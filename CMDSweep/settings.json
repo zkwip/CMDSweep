@@ -1,0 +1,59 @@
+{
+  "difficulties": [
+    {
+      "name": "Easy",
+      "width": 10,
+      "height": 10,
+      "mines": 10
+    },
+    {
+      "name": "Intermediate",
+      "width": 16,
+      "height": 16,
+      "mines": 40
+    },
+    {
+      "name": "Expert",
+      "width": 16,
+      "height": 30,
+      "mines": 99
+    },
+    {
+      "name": "Hardcore",
+      "width": 16,
+      "height": 30,
+      "mines": 99
+    }
+  ],
+  "colors": {
+    "cell-bg-undiscovered": "DARKGRAY",
+    "cell-bg-discovered": "GRAY",
+    "cell-1-discovered": "BLUE",
+    "cell-2-discovered": "DARKGREEN",
+    "cell-3-discovered": "RED",
+    "cell-4-discovered": "DARKBLUE",
+    "cell-5-discovered": "DARKRED",
+    "cell-6-discovered": "CYAN",
+    "cell-7-discovered": "BLACK",
+    "cell-8-discovered": "YELLOW",
+    "cell-selected-discovered": "WHITE",
+    "cell-flagged": "RED",
+    "cell-mine-hit": "RED",
+    "cell-mine-flagged": "DARKGREEN",
+    "cell-mine-missed": "BLACK"
+  },
+  "symbols": {
+    "vertical-border": "|",
+    "cursor": "X",
+    "flag": "F",
+    "mine": "*",
+    "seperator": " ",
+    "unknown": "?"
+  },
+  "dimensions": {
+    "cell-offset-x": 0,
+    "cell-offset-y": 0,
+    "cell-size-x": 2,
+    "cell-size-y": 1
+  }
+}
