@@ -71,6 +71,20 @@ namespace CMDSweep
             return 1;
         }
 
+        public int Flag(int x, int y)
+        {
+            if (CellIsFlagged(x, y)) return 0;
+            else Cells[x, y].Flagged = true;
+            return 1;
+        }
+
+        public int Unflag(int x, int y)
+        {
+            if (!CellIsFlagged(x, y)) return 0;
+            else Cells[x, y].Flagged = false;
+            return -1;
+        }
+
         public List<CellLocation> CompareForChanges(GameState other)
         {
             List<CellLocation> res = new List<CellLocation>();

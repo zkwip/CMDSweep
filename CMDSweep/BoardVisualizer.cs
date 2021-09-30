@@ -14,7 +14,7 @@ namespace CMDSweep
 
         GameState currentGS;
         
-        public bool Visualize(GameState gs, bool full = false)
+        public bool Visualize(GameState gs, bool full)
         {
             full = (currentGS == null || full);
             List<CellLocation> changes;
@@ -28,7 +28,6 @@ namespace CMDSweep
                 changes = gs.CompareForChanges(currentGS);
                 Console.WriteLine("Rendering Partial board ({0})", changes.Count);
                 if (changes.Count == 0) return false;
-
                 foreach (CellLocation cl in changes) RenderAtLocation(cl.X, cl.Y);
             }
 

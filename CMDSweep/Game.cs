@@ -45,12 +45,21 @@ namespace CMDSweep
             {
                 force = true;
                 bounds = renderer.Bounds;
+                Console.WriteLine("Change detected");
             }
 
             switch (grs)
             {
                 case GameRenderState.Playing:
-                    bv.Visualize(currentState,force);
+                    bv.Visualize(currentState, force);
+
+                    currentState = currentState.Clone();
+
+                    if (currentState.CellIsFlagged(0, 0))
+                        currentState.Unflag(0, 0);
+                    else
+                        currentState.Flag(0,0);
+
                     break;
                 default:
                     break;
