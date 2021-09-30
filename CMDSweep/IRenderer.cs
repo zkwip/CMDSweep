@@ -4,9 +4,9 @@ namespace CMDSweep
 {
     interface IRenderer
     {
-        void SetTile(int row, int col, TileData data);
+        void PrintAtTile(int row, int col, StyleData data, string s);
         void SetCursor(int row, int col);
-        void ClearScreen(TileData data);
+        void ClearScreen(StyleData data);
         void HideCursor();
         void SetTitle(string s);
         Bounds Bounds { get; }
@@ -23,13 +23,12 @@ namespace CMDSweep
     }
 
 
-    public struct TileData
+    public struct StyleData
     {
-        public TileData(ConsoleColor fg, ConsoleColor bg, char c, bool h) { Foreground = fg; Background = bg; Symbol = c; Highlight = h; }
+        public StyleData(ConsoleColor fg, ConsoleColor bg, char c, bool h) { Foreground = fg; Background = bg; Highlight = h; }
 
         public readonly ConsoleColor Foreground;
         public readonly ConsoleColor Background;
-        public readonly char Symbol;
         public readonly bool Highlight;
     }
 }

@@ -18,12 +18,15 @@ namespace CMDSweep
         IRenderer renderer;
         Timer t;
         Bounds bounds;
+        BoardVisualizer bv;
+        GameState currentState;
 
         public Game(IRenderer r)
         {
             renderer = r;
             bounds = r.Bounds;
             InitialiseGame();
+            bv = new BoardVisualizer(r);
 
             t = new Timer(200);
 
@@ -47,7 +50,7 @@ namespace CMDSweep
             switch (grs)
             {
                 case GameRenderState.Playing:
-                    RenderGame(force);
+                    bv.Visualize(currentState,force);
                     break;
                 default:
                     break;
@@ -55,14 +58,12 @@ namespace CMDSweep
 
         }
 
-        private void RenderGame(bool force)
-        {
-            throw new NotImplementedException();
-        }
-
         public void InitialiseGame()
         {
             grs = GameRenderState.Playing;
+            CellData[,] cd = new CellData[1, 1];
+            cd[0, 0] = new CellData(true, false, false);
+            currentState = new GameState(cd);
         }
     }
 }

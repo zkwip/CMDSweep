@@ -18,13 +18,13 @@ namespace CMDSweep
             get {  return new Bounds(Console.WindowWidth, Console.WindowHeight);}
         }
 
-        public void ClearScreen(TileData data)
+        public void ClearScreen(StyleData data)
         {
             SendDataToConsole(data);
             Console.Clear();
         }
 
-        private void SendDataToConsole(TileData data)
+        private void SendDataToConsole(StyleData data)
         {
             Console.ForegroundColor = data.Foreground;
             Console.BackgroundColor = data.Background;
@@ -41,11 +41,11 @@ namespace CMDSweep
             Console.CursorVisible = false;
         }
 
-        public void SetTile(int row, int col, TileData data)
+        public void PrintAtTile(int row, int col, StyleData data, string s)
         {
             SetCursor(row, col);
             SendDataToConsole(data);
-            Console.Write(data.Symbol);
+            Console.Write(s);
         }
 
         public void SetTitle(string s)

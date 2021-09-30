@@ -1,6 +1,5 @@
 ﻿using System;
 
-
 namespace CMDSweep
 {
     class Program
@@ -9,7 +8,7 @@ namespace CMDSweep
         {
             IRenderer cmdr = new WinCMDRenderer();
             Game g = new Game(cmdr);
-            
+            Console.Read();
         }
     }
 }
