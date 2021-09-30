@@ -21,17 +21,17 @@ namespace CMDSweep
 
             if (full)
             {
+                currentGS = gs;
                 RenderFullBoard();
             }
             else
             {
                 changes = gs.CompareForChanges(currentGS);
+                currentGS = gs;
                 Console.WriteLine("Rendering Partial board ({0})", changes.Count);
                 if (changes.Count == 0) return false;
                 foreach (CellLocation cl in changes) RenderAtLocation(cl.X, cl.Y);
             }
-
-            currentGS = gs;
             
             return true;
         }
@@ -43,6 +43,7 @@ namespace CMDSweep
 
         void RenderFullBoard()
         {
+            Console.WriteLine("Rendering full board at of size ({0} x {1})", currentGS.BoardWidth, currentGS.BoardHeight);
             CalculateDimensions();
         }
         

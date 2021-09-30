@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Timers;
+using System.Web;
 
 namespace CMDSweep
 {
@@ -14,6 +18,7 @@ namespace CMDSweep
         }
 
         GameRenderState grs;
+        Settings settings;
 
         IRenderer renderer;
         Timer t;
@@ -23,6 +28,7 @@ namespace CMDSweep
 
         public Game(IRenderer r)
         {
+            LoadSettings();
             renderer = r;
             bounds = r.Bounds;
             InitialiseGame();
@@ -35,6 +41,31 @@ namespace CMDSweep
             t.Start();
             Refresh(false);
 
+        }
+
+        public class Settings
+        {
+            public List<Difficulty> Difficulties;
+            public Dictionary<string, string> Colors;
+            public Dictionary<string, char> Symbols;
+            public Dictionary<string, int> Dimensions;
+        }
+
+        public class Difficulty
+        {
+            public string Name;
+            public int Width;
+            public int Height;
+            public int Mines;
+        }
+
+        private void LoadSettings()
+        {
+            using (StreamReader r = new StreamReader("../../settings.json"))
+            {
+                string json = r.ReadToEnd();
+                settings = JsonConvert.DeserializeObject<Settings>(json);
+            }
         }
 
         private void TimerElapsed(object sender, ElapsedEventArgs e) => Refresh(false);
@@ -52,14 +83,7 @@ namespace CMDSweep
             {
                 case GameRenderState.Playing:
                     bv.Visualize(currentState, force);
-
                     currentState = currentState.Clone();
-
-                    if (currentState.CellIsFlagged(0, 0))
-                        currentState.Unflag(0, 0);
-                    else
-                        currentState.Flag(0,0);
-
                     break;
                 default:
                     break;
@@ -70,9 +94,7 @@ namespace CMDSweep
         public void InitialiseGame()
         {
             grs = GameRenderState.Playing;
-            CellData[,] cd = new CellData[1, 1];
-            cd[0, 0] = new CellData(true, false, false);
-            currentState = new GameState(cd);
+            currentState = GameState.NewGame(10,10,10,4,4,2);
         }
     }
 }

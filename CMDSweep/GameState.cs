@@ -9,14 +9,21 @@ namespace CMDSweep
 
         public GameState(CellData[,] datas) { Cells = datas; }
         public GameState Clone() { return new GameState((CellData[,])Cells.Clone()); }
+        public static GameState NewGame(int width, int height, int mines, int x, int y, int safezone)
+        {
+            CellData[,] datas = new CellData[width, height];
+            GameState gs = new GameState(datas);
+            gs.PlaceMines(x, y, mines, safezone);
+            return gs;
+        }
 
-        int BoardWidth { get => Cells.GetLength(0); }
-        int BoardHeight { get => Cells.GetLength(1); }
+        public int BoardWidth { get => Cells.GetLength(0); }
+        public int BoardHeight { get => Cells.GetLength(1); }
 
-        int Mines { get => CountCells(x => x.Mine); }
-        int Flags { get => CountCells(x => x.Flagged); }
-        int Discovered { get => CountCells(x => x.Discovered); }
-        int MinesLeft { get => Mines - Flags; }
+        public int Mines { get => CountCells(x => x.Mine); }
+        public int Flags { get => CountCells(x => x.Flagged); }
+        public int Discovered { get => CountCells(x => x.Discovered); }
+        public int MinesLeft { get => Mines - Flags; }
 
 
         private int CountCells(Predicate<CellData> p)
@@ -67,7 +74,8 @@ namespace CMDSweep
             Cells[x, y].Discovered = true;
 
             // Continue discovering if encountering an empty cell
-            if (CellMineNumber(x, y) == 0) return ApplySurroundingCells(x, y, 0, Discover, (a, b) => (a < 0 || b < 0) ? -1 : a + b);
+            if (CellMineNumber(x, y) == 0)
+                return ApplySurroundingCells(x, y, 0, Discover, (a, b) => (a < 0 || b < 0) ? -1 : a + b);
             return 1;
         }
 
@@ -97,6 +105,28 @@ namespace CMDSweep
             }
             return res;
         }
+
+        private void PlaceMines(int x, int y, int count, int savezone)
+        {
+            int left = count;
+            Random rng = new Random();
+
+            while (left > 0)
+            {
+                int px = rng.Next() % BoardWidth;
+                int py = rng.Next() % BoardHeight;
+
+                if (x <= px + savezone && y <= py + savezone && x >= px - savezone && y >= py - savezone)
+                    continue; // No mines at start
+                if (CellIsMine(px, py))
+                    continue; // No duplicate mines
+                if (CellMineNumber(px, py) > 6)
+                    continue; // Not too many mines around eachoter
+
+                Cells[px, py].Mine = true;
+                left--;
+            }
+        }
     }
 
     struct CellLocation
@@ -110,7 +140,7 @@ namespace CMDSweep
     struct CellData
     {
         public CellData(bool m, bool d, bool f) { Mine = m; Discovered = d; Flagged = f; }
-        public readonly bool Mine;
+        public bool Mine;
         public bool Discovered;
         public bool Flagged;
 
@@ -133,4 +163,5 @@ namespace CMDSweep
                    c1.Flagged != c2.Flagged;
         }
     }
+
 }
