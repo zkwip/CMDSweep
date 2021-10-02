@@ -1,10 +1,10 @@
 # CMDSweep
-A Command line minesweeper
+A command line minesweeper
 
 ## Features
 - Multiple keyboard controls, WASD and arrows are supported
 - All classic difficulties
-- User editable colors
+- User editable colors, symbols and controls
 
 ## Future features and options
 - Hardcore mode with count down timer
