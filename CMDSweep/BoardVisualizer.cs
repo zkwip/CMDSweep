@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep
 {
-    class BoardVisualizer
+    public class BoardVisualizer
     {
         readonly IRenderer renderer;
         readonly Game game;
@@ -15,7 +15,7 @@ namespace CMDSweep
         private int scaleY = 1;
 
         private GameState lastRenderedGameState;
-        private StyleData styleOutOfBounds;
+        private StyleData hideStyle;
         private RefreshMode lastRefresh = RefreshMode.Rescale;
 
         public BoardVisualizer(Game g)
@@ -24,7 +24,7 @@ namespace CMDSweep
             settings = g.Settings;
             game = g;
             UpdateDimensions();
-            styleOutOfBounds = new StyleData(settings.Colors["cell-fg-out-of-bounds"], settings.Colors["cell-bg-out-of-bounds"], false); 
+            hideStyle = new StyleData(settings.Colors["cell-bg-out-of-bounds"], settings.Colors["cell-bg-out-of-bounds"], false); 
         }
 
         GameState CurrentState { get => game.CurrentState; }
@@ -32,7 +32,14 @@ namespace CMDSweep
         
         public bool Visualize(RefreshMode mode)
         {
-            if(lastRenderedGameState == null && mode == RefreshMode.ChangesOnly) mode = RefreshMode.Full;
+            if (mode == RefreshMode.ChangesOnly)
+            {
+                if (lastRenderedGameState == null)
+                    mode = RefreshMode.Full;
+                else if (CurrentState.PlayerState != lastRenderedGameState.PlayerState && mode == RefreshMode.ChangesOnly)
+                    mode = RefreshMode.Full;
+            }
+
             List<CellLocation> changes;
 
             if (mode != RefreshMode.ChangesOnly || lastRefresh == RefreshMode.Rescale)
@@ -54,7 +61,7 @@ namespace CMDSweep
 
         private void UpdateStatBoard()
         {
-            renderer.HideCursor(styleOutOfBounds);
+            renderer.HideCursor(hideStyle);
             int minesleft = CurrentState.MinesLeft;
         }
 
@@ -80,11 +87,12 @@ namespace CMDSweep
         {
             if (UpdateDimensions())
             {
-                renderer.ClearScreen(styleOutOfBounds);
+                renderer.ClearScreen(hideStyle);
                 for (int y = 0; y < CurrentState.BoardHeight; y++)
                 {
                     for (int x = 0; x < CurrentState.BoardWidth; x++) RenderAtLocation(x, y);
                 }
+                renderer.HideCursor(hideStyle);
             }
             else
             {
@@ -143,7 +151,7 @@ namespace CMDSweep
                     if (num > 0)
                     {
                         text = num.ToString();
-                        fg = settings.Colors[string.Format("cell-{0}-discovered", num)];
+                        fg = settings.Colors[string.Format("cell-{0}-discovered", num%10)];
                     }
                     else
                     {

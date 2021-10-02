@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMDSweep", "CMDSweep\CMDSweep.csproj", "{CC5B3D4A-B723-421D-8469-0FFAA03DDCD8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMDSweepTest", "CMDSweepTest\CMDSweepTest.csproj", "{774693F5-A037-4B81-BF6C-1EE115FB1A4A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{CC5B3D4A-B723-421D-8469-0FFAA03DDCD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC5B3D4A-B723-421D-8469-0FFAA03DDCD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC5B3D4A-B723-421D-8469-0FFAA03DDCD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{774693F5-A037-4B81-BF6C-1EE115FB1A4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{774693F5-A037-4B81-BF6C-1EE115FB1A4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{774693F5-A037-4B81-BF6C-1EE115FB1A4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{774693F5-A037-4B81-BF6C-1EE115FB1A4A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

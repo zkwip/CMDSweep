@@ -6,9 +6,11 @@ using Newtonsoft.Json;
 
 namespace CMDSweep
 {
-    class Game
+    using Control = KeyValuePair<InputAction, List<ConsoleKey>>;
+
+    public class Game
     {
-        enum GameRenderState
+        enum RenderState
         {
             Playing,
             Menu,
@@ -16,14 +18,15 @@ namespace CMDSweep
             Highscore,
         }
 
-        GameRenderState grs;
 
         Timer refreshTimer;
         Bounds screenBounds;
 
-        public readonly GameSettings Settings;
-        public readonly IRenderer Renderer;
-        public readonly BoardVisualizer Visualizer;
+        private RenderState renderState;
+
+        internal readonly GameSettings Settings;
+        internal readonly IRenderer Renderer;
+        internal readonly BoardVisualizer Visualizer;
 
         public GameState CurrentState;
         public Difficulty CurrentDifficulty;
@@ -45,11 +48,87 @@ namespace CMDSweep
             refreshTimer.Start();
 
             Refresh(RefreshMode.Rescale);
+
+            while (Step());
+            refreshTimer.Stop();
+        }
+
+        private bool Step()
+        {
+            InputAction ia = ReadAction();
+            switch (renderState)
+            {
+                case RenderState.Playing: return PlayStep(ia);
+                case RenderState.Dead: return DeadStep(ia);
+                case RenderState.Highscore: return HighScoreStep(ia);
+                case RenderState.Menu: return MenuStep(ia);
+                default: return false;
+            }
+        }
+
+        private InputAction ReadAction()
+        {
+            ConsoleKey key = Console.ReadKey().Key;
+            foreach (Control ctrl in Settings.Controls)
+                if (ctrl.Value.Contains(key))
+                    return ctrl.Key;
+            return InputAction.Unknown;
+        }
+
+        private bool PlayStep(InputAction ia)
+        {            
+            switch (ia)
+            {
+                case InputAction.Up:
+                    CurrentState = CurrentState.Clone();
+                    CurrentState.MoveCursor(Direction.Up);
+                    break;
+                case InputAction.Down:
+                    CurrentState = CurrentState.Clone();
+                    CurrentState.MoveCursor(Direction.Down);
+                    break;
+                case InputAction.Left:
+                    CurrentState = CurrentState.Clone();
+                    CurrentState.MoveCursor(Direction.Left);
+                    break;
+                case InputAction.Right:
+                    CurrentState = CurrentState.Clone();
+                    CurrentState.MoveCursor(Direction.Right);
+                    break;
+                case InputAction.Dig:
+                    CurrentState = CurrentState.Clone();
+                    CurrentState.Dig();
+                    break;
+                case InputAction.Flag:
+                    CurrentState = CurrentState.Clone();
+                    CurrentState.ToggleFlag();
+                    break;
+            }
+
+            if (CurrentState.PlayerState == PlayerState.Dead) renderState = RenderState.Dead;
+            Refresh(RefreshMode.ChangesOnly);
+
+            return true;
+        }
+
+        private bool DeadStep(InputAction ia)
+        {
+            return false;
+        }
+
+        private bool HighScoreStep(InputAction ia)
+        {
+            return false;
+        }
+
+        private bool MenuStep(InputAction ia)
+        {
+            return false;
         }
 
         private GameSettings LoadSettings()
         {
-            using (StreamReader r = new StreamReader("../../settings.json"))
+            using (StreamReader r = new StreamReader("settings.json"))
             {
                 string json = r.ReadToEnd();
                 return JsonConvert.DeserializeObject<GameSettings>(json);
@@ -64,12 +143,11 @@ namespace CMDSweep
             {
                 mode = RefreshMode.Rescale;
                 screenBounds = Renderer.Bounds;
-                Console.WriteLine("Change detected");
             }
 
-            switch (grs)
+            switch (renderState)
             {
-                case GameRenderState.Playing:
+                case RenderState.Playing:
                     Visualizer.Visualize(mode);
                     CurrentState = CurrentState.Clone();
                     break;
@@ -81,23 +159,24 @@ namespace CMDSweep
 
         public void InitialiseGame()
         {
-            grs = GameRenderState.Playing;
+            renderState = RenderState.Playing;
             CurrentState = GameState.NewGame(
                 CurrentDifficulty.Width, 
                 CurrentDifficulty.Height, 
                 CurrentDifficulty.Mines, 
-                CurrentDifficulty.Safezone
+                CurrentDifficulty.Safezone,
+                CurrentDifficulty.DetectionRadius
             );
         }
     }
 
-    public class GameSettings
+    internal class GameSettings
     {
         public List<Difficulty> Difficulties;
         public Dictionary<string, ConsoleColor> Colors;
         public Dictionary<string, string> Texts;
         public Dictionary<string, int> Dimensions;
-        public Dictionary<string, List<ConsoleKey>> Controls;
+        public Dictionary<InputAction, List<ConsoleKey>> Controls;
     }
 
     public class Difficulty
@@ -107,12 +186,26 @@ namespace CMDSweep
         public int Height;
         public int Mines;
         public int Safezone;
+        public int DetectionRadius;
     }
-    
-    enum RefreshMode
+
+    public enum RefreshMode
     {
         Rescale = 2,
         Full = 1,
         ChangesOnly = 0,
     }
+
+    enum InputAction
+    {
+        Up,
+        Left,
+        Down,
+        Right,
+        Dig,
+        Flag,
+
+        Unknown,
+    }
+
 }

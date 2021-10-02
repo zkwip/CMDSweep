@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep
 {
-    class GameState
+    public class GameState
     {
         // Internals
         private CellData[,] Cells;
@@ -11,11 +11,12 @@ namespace CMDSweep
         private PlayerState playerState;
         private int mineCount = 0;
         private int safeZone = 0;
+        private int mineDetectRadius = 1;
 
         // Constructors and cloners
         public GameState(CellData[,] datas,CellLocation c, PlayerState ps) { Cells = datas; cursor = c; playerState = ps; }
         public GameState Clone() { return new GameState((CellData[,])Cells.Clone(),cursor,playerState); }
-        public static GameState NewGame(int width, int height, int mines, int safezone)
+        public static GameState NewGame(int width, int height, int mines, int safezone, int radius)
         {
             CellData[,] datas = new CellData[width, height];
             int x = width / 2;
@@ -24,6 +25,7 @@ namespace CMDSweep
             GameState gs = new GameState(datas,new CellLocation(x,y),PlayerState.NewGame);
             gs.mineCount = mines;
             gs.safeZone = safezone;
+            gs.mineDetectRadius = radius;
 
             return gs;
         }
@@ -39,9 +41,9 @@ namespace CMDSweep
         private TOut ApplySurroundingCells<TOut,Inter>(int x, int y, TOut zero, Func<int, int, Inter> callback, Func<TOut,Inter,TOut> fold)
         {
             TOut res = zero;
-            for (int ax = x - 1; ax <= x + 1; ax++)
+            for (int ax = x - mineDetectRadius; ax <= x + mineDetectRadius; ax++)
             {
-                for (int ay = y - 1; ay <= y + 1; ay++)
+                for (int ay = y - mineDetectRadius; ay <= y + mineDetectRadius; ay++)
                 {
                     res = fold(res,callback(ax, ay));
                 }
@@ -76,11 +78,26 @@ namespace CMDSweep
         public int CellMineNumber(int x, int y)             => CountSurroundingCells(x, y, c => c.Mine);
 
         //Other queries
-        public int Discover(int x, int y)
+        public int Dig()
         {
+            int x = cursor.X;
+            int y = cursor.Y;
+
             // If needed, start the game
             if (playerState == PlayerState.NewGame) PlaceMines(x, y, mineCount, safeZone);
-            
+
+            //Do the digging
+            int res = Discover(x,y);
+
+            //Check for death
+            if (res < 0) playerState = PlayerState.Dead;
+
+            return res;
+        }
+
+
+        public int Discover(int x, int y)
+        {
             // Check discoverable
             if (CellOutsideBounds(x, y)) return 0;
             if (CellIsFlagged(x, y)) return 0;
@@ -96,6 +113,13 @@ namespace CMDSweep
             return 1;
         }
 
+        public int ToggleFlag()
+        {
+            if (CellIsFlagged(cursor.X, cursor.Y))
+                return Unflag(cursor.X, cursor.Y);
+            else
+                return Flag(cursor.X, cursor.Y);
+        }
         public int Flag(int x, int y)
         {
             if (CellIsFlagged(x, y) || CellIsDiscovered(x,y)) return 0;
@@ -108,6 +132,17 @@ namespace CMDSweep
             if (!CellIsFlagged(x, y)) return 0;
             else Cells[x, y].Flagged = false;
             return -1;
+        }
+
+        public CellLocation Wrap(CellLocation cl)
+        {
+            while (cl.X < 0) cl.X += BoardWidth;
+            while (cl.X >= BoardWidth) cl.X -= BoardWidth;
+
+            while (cl.Y < 0) cl.Y += BoardHeight;
+            while (cl.Y >= BoardHeight) cl.Y -= BoardHeight;
+
+            return cl;
         }
         
         public CellLocation MoveCursor(Direction d)
@@ -128,12 +163,7 @@ namespace CMDSweep
 
         public CellLocation SetCursor(CellLocation cl)
         {
-            while (cl.X < 0) cl.X += BoardWidth;
-            while (cl.X > BoardWidth) cl.X += BoardWidth;
-            while (cl.X < 0) cl.Y += BoardHeight;
-            while (cl.X > BoardHeight) cl.Y += BoardHeight;
-
-            cursor = cl;
+            cursor = Wrap(cl);
             return cursor;
         }
 
@@ -159,10 +189,13 @@ namespace CMDSweep
         private void PlaceMines(int x, int y, int count, int savezone)
         {
             int left = count;
+            int fails = 0;
             Random rng = new Random();
-
-            while (left > 0)
+            
+            // Try to randomly place mines and check if the are valid;
+            while (left > 0 && fails < 1000)
             {
+                fails++;
                 int px = rng.Next() % BoardWidth;
                 int py = rng.Next() % BoardHeight;
 
@@ -172,16 +205,21 @@ namespace CMDSweep
                 if (CellIsMine(px, py))
                     continue; // No duplicate mines
 
-                if (CellMineNumber(px, py) > 6)
+                if (CellMineNumber(px, py) > 3 * (mineDetectRadius + 1) * mineDetectRadius)
                     continue; // Not too many mines around eachoter
 
                 Cells[px, py].Mine = true;
+
+                fails = 0;
                 left--;
             }
+
+            if (left > 0) throw new Exception("Can't place mine after 1000 random tries");
+            playerState = PlayerState.Playing;
         }
     }
 
-    struct CellLocation
+    public struct CellLocation
     {
         public CellLocation(int x, int y) { X = x; Y = y; }
 
@@ -201,7 +239,7 @@ namespace CMDSweep
         }
     }
 
-    struct CellData
+    public struct CellData
     {
         public CellData(bool m, bool d, bool f) { Mine = m; Discovered = d; Flagged = f; }
         public bool Mine;
@@ -228,7 +266,7 @@ namespace CMDSweep
         }
     }
 
-    enum Direction
+    public enum Direction
     {
         Up,
         Down,
@@ -236,7 +274,7 @@ namespace CMDSweep
         Right,
     }
 
-    enum PlayerState
+    public enum PlayerState
     {
         NewGame,
         Playing,

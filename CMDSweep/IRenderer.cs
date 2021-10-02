@@ -2,12 +2,11 @@
 
 namespace CMDSweep
 {
-    interface IRenderer
+    public interface IRenderer
     {
         void PrintAtTile(int row, int col, StyleData data, string s);
         void SetCursor(int row, int col);
         void ClearScreen(StyleData data);
-        void HideCursor();
         void SetTitle(string s);
         Bounds Bounds { get; }
 
