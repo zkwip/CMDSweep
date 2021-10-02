@@ -6,17 +6,25 @@ namespace CMDSweep
     class GameState
     {
         // Internals
-        CellData[,] Cells;
-        CellLocation cursor;
+        private CellData[,] Cells;
+        private CellLocation cursor;
+        private PlayerState playerState;
+        private int mineCount = 0;
+        private int safeZone = 0;
 
         // Constructors and cloners
-        public GameState(CellData[,] datas) { Cells = datas; }
-        public GameState Clone() { return new GameState((CellData[,])Cells.Clone()); }
-        public static GameState NewGame(int width, int height, int mines, int x, int y, int safezone)
+        public GameState(CellData[,] datas,CellLocation c, PlayerState ps) { Cells = datas; cursor = c; playerState = ps; }
+        public GameState Clone() { return new GameState((CellData[,])Cells.Clone(),cursor,playerState); }
+        public static GameState NewGame(int width, int height, int mines, int safezone)
         {
             CellData[,] datas = new CellData[width, height];
-            GameState gs = new GameState(datas);
-            gs.PlaceMines(x, y, mines, safezone);
+            int x = width / 2;
+            int y = height / 2;
+
+            GameState gs = new GameState(datas,new CellLocation(x,y),PlayerState.NewGame);
+            gs.mineCount = mines;
+            gs.safeZone = safezone;
+
             return gs;
         }
 
@@ -50,14 +58,15 @@ namespace CMDSweep
         private int CountSurroundingCells(int x, int y, Func<CellData, bool> callback)  => CountSurroundingCells(x, y, (cx, cy) => CheckCell(cx, cy, callback, false));
         private int CountSurroundingCells(int x, int y, Func<int, int, bool> callback)  => ApplySurroundingCells(x, y, 0, callback, (res, boo) => boo ? res : res++);
 
-        // Board Properties
+        // Oneliner Board Properties
         public int BoardWidth { get => Cells.GetLength(0); }
         public int BoardHeight { get => Cells.GetLength(1); }
         public int Mines { get => CountCells(x => x.Mine); }
         public int Flags { get => CountCells(x => x.Flagged); }
         public int Discovered { get => CountCells(x => x.Discovered); }
         public int MinesLeft { get => Mines - Flags; }
-        public CellLocation Cursor { get; }
+        public CellLocation Cursor { get => cursor; }
+        public PlayerState PlayerState { get => playerState; }
 
         // Oneliner Board Queries
         private bool CellOutsideBounds(int x, int y)        => (x < 0 || y < 0 || x >= BoardWidth || y >= BoardHeight);
@@ -69,6 +78,9 @@ namespace CMDSweep
         //Other queries
         public int Discover(int x, int y)
         {
+            // If needed, start the game
+            if (playerState == PlayerState.NewGame) PlaceMines(x, y, mineCount, safeZone);
+            
             // Check discoverable
             if (CellOutsideBounds(x, y)) return 0;
             if (CellIsFlagged(x, y)) return 0;
@@ -224,4 +236,10 @@ namespace CMDSweep
         Right,
     }
 
+    enum PlayerState
+    {
+        NewGame,
+        Playing,
+        Dead,
+    }
 }

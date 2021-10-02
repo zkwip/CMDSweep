@@ -31,6 +31,7 @@ namespace CMDSweep
         public Game(IRenderer r)
         {
             Settings = LoadSettings();
+            CurrentDifficulty = Settings.Difficulties[0];
             Renderer = r;
             screenBounds = r.Bounds;
 
@@ -81,7 +82,12 @@ namespace CMDSweep
         public void InitialiseGame()
         {
             grs = GameRenderState.Playing;
-            CurrentState = GameState.NewGame(10,10,10,4,4,2);
+            CurrentState = GameState.NewGame(
+                CurrentDifficulty.Width, 
+                CurrentDifficulty.Height, 
+                CurrentDifficulty.Mines, 
+                CurrentDifficulty.Safezone
+            );
         }
     }
 
@@ -89,8 +95,9 @@ namespace CMDSweep
     {
         public List<Difficulty> Difficulties;
         public Dictionary<string, ConsoleColor> Colors;
-        public Dictionary<string, char> Symbols;
+        public Dictionary<string, string> Texts;
         public Dictionary<string, int> Dimensions;
+        public Dictionary<string, List<ConsoleKey>> Controls;
     }
 
     public class Difficulty
@@ -99,6 +106,7 @@ namespace CMDSweep
         public int Width;
         public int Height;
         public int Mines;
+        public int Safezone;
     }
     
     enum RefreshMode

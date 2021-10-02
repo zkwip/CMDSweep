@@ -4,31 +4,35 @@
       "Name": "Easy",
       "Width": 10,
       "Height": 10,
-      "Mines": 10
+      "Mines": 10,
+      "Safezone": 1
     },
     {
       "Name": "Intermediate",
       "Width": 16,
       "Height": 16,
-      "Mines": 40
+      "Mines": 40,
+      "Safezone": 1
     },
     {
       "Name": "Expert",
       "Width": 16,
       "Height": 30,
-      "Mines": 99
+      "Mines": 99,
+      "Safezone": 1
     },
     {
       "Name": "Hardcore",
       "Width": 16,
       "Height": 30,
-      "Mines": 99
+      "Mines": 99,
+      "Safezone": 1
     }
   ],
   "Colors": {
-    "cell-fg-out-of-bounds": "BLACK",
-    "cell-bg-out-of-bounds": "GRAY",
-    "cell-fg-undiscovered":  "BLACK",
+    "cell-fg-out-of-bounds": "WHITE",
+    "cell-bg-out-of-bounds": "DARKGRAY",
+    "cell-fg-undiscovered": "GRAY",
     "cell-bg-undiscovered": "DARKGRAY",
     "cell-bg-discovered": "GRAY",
     "cell-1-discovered": "BLUE",
@@ -41,20 +45,33 @@
     "cell-8-discovered": "YELLOW",
     "cell-selected-discovered": "WHITE",
     "cell-flagged": "RED",
-    "cell-mine-hit": "RED",
-    "cell-mine-flagged": "DARKGREEN",
-    "cell-mine-missed": "BLACK"
+    "cell-dead-wrong-flag": "RED",
+    "cell-dead-mine-hit": "RED",
+    "cell-dead-mine-flagged": "DARKGREEN",
+    "cell-dead-mine-missed": "BLACK",
+    "cell-questioned": "BLACK",
+    "cell-selected":  "WHITE"
   },
-  "Symbols": {
+  "Texts": {
     "vertical-border": "|",
+    "horizontal-border":  "--",
     "cursor": "X",
-    "flag": "F",
-    "mine": "*",
-    "seperator": " ",
-    "unknown": "?"
+    "cell-flag": "F",
+    "cell-mine": "*",
+    "cell-undiscovered": "-",
+    "cell-questioned": "?",
+    "cell-empty": ""
   },
   "Dimensions": {
     "cell-size-x": 2,
     "cell-size-y": 1
+  },
+  "Controls": {
+    "up": [ "UpArrow", "W" ],
+    "left": [ "LeftArrow", "A" ],
+    "down": [ "DownArrow", "S" ],
+    "right": [ "RightArrow", "D" ],
+    "dig": [ "SpaceBar", "Enter" ],
+    "flag": [ "E", "F" ]
   }
 }

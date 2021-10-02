@@ -81,7 +81,6 @@ namespace CMDSweep
             if (UpdateDimensions())
             {
                 renderer.ClearScreen(styleOutOfBounds);
-
                 for (int y = 0; y < CurrentState.BoardHeight; y++)
                 {
                     for (int x = 0; x < CurrentState.BoardWidth; x++) RenderAtLocation(x, y);
@@ -97,15 +96,135 @@ namespace CMDSweep
         {
             int posX = offsetX + x * scaleX;
             int posY = offsetY + y * scaleY;
+            
+            ConsoleColor fg;
+            switch (GetTileVisual(x, y))
+            {
+                case TileVisual.Discovered:         fg = settings.Colors["cell-fg-discovered"];     break;
+                case TileVisual.Undiscovered:       fg = settings.Colors["cell-fg-undiscovered"];   break;
+                case TileVisual.Flagged:            fg = settings.Colors["cell-flagged"];           break;
 
-            string text = "x ";
+                case TileVisual.DeadWrongFlag:      fg = settings.Colors["cell-dead-wrong-flag"];   break;
+                case TileVisual.DeadMine:           fg = settings.Colors["cell-dead-mine-missed"];  break;
+                case TileVisual.DeadMineExploded:   fg = settings.Colors["cell-dead-mine-hit"];     break;
+                case TileVisual.DeadMineFlagged:    fg = settings.Colors["cell-dead-mine-flagged"]; break;
+                case TileVisual.DeadDiscovered:     fg = settings.Colors["cell-fg-discovered"];     break;
+                case TileVisual.DeadUndiscovered:   fg = settings.Colors["cell-fg-undiscovered"];   break;
+                case TileVisual.QuestionMarked:     fg = settings.Colors["cell-questioned"];        break;
+                default:                            fg = settings.Colors["cell-fg-out-of-bounds"];  break;
+            }
 
-            ConsoleColor fg = settings.Colors["cell-fg-undiscovered"];
-            ConsoleColor bg = settings.Colors["cell-bg-undiscovered"];
+            string text = settings.Texts["cell-empty"];
+            switch (GetTileVisual(x, y))
+            {
+                case TileVisual.Undiscovered:
+                case TileVisual.DeadUndiscovered:
+                    text = settings.Texts["cell-undiscovered"];
+                    break;
+
+                case TileVisual.DeadWrongFlag:
+                case TileVisual.DeadMineFlagged:
+                case TileVisual.Flagged:
+                    text = settings.Texts["cell-flag"];
+                    break;
+
+                case TileVisual.DeadMine:
+                case TileVisual.DeadMineExploded:
+                    text = settings.Texts["cell-mine"];
+                    break;
+
+                case TileVisual.QuestionMarked:
+                    text = settings.Texts["cell-questioned"];
+                    break;
+
+                case TileVisual.DeadDiscovered:
+                case TileVisual.Discovered:
+                    int num = CurrentState.CellMineNumber(x, y);
+                    if (num > 0)
+                    {
+                        text = num.ToString();
+                        fg = settings.Colors[string.Format("cell-{0}-discovered", num)];
+                    }
+                    else
+                    {
+                        text = settings.Texts["cell-empty"];
+                    }
+                    break;
+            }
+
+            if (CurrentState.PlayerState != PlayerState.Dead && CurrentState.Cursor == new CellLocation(x, y))
+            {
+                fg = settings.Colors["cell-selected"];
+                if (text == settings.Texts["cell-undiscovered"] || text == settings.Texts["cell-empty"])
+                    text = settings.Texts["cursor"];
+            }
+
+            ConsoleColor bg;
+            switch(GetTileVisual(x,y))
+            {
+                case TileVisual.Discovered:
+                case TileVisual.DeadDiscovered:
+                case TileVisual.DeadMineExploded:
+                case TileVisual.DeadMine:
+                    bg = settings.Colors["cell-bg-discovered"];
+                    break;
+
+                default:
+                    bg = settings.Colors["cell-bg-undiscovered"];
+                    break;
+            }
 
             StyleData data = new StyleData(fg,bg,false);
+            
+            //padding
+            int padRight = 0;
+            if (text.Length < scaleX) padRight = scaleX - text.Length;
+            int padLeft = padRight / 2;
+            padRight = scaleX-padLeft;
 
-            renderer.PrintAtTile(posY, posX, data, text);
+            renderer.PrintAtTile(posY, posX, data, " ".PadLeft(padLeft));
+            renderer.PrintAtTile(posY, posX, data, text.PadRight(padRight));
+
+        }
+
+        private TileVisual GetTileVisual(int x, int y)
+        {
+            if(CurrentState.PlayerState == PlayerState.Dead)
+            {
+                if (CurrentState.CellIsMine(x,y))
+                {
+                    if (CurrentState.CellIsFlagged(x, y)) return TileVisual.DeadMineFlagged;
+                    if (CurrentState.CellIsDiscovered(x, y)) return TileVisual.DeadMineExploded;
+                    else return TileVisual.DeadMine;
+                }
+                else
+                {
+                    if (CurrentState.CellIsFlagged(x, y)) return TileVisual.DeadWrongFlag;
+                    if (CurrentState.CellIsDiscovered(x, y)) return TileVisual.DeadDiscovered;
+                    else return TileVisual.DeadUndiscovered;
+                }
+            }
+            else
+            {
+                if (CurrentState.CellIsDiscovered(x,y)) return TileVisual.Discovered;
+                if (CurrentState.CellIsFlagged(x, y)) return TileVisual.Flagged;
+                else return TileVisual.Undiscovered;
+            }
+        }
+
+        enum TileVisual
+        {
+            Undiscovered,
+            Flagged,
+            QuestionMarked,
+            Discovered,
+
+            DeadUndiscovered,
+            DeadDiscovered,
+            DeadMine,
+            DeadMineExploded,
+            DeadMineFlagged,
+            DeadWrongFlag,
         }
 
     }
