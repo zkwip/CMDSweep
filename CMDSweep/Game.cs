@@ -1,9 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Timers;
-using System.Web;
+using Newtonsoft.Json;
 
 namespace CMDSweep
 {
@@ -18,72 +17,60 @@ namespace CMDSweep
         }
 
         GameRenderState grs;
-        Settings settings;
 
-        IRenderer renderer;
-        Timer t;
-        Bounds bounds;
-        BoardVisualizer bv;
-        GameState currentState;
+        Timer refreshTimer;
+        Bounds screenBounds;
+
+        public readonly GameSettings Settings;
+        public readonly IRenderer Renderer;
+        public readonly BoardVisualizer Visualizer;
+
+        public GameState CurrentState;
+        public Difficulty CurrentDifficulty;
 
         public Game(IRenderer r)
         {
-            LoadSettings();
-            renderer = r;
-            bounds = r.Bounds;
+            Settings = LoadSettings();
+            Renderer = r;
+            screenBounds = r.Bounds;
+
             InitialiseGame();
-            bv = new BoardVisualizer(r);
+            Visualizer = new BoardVisualizer(this);
 
-            t = new Timer(200);
 
-            t.Elapsed += TimerElapsed;
-            t.AutoReset = true;
-            t.Start();
-            Refresh(false);
+            refreshTimer = new Timer(200);
+            refreshTimer.Elapsed += TimerElapsed;
+            refreshTimer.AutoReset = true;
+            refreshTimer.Start();
 
+            Refresh(RefreshMode.Rescale);
         }
 
-        public class Settings
-        {
-            public List<Difficulty> Difficulties;
-            public Dictionary<string, string> Colors;
-            public Dictionary<string, char> Symbols;
-            public Dictionary<string, int> Dimensions;
-        }
-
-        public class Difficulty
-        {
-            public string Name;
-            public int Width;
-            public int Height;
-            public int Mines;
-        }
-
-        private void LoadSettings()
+        private GameSettings LoadSettings()
         {
             using (StreamReader r = new StreamReader("../../settings.json"))
             {
                 string json = r.ReadToEnd();
-                settings = JsonConvert.DeserializeObject<Settings>(json);
+                return JsonConvert.DeserializeObject<GameSettings>(json);
             }
         }
 
-        private void TimerElapsed(object sender, ElapsedEventArgs e) => Refresh(false);
+        private void TimerElapsed(object sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
         
-        private void Refresh(bool force)
+        private void Refresh(RefreshMode mode)
         {
-            if (bounds != renderer.Bounds)
+            if (screenBounds != Renderer.Bounds)
             {
-                force = true;
-                bounds = renderer.Bounds;
+                mode = RefreshMode.Rescale;
+                screenBounds = Renderer.Bounds;
                 Console.WriteLine("Change detected");
             }
 
             switch (grs)
             {
                 case GameRenderState.Playing:
-                    bv.Visualize(currentState, force);
-                    currentState = currentState.Clone();
+                    Visualizer.Visualize(mode);
+                    CurrentState = CurrentState.Clone();
                     break;
                 default:
                     break;
@@ -94,7 +81,30 @@ namespace CMDSweep
         public void InitialiseGame()
         {
             grs = GameRenderState.Playing;
-            currentState = GameState.NewGame(10,10,10,4,4,2);
+            CurrentState = GameState.NewGame(10,10,10,4,4,2);
         }
+    }
+
+    public class GameSettings
+    {
+        public List<Difficulty> Difficulties;
+        public Dictionary<string, ConsoleColor> Colors;
+        public Dictionary<string, char> Symbols;
+        public Dictionary<string, int> Dimensions;
+    }
+
+    public class Difficulty
+    {
+        public string Name;
+        public int Width;
+        public int Height;
+        public int Mines;
+    }
+    
+    enum RefreshMode
+    {
+        Rescale = 2,
+        Full = 1,
+        ChangesOnly = 0,
     }
 }

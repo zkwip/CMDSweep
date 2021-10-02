@@ -10,6 +10,8 @@ namespace CMDSweep
         void HideCursor();
         void SetTitle(string s);
         Bounds Bounds { get; }
+
+        void HideCursor(StyleData styleOutOfBounds);
     }
 
     public struct Bounds
@@ -25,7 +27,7 @@ namespace CMDSweep
 
     public struct StyleData
     {
-        public StyleData(ConsoleColor fg, ConsoleColor bg, char c, bool h) { Foreground = fg; Background = bg; Highlight = h; }
+        public StyleData(ConsoleColor fg, ConsoleColor bg, bool h) { Foreground = fg; Background = bg; Highlight = h; }
 
         public readonly ConsoleColor Foreground;
         public readonly ConsoleColor Background;

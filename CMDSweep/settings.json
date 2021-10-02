@@ -26,6 +26,9 @@
     }
   ],
   "Colors": {
+    "cell-fg-out-of-bounds": "BLACK",
+    "cell-bg-out-of-bounds": "GRAY",
+    "cell-fg-undiscovered":  "BLACK",
     "cell-bg-undiscovered": "DARKGRAY",
     "cell-bg-discovered": "GRAY",
     "cell-1-discovered": "BLUE",
@@ -51,8 +54,6 @@
     "unknown": "?"
   },
   "Dimensions": {
-    "cell-offset-x": 0,
-    "cell-offset-y": 0,
     "cell-size-x": 2,
     "cell-size-y": 1
   }

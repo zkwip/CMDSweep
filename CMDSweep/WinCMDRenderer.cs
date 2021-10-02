@@ -21,6 +21,7 @@ namespace CMDSweep
         public void ClearScreen(StyleData data)
         {
             SendDataToConsole(data);
+            HideCursor();
             Console.Clear();
         }
 
@@ -32,13 +33,26 @@ namespace CMDSweep
 
         public void SetCursor(int row, int col)
         {
-            Console.SetCursorPosition(col, row);
+            try
+            {
+                Console.SetCursorPosition(col, row);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                //todo
+            }
         }
 
         public void HideCursor()
         {
             SetCursor(0, 0);
             Console.CursorVisible = false;
+        }
+
+        public void HideCursor(StyleData data)
+        {
+            SendDataToConsole(data);
+            HideCursor();
         }
 
         public void PrintAtTile(int row, int col, StyleData data, string s)
