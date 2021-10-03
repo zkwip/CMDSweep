@@ -18,7 +18,6 @@ namespace CMDSweep
             Highscore,
         }
 
-
         Timer refreshTimer;
         Bounds screenBounds;
 
@@ -34,7 +33,7 @@ namespace CMDSweep
         public Game(IRenderer r)
         {
             Settings = LoadSettings();
-            CurrentDifficulty = Settings.Difficulties[0];
+            CurrentDifficulty = Settings.Difficulties[Settings.Difficulties.Count-1];
             Renderer = r;
             screenBounds = r.Bounds;
 
@@ -48,8 +47,8 @@ namespace CMDSweep
             refreshTimer.Start();
 
             Refresh(RefreshMode.Rescale);
-
-            while (Step());
+            int i = 0;
+            while (Step()) //Console.Title = string.Format("{0}: {1}",i++, CurrentState.PlayerState);
             refreshTimer.Stop();
         }
 
@@ -105,15 +104,30 @@ namespace CMDSweep
                     break;
             }
 
-            if (CurrentState.PlayerState == PlayerState.Dead) renderState = RenderState.Dead;
-            Refresh(RefreshMode.ChangesOnly);
+            if (CurrentState.PlayerState == PlayerState.Dead)
+            {
+                renderState = RenderState.Dead;
+                Refresh(RefreshMode.Full);
+            }
+            else
+                Refresh(RefreshMode.ChangesOnly);
 
             return true;
         }
 
         private bool DeadStep(InputAction ia)
         {
-            return false;
+            switch (ia)
+            {
+                case InputAction.Quit:
+                    return false;
+                case InputAction.Dig:
+                case InputAction.NewGame:
+                    InitialiseGame();
+                    Refresh(RefreshMode.Full);
+                    break;
+            }
+            return true;
         }
 
         private bool HighScoreStep(InputAction ia)
@@ -148,6 +162,7 @@ namespace CMDSweep
             switch (renderState)
             {
                 case RenderState.Playing:
+                case RenderState.Dead:
                     Visualizer.Visualize(mode);
                     CurrentState = CurrentState.Clone();
                     break;
@@ -204,6 +219,9 @@ namespace CMDSweep
         Right,
         Dig,
         Flag,
+
+        Quit,
+        NewGame,
 
         Unknown,
     }

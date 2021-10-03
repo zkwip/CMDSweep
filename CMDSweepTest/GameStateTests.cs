@@ -36,6 +36,18 @@ namespace CMDSweepTest
 
             Assert.AreEqual(mines, gs.Mines);
             Assert.AreEqual(mines, gs.MinesLeft);
+            Assert.AreEqual(0, gs.CellMineNumber(5, 5));
+
+            GameState gs2 = gs.Clone();
+
+            Assert.AreEqual(true, gs2.CellIsDiscovered(5, 5));
+            Assert.AreEqual(false, gs2.CellIsMine(5, 5));
+            Assert.AreEqual(false, gs2.CellIsFlagged(5, 5));
+
+            Assert.AreEqual(mines, gs2.Mines);
+            Assert.AreEqual(mines, gs2.MinesLeft);
+            Assert.AreEqual(0, gs2.CellMineNumber(5, 5));
+
         }
     }
 }

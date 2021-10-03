@@ -50,7 +50,6 @@ namespace CMDSweep
             else
             {
                 changes = CurrentState.CompareForChanges(lastRenderedGameState);
-
                 lastRenderedGameState = CurrentState;
                 foreach (CellLocation cl in changes) RenderAtLocation(cl.X, cl.Y);
             }
@@ -184,15 +183,16 @@ namespace CMDSweep
 
             StyleData data = new StyleData(fg,bg,false);
             
-            //padding
+            // Padding
             int padRight = 0;
             if (text.Length < scaleX) padRight = scaleX - text.Length;
             int padLeft = padRight / 2;
             padRight = scaleX-padLeft;
 
+            // Actual rendering
             renderer.PrintAtTile(posY, posX, data, " ".PadLeft(padLeft));
             renderer.PrintAtTile(posY, posX, data, text.PadRight(padRight));
-
+            // It goes wrong here somewhere
         }
 
         private TileVisual GetTileVisual(int x, int y)

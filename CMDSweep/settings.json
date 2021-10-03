@@ -18,19 +18,19 @@
     },
     {
       "Name": "Expert",
-      "Width": 16,
-      "Height": 30,
+      "Width": 30,
+      "Height": 16,
       "Mines": 99,
       "Safezone": 1,
       "DetectionRadius": 1
     },
     {
-      "Name": "Hardcore",
-      "Width": 16,
-      "Height": 30,
-      "Mines": 99,
-      "Safezone": 1,
-      "DetectionRadius": 1
+      "Name": "Whacky",
+      "Width": 30,
+      "Height": 16,
+      "Mines": 50,
+      "Safezone": 2,
+      "DetectionRadius": 2
     }
   ],
   "Colors": {
@@ -68,7 +68,7 @@
     "cell-mine": "*",
     "cell-undiscovered": "-",
     "cell-questioned": "?",
-    "cell-empty": ""
+    "cell-empty": " "
   },
   "Dimensions": {
     "cell-size-x": 2,
@@ -80,6 +80,8 @@
     "Down": [ "DownArrow", "S" ],
     "Right": [ "RightArrow", "D" ],
     "Dig": [ "SpaceBar", "Enter" ],
-    "Flag": [ "E", "F" ]
+    "Flag": [ "E", "F" ],
+    "Quit": [ "Q", "Escape" ],
+    "NewGame": ["N","F2"],
   }
 }
