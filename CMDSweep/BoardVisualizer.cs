@@ -13,6 +13,7 @@ namespace CMDSweep
         private int offsetY = 0;
         private int scaleX = 1;
         private int scaleY = 1;
+        private bool rendering = false;
 
         private GameState lastRenderedGameState;
         private StyleData hideStyle;
@@ -32,6 +33,12 @@ namespace CMDSweep
         
         public bool Visualize(RefreshMode mode)
         {
+            if (rendering)
+            {
+                if (mode != RefreshMode.ChangesOnly) lastRefresh = RefreshMode.Rescale;
+                return false;
+            }
+            rendering = true;
             if (mode == RefreshMode.ChangesOnly)
             {
                 if (lastRenderedGameState == null)
@@ -54,7 +61,9 @@ namespace CMDSweep
                 foreach (CellLocation cl in changes) RenderAtLocation(cl.X, cl.Y);
             }
             UpdateStatBoard();
+
             lastRefresh = mode;
+            rendering = false;
             return true;
         }
 
@@ -77,7 +86,7 @@ namespace CMDSweep
             offsetX = (renderer.Bounds.Width - reqWidth) / 2;
             offsetY = (renderer.Bounds.Height - reqHeight) / 2;
 
-            if (offsetX <= 0 || offsetY <= 0) succes = false;
+            if (offsetX < scaleX || offsetY < scaleY) succes = false;
 
             return succes;
         }
@@ -87,6 +96,7 @@ namespace CMDSweep
             if (UpdateDimensions())
             {
                 renderer.ClearScreen(hideStyle);
+                RenderBorder();
                 for (int y = 0; y < CurrentState.BoardHeight; y++)
                 {
                     for (int x = 0; x < CurrentState.BoardWidth; x++) RenderAtLocation(x, y);
@@ -97,6 +107,29 @@ namespace CMDSweep
             {
                 // TDOD: Handle a board that does not fit on screen
             }
+        }
+
+        void RenderBorder()
+        {
+            StyleData data = new StyleData(settings.Colors["border-fg"], settings.Colors["cell-bg-out-of-bounds"],false);
+
+            renderer.PrintAtTile(offsetY - scaleY, offsetX - scaleX, data, settings.Texts["border-corner-tl"]);
+            for (int x = 0; x < CurrentState.BoardWidth; x++)
+                renderer.PrintAtTile(offsetY - scaleY, offsetX + x * scaleX, data, settings.Texts["border-horizontal"]);
+
+            renderer.PrintAtTile(offsetY - scaleY, offsetX + CurrentState.BoardWidth * scaleX, data, settings.Texts["border-corner-tr"]);
+
+            for (int y = 0; y < CurrentState.BoardHeight; y++)
+            {
+                renderer.PrintAtTile(offsetY + y * scaleY, offsetX - scaleX, data, settings.Texts["border-vertical"]);
+                renderer.PrintAtTile(offsetY + y * scaleY, offsetX + CurrentState.BoardWidth * scaleX, data, settings.Texts["border-vertical"]);
+            }
+
+
+            renderer.PrintAtTile(offsetY + CurrentState.BoardHeight * scaleY, offsetX - scaleX, data, settings.Texts["border-corner-bl"]);
+            for (int x = 0; x < CurrentState.BoardWidth; x++)
+                renderer.PrintAtTile(offsetY + CurrentState.BoardHeight * scaleY, offsetX + x * scaleX, data, settings.Texts["border-horizontal"]);
+            renderer.PrintAtTile(offsetY + CurrentState.BoardHeight * scaleY, offsetX + CurrentState.BoardWidth * scaleX, data, settings.Texts["border-corner-br"]);
         }
         
         void RenderAtLocation(int x, int y)
@@ -117,7 +150,7 @@ namespace CMDSweep
                 case TileVisual.DeadMineFlagged:    fg = settings.Colors["cell-dead-mine-flagged"]; break;
                 case TileVisual.DeadDiscovered:     fg = settings.Colors["cell-fg-discovered"];     break;
                 case TileVisual.DeadUndiscovered:   fg = settings.Colors["cell-fg-undiscovered"];   break;
-                case TileVisual.QuestionMarked:     fg = settings.Colors["cell-questioned"];        break;
+                case TileVisual.QuestionMarked:     fg = settings.Colors["cell-questionmarked"];  break;
                 default:                            fg = settings.Colors["cell-fg-out-of-bounds"];  break;
             }
 
@@ -141,7 +174,7 @@ namespace CMDSweep
                     break;
 
                 case TileVisual.QuestionMarked:
-                    text = settings.Texts["cell-questioned"];
+                    text = settings.Texts["cell-questionmarked"];
                     break;
 
                 case TileVisual.DeadDiscovered:
@@ -172,7 +205,7 @@ namespace CMDSweep
                 case TileVisual.Discovered:
                 case TileVisual.DeadDiscovered:
                 case TileVisual.DeadMineExploded:
-                case TileVisual.DeadMine:
+                //case TileVisual.DeadMine:
                     bg = settings.Colors["cell-bg-discovered"];
                     break;
 
@@ -216,6 +249,7 @@ namespace CMDSweep
             {
                 if (CurrentState.CellIsDiscovered(x,y)) return TileVisual.Discovered;
                 if (CurrentState.CellIsFlagged(x, y)) return TileVisual.Flagged;
+                if (CurrentState.CellIsQuestionMarked(x, y)) return TileVisual.QuestionMarked;
                 else return TileVisual.Undiscovered;
             }
         }

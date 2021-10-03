@@ -1,4 +1,4 @@
-{
+﻿{
   "Difficulties": [
     {
       "Name": "Easy",
@@ -57,18 +57,28 @@
     "cell-dead-mine-hit": "RED",
     "cell-dead-mine-flagged": "DARKGREEN",
     "cell-dead-mine-missed": "BLACK",
-    "cell-questioned": "BLACK",
-    "cell-selected": "WHITE"
+    "cell-questionmarked": "BLACK",
+    "cell-selected": "WHITE",
+
+    "border-fg": "BLACK"
   },
   "Texts": {
-    "vertical-border": "|",
-    "horizontal-border":  "--",
+    "border-vertical": "║ ",
+    "border-horizontal": "══",
+    "border-corner-tl": "╔═",
+    "border-corner-bl": "╚═",
+    "border-corner-tr": "╗ ",
+    "border-corner-br": "╝ ",
     "cursor": "X",
     "cell-flag": "F",
     "cell-mine": "*",
     "cell-undiscovered": "-",
-    "cell-questioned": "?",
-    "cell-empty": " "
+    "cell-questionmarked": "?",
+    "cell-empty": " ",
+    "face-normal": ":)",
+    "face-suprise": ":O",
+    "face-win": "B)",
+    "face-dead": ":c"
   },
   "Dimensions": {
     "cell-size-x": 2,

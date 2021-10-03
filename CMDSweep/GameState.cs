@@ -12,9 +12,10 @@ namespace CMDSweep
         private int mineCount = 0;
         private int safeZone = 0;
         private int mineDetectRadius = 1;
+        private bool QuestionMarkEnabled = true;
 
         // Constructors and cloners
-        public GameState(CellData[,] datas) { Cells = datas;  }
+        private GameState(CellData[,] datas) { Cells = datas;  }
 
         public GameState Clone() {
             GameState gs =  new GameState((CellData[,])Cells.Clone());
@@ -24,11 +25,12 @@ namespace CMDSweep
             gs.mineCount = mineCount;
             gs.safeZone = safeZone;
             gs.mineDetectRadius = mineDetectRadius;
+            gs.QuestionMarkEnabled = QuestionMarkEnabled;
 
             return gs;
         }
 
-        public static GameState NewGame(int width, int height, int mines, int safezone, int radius)
+        public static GameState NewGame(int width, int height, int mines, int safezone, int radius, bool questionMarkEnabled)
         {
             CellData[,] datas = new CellData[width, height];
             int x = width / 2;
@@ -41,7 +43,8 @@ namespace CMDSweep
             gs.mineCount = mines;
             gs.safeZone = safezone;
             gs.mineDetectRadius = radius;
-            
+            gs.QuestionMarkEnabled = questionMarkEnabled;
+
             return gs;
         }
 
@@ -79,7 +82,7 @@ namespace CMDSweep
         public int BoardWidth { get => Cells.GetLength(0); }
         public int BoardHeight { get => Cells.GetLength(1); }
         public int Mines { get => CountCells(x => x.Mine); }
-        public int Flags { get => CountCells(x => x.Flagged); }
+        public int Flags { get => CountCells(x => x.Flagged == FlagMarking.Flagged); }
         public int Discovered { get => CountCells(x => x.Discovered); }
         public int MinesLeft { get => Mines - Flags; }
         public CellLocation Cursor { get => cursor; }
@@ -88,8 +91,9 @@ namespace CMDSweep
         // Oneliner Board Queries
         private bool CellOutsideBounds(int x, int y)        => (x < 0 || y < 0 || x >= BoardWidth || y >= BoardHeight);
         public bool CellIsMine(int x, int y)                => CheckCell(x, y, c => c.Mine, false);
-        public bool CellIsFlagged(int x, int y)             => CheckCell(x, y, c => c.Flagged, false);
+        public bool CellIsFlagged(int x, int y)             => CheckCell(x, y, c => c.Flagged == FlagMarking.Flagged, false);
         public bool CellIsDiscovered(int x, int y)          => CheckCell(x, y, c => c.Discovered, false);
+        public bool CellIsQuestionMarked(int x, int y)      => CheckCell(x, y, c => c.Flagged == FlagMarking.QuestionMarked, false);
         public int CellMineNumber(int x, int y)             => CountSurroundingCells(x, y, c => c.Mine);
 
         //Other queries
@@ -132,26 +136,45 @@ namespace CMDSweep
 
         public int ToggleFlag()
         {
-            if (CellIsFlagged(cursor.X, cursor.Y))
-                return Unflag(cursor.X, cursor.Y);
-            else
-                return Flag(cursor.X, cursor.Y);
+            int x = cursor.X;
+            int y = cursor.Y;
+
+            switch (Cells[x,y].Flagged) {
+                case FlagMarking.Flagged:
+                    if (QuestionMarkEnabled) return QuestionMark(x, y);
+                    return Unflag(x, y);
+
+                case FlagMarking.QuestionMarked:
+                    return Unflag(x, y);
+
+                case FlagMarking.Unflagged:
+                default:
+                    return Flag(x, y);
+            }
+            
         }
         public int Flag(int x, int y)
         {
-            if (CellIsFlagged(x, y) || CellIsDiscovered(x,y)) return 0;
-            if (CellIsDiscovered(x, y)) return 0;
+            int res = CellIsFlagged(x, y) ? 0 : 1;
 
-            Cells[x, y].Flagged = true;
-            return 1;
+            Cells[x, y].Flagged = FlagMarking.Flagged;
+            return res;
         }
 
         public int Unflag(int x, int y)
         {
-            if (!CellIsFlagged(x, y)) return 0;
+            int res = CellIsFlagged(x, y) ? -1 : 0;
 
-            Cells[x, y].Flagged = false;
-            return -1;
+            Cells[x, y].Flagged = FlagMarking.Unflagged;
+            return res;
+        }
+
+        public int QuestionMark(int x, int y)
+        {
+            int res = CellIsFlagged(x, y) ? -1 : 0;
+
+            Cells[x, y].Flagged = FlagMarking.QuestionMarked;
+            return res;
         }
 
         public CellLocation Wrap(CellLocation cl)
@@ -228,14 +251,12 @@ namespace CMDSweep
 
                 if (CellIsMine(px, py))
                     continue; // No duplicate mines
-
-                Console.Title = "test3";
+                
                 mc = CellMineNumber(px, py);
                 if (mc > maxMines)
                     continue; // Not too many mines around eachoter
 
                 // Succes
-                Console.Title = "test4";
                 Cells[px, py].Mine = true;
 
                 placementFailures = 0;
@@ -270,10 +291,11 @@ namespace CMDSweep
 
     public struct CellData
     {
-        public CellData(bool m, bool d, bool f) { Mine = m; Discovered = d; Flagged = f; }
+        public CellData(bool m, bool d, FlagMarking f, bool q) { Mine = m; Discovered = d; Flagged = f; QuestionMarked = q; }
         public bool Mine;
         public bool Discovered;
-        public bool Flagged;
+        public FlagMarking Flagged;
+        public bool QuestionMarked;
 
         public override bool Equals(object obj)
         {
@@ -308,5 +330,12 @@ namespace CMDSweep
         NewGame,
         Playing,
         Dead,
+    }
+
+    public enum FlagMarking
+    {
+        Unflagged,
+        Flagged,
+        QuestionMarked,
     }
 }

@@ -47,7 +47,6 @@ namespace CMDSweep
             refreshTimer.Start();
 
             Refresh(RefreshMode.Rescale);
-            int i = 0;
             while (Step()) //Console.Title = string.Format("{0}: {1}",i++, CurrentState.PlayerState);
             refreshTimer.Stop();
         }
@@ -176,11 +175,12 @@ namespace CMDSweep
         {
             renderState = RenderState.Playing;
             CurrentState = GameState.NewGame(
-                CurrentDifficulty.Width, 
-                CurrentDifficulty.Height, 
-                CurrentDifficulty.Mines, 
+                CurrentDifficulty.Width,
+                CurrentDifficulty.Height,
+                CurrentDifficulty.Mines,
                 CurrentDifficulty.Safezone,
-                CurrentDifficulty.DetectionRadius
+                CurrentDifficulty.DetectionRadius,
+                true
             );
         }
     }
