@@ -13,6 +13,9 @@ namespace CMDSweep
         private int safeZone = 0;
         private int mineDetectRadius = 1;
         private bool QuestionMarkEnabled = true;
+        private DateTime startTime;
+        private TimeSpan preTime;
+        private bool timePaused = true;
 
         // Constructors and cloners
         private GameState(CellData[,] datas) { Cells = datas;  }
@@ -26,6 +29,9 @@ namespace CMDSweep
             gs.safeZone = safeZone;
             gs.mineDetectRadius = mineDetectRadius;
             gs.QuestionMarkEnabled = QuestionMarkEnabled;
+            gs.startTime = startTime;
+            gs.preTime = preTime;
+            gs.timePaused = timePaused;
 
             return gs;
         }
@@ -44,6 +50,9 @@ namespace CMDSweep
             gs.safeZone = safezone;
             gs.mineDetectRadius = radius;
             gs.QuestionMarkEnabled = questionMarkEnabled;
+            gs.startTime = DateTime.Now;
+            gs.preTime = TimeSpan.Zero;
+            gs.timePaused = true;
 
             return gs;
         }
@@ -81,12 +90,17 @@ namespace CMDSweep
         // Oneliner Board Properties
         public int BoardWidth { get => Cells.GetLength(0); }
         public int BoardHeight { get => Cells.GetLength(1); }
-        public int Mines { get => CountCells(x => x.Mine); }
-        public int Flags { get => CountCells(x => x.Flagged == FlagMarking.Flagged); }
-        public int Discovered { get => CountCells(x => x.Discovered); }
-        public int MinesLeft { get => Mines - Flags; }
+        public int CountMines { get => CountCells(x => x.Mine); }
+        public int GameMines { get => mineCount; }
+        public int CountFlags { get => CountCells(x => x.Flagged == FlagMarking.Flagged); }
+        public int CountDiscovered { get => CountCells(x => x.Discovered); }
+        public int MinesLeft { get => GameMines - CountFlags; }
         public CellLocation Cursor { get => cursor; }
         public PlayerState PlayerState { get => playerState; }
+        public TimeSpan Time { get => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime))); }
+        public bool Paused { get => timePaused; }
+        public int Tiles { get =>  BoardHeight * BoardWidth; }
+        public double Discovery { get => (double)CountDiscovered / Tiles; }
 
         // Oneliner Board Queries
         private bool CellOutsideBounds(int x, int y)        => (x < 0 || y < 0 || x >= BoardWidth || y >= BoardHeight);
@@ -109,11 +123,38 @@ namespace CMDSweep
             int res = Discover(x,y);
 
             //Check for death
-            if (res < 0) playerState = PlayerState.Dead;
+            if (res < 0) Die();
+
+            if (CountDiscovered + CountMines == Tiles) Win();
             
             return res;
         }
 
+        public void Win()
+        {
+            Console.Title = "You win!";
+            playerState = PlayerState.Win;
+            FreezeGame();
+        }
+
+        public void Die()
+        {
+            Console.Title = "You died!";
+            playerState = PlayerState.Dead;
+            FreezeGame();
+        }
+
+        public void ResumeGame()
+        {
+            timePaused = false;
+            startTime = DateTime.Now;
+        }
+
+        public void FreezeGame()
+        {
+            timePaused = true;
+            preTime = preTime + (DateTime.Now - startTime);
+        }
 
         public int Discover(int x, int y)
         {
@@ -124,6 +165,7 @@ namespace CMDSweep
 
             // Discover
             Cells[x, y].Discovered = true;
+            Cells[x, y].Flagged = FlagMarking.Unflagged;
 
             // Check for mine
             if (CellIsMine(x, y)) return -1;
@@ -266,6 +308,7 @@ namespace CMDSweep
             if (minesLeftToPlace > 0) throw new Exception("Can't place mine after 1000 random tries");
 
             playerState = PlayerState.Playing;
+            ResumeGame();
         }
     }
 
@@ -330,6 +373,7 @@ namespace CMDSweep
         NewGame,
         Playing,
         Dead,
+        Win,
     }
 
     public enum FlagMarking

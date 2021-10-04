@@ -33,12 +33,15 @@ namespace CMDSweep
         
         public bool Visualize(RefreshMode mode)
         {
+            //preventing race conditions while rendering
             if (rendering)
             {
                 if (mode != RefreshMode.ChangesOnly) lastRefresh = RefreshMode.Rescale;
                 return false;
             }
             rendering = true;
+
+
             if (mode == RefreshMode.ChangesOnly)
             {
                 if (lastRenderedGameState == null)
@@ -48,7 +51,6 @@ namespace CMDSweep
             }
 
             List<CellLocation> changes;
-
             if (mode != RefreshMode.ChangesOnly || lastRefresh == RefreshMode.Rescale)
             {
                 lastRenderedGameState = CurrentState;
@@ -60,7 +62,11 @@ namespace CMDSweep
                 lastRenderedGameState = CurrentState;
                 foreach (CellLocation cl in changes) RenderAtLocation(cl.X, cl.Y);
             }
+
             UpdateStatBoard();
+
+
+            renderer.HideCursor(hideStyle);
 
             lastRefresh = mode;
             rendering = false;
@@ -69,8 +75,16 @@ namespace CMDSweep
 
         private void UpdateStatBoard()
         {
-            renderer.HideCursor(hideStyle);
-            int minesleft = CurrentState.MinesLeft;
+            StyleData minesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
+
+            int right = renderer.Bounds.Width - settings.Dimensions["stat-padding-x"];
+            int left = settings.Dimensions["stat-padding-x"];
+            int center = renderer.Bounds.Width / 2;
+            int top = settings.Dimensions["stat-padding-y"];
+
+            renderer.PrintAtTile(top, left, minesLeftStyle, CurrentState.Time.ToString(@"\ h\:mm\:ss\ "));
+            renderer.PrintAtTile(top, right - 5, minesLeftStyle, string.Format(" {0:D3} ",CurrentState.MinesLeft));
+
         }
 
         bool UpdateDimensions()

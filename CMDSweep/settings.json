@@ -60,7 +60,9 @@
     "cell-questionmarked": "BLACK",
     "cell-selected": "WHITE",
 
-    "border-fg": "BLACK"
+    "border-fg": "BLACK",
+    "stat-mines-fg": "RED",
+    "stat-mines-bg":  "DARKRED"
   },
   "Texts": {
     "border-vertical": "║ ",
@@ -82,7 +84,9 @@
   },
   "Dimensions": {
     "cell-size-x": 2,
-    "cell-size-y": 1
+    "cell-size-y": 1,
+    "stat-padding-x": 2,
+    "stat-padding-y": 1
   },
   "Controls": {
     "Up": [ "UpArrow", "W" ],
@@ -92,6 +96,7 @@
     "Dig": [ "SpaceBar", "Enter" ],
     "Flag": [ "E", "F" ],
     "Quit": [ "Q", "Escape" ],
-    "NewGame": ["N","F2"],
+    "NewGame": [ "N", "F2", "R" ],
+    "Help":  ["F1","H"]
   }
 }

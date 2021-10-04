@@ -26,6 +26,7 @@ namespace CMDSweep
 
     public struct StyleData
     {
+        public StyleData(ConsoleColor fg, ConsoleColor bg) { Foreground = fg; Background = bg; Highlight = false; }
         public StyleData(ConsoleColor fg, ConsoleColor bg, bool h) { Foreground = fg; Background = bg; Highlight = h; }
 
         public readonly ConsoleColor Foreground;

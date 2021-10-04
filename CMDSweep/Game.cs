@@ -14,7 +14,7 @@ namespace CMDSweep
         {
             Playing,
             Menu,
-            Dead,
+            Done,
             Highscore,
         }
 
@@ -33,7 +33,7 @@ namespace CMDSweep
         public Game(IRenderer r)
         {
             Settings = LoadSettings();
-            CurrentDifficulty = Settings.Difficulties[Settings.Difficulties.Count-1];
+            CurrentDifficulty = Settings.Difficulties[2];
             Renderer = r;
             screenBounds = r.Bounds;
 
@@ -47,9 +47,10 @@ namespace CMDSweep
             refreshTimer.Start();
 
             Refresh(RefreshMode.Rescale);
-            while (Step()) //Console.Title = string.Format("{0}: {1}",i++, CurrentState.PlayerState);
+            while (Step());
             refreshTimer.Stop();
         }
+        private void TimerElapsed(object sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
 
         private bool Step()
         {
@@ -57,7 +58,7 @@ namespace CMDSweep
             switch (renderState)
             {
                 case RenderState.Playing: return PlayStep(ia);
-                case RenderState.Dead: return DeadStep(ia);
+                case RenderState.Done: return DoneStep(ia);
                 case RenderState.Highscore: return HighScoreStep(ia);
                 case RenderState.Menu: return MenuStep(ia);
                 default: return false;
@@ -103,9 +104,9 @@ namespace CMDSweep
                     break;
             }
 
-            if (CurrentState.PlayerState == PlayerState.Dead)
+            if (CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
             {
-                renderState = RenderState.Dead;
+                renderState = RenderState.Done;
                 Refresh(RefreshMode.Full);
             }
             else
@@ -114,7 +115,7 @@ namespace CMDSweep
             return true;
         }
 
-        private bool DeadStep(InputAction ia)
+        private bool DoneStep(InputAction ia)
         {
             switch (ia)
             {
@@ -148,7 +149,6 @@ namespace CMDSweep
             }
         }
 
-        private void TimerElapsed(object sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
         
         private void Refresh(RefreshMode mode)
         {
@@ -160,10 +160,10 @@ namespace CMDSweep
 
             switch (renderState)
             {
+
                 case RenderState.Playing:
-                case RenderState.Dead:
+                case RenderState.Done:
                     Visualizer.Visualize(mode);
-                    CurrentState = CurrentState.Clone();
                     break;
                 default:
                     break;
@@ -222,6 +222,7 @@ namespace CMDSweep
 
         Quit,
         NewGame,
+        Help,
 
         Unknown,
     }
