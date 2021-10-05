@@ -16,7 +16,7 @@ namespace CMDSweep
         private bool rendering = false;
 
         private GameState lastRenderedGameState;
-        private StyleData hideStyle;
+        private readonly StyleData hideStyle;
         private RefreshMode lastRefresh = RefreshMode.Rescale;
 
         public BoardVisualizer(Game g)
@@ -60,7 +60,7 @@ namespace CMDSweep
             {
                 changes = CurrentState.CompareForChanges(lastRenderedGameState);
                 lastRenderedGameState = CurrentState;
-                foreach (CellLocation cl in changes) RenderAtLocation(cl.X, cl.Y);
+                foreach (CellLocation cl in changes) RenderAtLocation(cl);
             }
 
             UpdateStatBoard();
@@ -113,7 +113,7 @@ namespace CMDSweep
                 RenderBorder();
                 for (int y = 0; y < CurrentState.BoardHeight; y++)
                 {
-                    for (int x = 0; x < CurrentState.BoardWidth; x++) RenderAtLocation(x, y);
+                    for (int x = 0; x < CurrentState.BoardWidth; x++) RenderAtLocation(new CellLocation(x, y));
                 }
                 renderer.HideCursor(hideStyle);
             }
@@ -146,13 +146,13 @@ namespace CMDSweep
             renderer.PrintAtTile(offsetY + CurrentState.BoardHeight * scaleY, offsetX + CurrentState.BoardWidth * scaleX, data, settings.Texts["border-corner-br"]);
         }
         
-        void RenderAtLocation(int x, int y)
+        void RenderAtLocation(CellLocation cl)
         {
-            int posX = offsetX + x * scaleX;
-            int posY = offsetY + y * scaleY;
+            int posX = offsetX + cl.X * scaleX;
+            int posY = offsetY + cl.Y * scaleY;
             
             ConsoleColor fg;
-            switch (GetTileVisual(x, y))
+            switch (GetTileVisual(cl))
             {
                 case TileVisual.Discovered:         fg = settings.Colors["cell-fg-discovered"];     break;
                 case TileVisual.Undiscovered:       fg = settings.Colors["cell-fg-undiscovered"];   break;
@@ -169,7 +169,7 @@ namespace CMDSweep
             }
 
             string text = settings.Texts["cell-empty"];
-            switch (GetTileVisual(x, y))
+            switch (GetTileVisual(cl))
             {
                 case TileVisual.Undiscovered:
                 case TileVisual.DeadUndiscovered:
@@ -193,8 +193,9 @@ namespace CMDSweep
 
                 case TileVisual.DeadDiscovered:
                 case TileVisual.Discovered:
-                    int num = CurrentState.CellMineNumber(x, y);
-                    if (num > 0)
+                    int num = CurrentState.CellMineNumber(cl);
+                    if (CurrentState.Difficulty.SubtractFlags) num = CurrentState.CellSubtractedMineNumber(cl);
+                    if (num > 0 && (CurrentState.Cursor == cl || !CurrentState.Difficulty.OnlyShowAtCursor))
                     {
                         text = num.ToString();
                         fg = settings.Colors[string.Format("cell-{0}-discovered", num%10)];
@@ -206,15 +207,17 @@ namespace CMDSweep
                     break;
             }
 
-            if (CurrentState.PlayerState != PlayerState.Dead && CurrentState.Cursor == new CellLocation(x, y))
+            // Cursor
+            if (CurrentState.PlayerState != PlayerState.Dead && CurrentState.Cursor == cl)
             {
-                fg = settings.Colors["cell-selected"];
+                if (!CurrentState.Difficulty.OnlyShowAtCursor || GetTileVisual(cl) != TileVisual.Discovered || CurrentState.CellMineNumber(cl) <= 0)
+                    fg = settings.Colors["cell-selected"];
                 if (text == settings.Texts["cell-undiscovered"] || text == settings.Texts["cell-empty"])
                     text = settings.Texts["cursor"];
             }
 
             ConsoleColor bg;
-            switch(GetTileVisual(x,y))
+            switch(GetTileVisual(cl))
             {
                 case TileVisual.Discovered:
                 case TileVisual.DeadDiscovered:
@@ -242,28 +245,28 @@ namespace CMDSweep
             // It goes wrong here somewhere
         }
 
-        private TileVisual GetTileVisual(int x, int y)
+        private TileVisual GetTileVisual(CellLocation cl)
         {
             if(CurrentState.PlayerState == PlayerState.Dead)
             {
-                if (CurrentState.CellIsMine(x,y))
+                if (CurrentState.CellIsMine(cl))
                 {
-                    if (CurrentState.CellIsFlagged(x, y)) return TileVisual.DeadMineFlagged;
-                    if (CurrentState.CellIsDiscovered(x, y)) return TileVisual.DeadMineExploded;
+                    if (CurrentState.CellIsFlagged(cl)) return TileVisual.DeadMineFlagged;
+                    if (CurrentState.CellIsDiscovered(cl)) return TileVisual.DeadMineExploded;
                     else return TileVisual.DeadMine;
                 }
                 else
                 {
-                    if (CurrentState.CellIsFlagged(x, y)) return TileVisual.DeadWrongFlag;
-                    if (CurrentState.CellIsDiscovered(x, y)) return TileVisual.DeadDiscovered;
+                    if (CurrentState.CellIsFlagged(cl)) return TileVisual.DeadWrongFlag;
+                    if (CurrentState.CellIsDiscovered(cl)) return TileVisual.DeadDiscovered;
                     else return TileVisual.DeadUndiscovered;
                 }
             }
             else
             {
-                if (CurrentState.CellIsDiscovered(x,y)) return TileVisual.Discovered;
-                if (CurrentState.CellIsFlagged(x, y)) return TileVisual.Flagged;
-                if (CurrentState.CellIsQuestionMarked(x, y)) return TileVisual.QuestionMarked;
+                if (CurrentState.CellIsDiscovered(cl)) return TileVisual.Discovered;
+                if (CurrentState.CellIsFlagged(cl)) return TileVisual.Flagged;
+                if (CurrentState.CellIsQuestionMarked(cl)) return TileVisual.QuestionMarked;
                 else return TileVisual.Undiscovered;
             }
         }

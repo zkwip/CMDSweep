@@ -6,7 +6,13 @@
       "Height": 10,
       "Mines": 10,
       "Safezone": 1,
-      "DetectionRadius": 1
+      "DetectionRadius": 1,
+      "WrapAround": false,
+      "QuestionMarkAllowed": true,
+      "FlagsAllowed": true,
+      "AutomaticDiscovery": true,
+      "SubtractFlags": false,
+      "OnlyShowAtCursor": false
     },
     {
       "Name": "Intermediate",
@@ -14,7 +20,13 @@
       "Height": 16,
       "Mines": 40,
       "Safezone": 1,
-      "DetectionRadius": 1
+      "DetectionRadius": 1,
+      "WrapAround": false,
+      "QuestionMarkAllowed": true,
+      "FlagsAllowed": true,
+      "AutomaticDiscovery": true,
+      "SubtractFlags": false,
+      "OnlyShowAtCursor": false
     },
     {
       "Name": "Expert",
@@ -22,15 +34,27 @@
       "Height": 16,
       "Mines": 99,
       "Safezone": 1,
-      "DetectionRadius": 1
+      "DetectionRadius": 1,
+      "WrapAround": false,
+      "QuestionMarkAllowed": true,
+      "FlagsAllowed": true,
+      "AutomaticDiscovery": true,
+      "SubtractFlags": false,
+      "OnlyShowAtCursor": false
     },
     {
-      "Name": "Whacky",
+      "Name": "Testing",
       "Width": 30,
       "Height": 16,
-      "Mines": 50,
-      "Safezone": 2,
-      "DetectionRadius": 2
+      "Mines": 99,
+      "Safezone": 1,
+      "DetectionRadius": 1,
+      "WrapAround": false,
+      "QuestionMarkAllowed": false,
+      "FlagsAllowed": false,
+      "AutomaticDiscovery": false,
+      "SubtractFlags": false,
+      "OnlyShowAtCursor": true
     }
   ],
   "Colors": {

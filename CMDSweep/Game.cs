@@ -33,7 +33,7 @@ namespace CMDSweep
         public Game(IRenderer r)
         {
             Settings = LoadSettings();
-            CurrentDifficulty = Settings.Difficulties[2];
+            CurrentDifficulty = Settings.Difficulties[3];
             Renderer = r;
             screenBounds = r.Bounds;
 
@@ -174,14 +174,7 @@ namespace CMDSweep
         public void InitialiseGame()
         {
             renderState = RenderState.Playing;
-            CurrentState = GameState.NewGame(
-                CurrentDifficulty.Width,
-                CurrentDifficulty.Height,
-                CurrentDifficulty.Mines,
-                CurrentDifficulty.Safezone,
-                CurrentDifficulty.DetectionRadius,
-                true
-            );
+            CurrentState = GameState.NewGame(CurrentDifficulty);
         }
     }
 
@@ -202,6 +195,12 @@ namespace CMDSweep
         public int Mines;
         public int Safezone;
         public int DetectionRadius;
+        public bool FlagsAllowed;
+        public bool QuestionMarkAllowed;
+        public bool WrapAround;
+        public bool SubtractFlags;
+        public bool OnlyShowAtCursor;
+        public bool AutomaticDiscovery;
     }
 
     public enum RefreshMode
