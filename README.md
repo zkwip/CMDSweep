@@ -11,6 +11,7 @@ A command line minesweeper
 - Enabling / Disabling of automatic discovery from empty tiles
 - hide all numbers except at the cursor
 - Configurable safe zones
+- Lives
 
 ## Future features and options
 - Hardcore mode with count down timer
@@ -19,4 +20,3 @@ A command line minesweeper
 - Hints - let the computer do it for you
 - Campaign
 - Undo
-- Lives
