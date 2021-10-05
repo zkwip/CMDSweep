@@ -92,7 +92,9 @@
 
     "border-fg": "BLACK",
     "stat-mines-fg": "RED",
-    "stat-mines-bg":  "DARKRED"
+    "stat-mines-bg": "DARKRED",
+    "face-bg": "YELLOW",
+    "face-fg": "BLACK"
   },
   "Texts": {
     "border-vertical": "║ ",
@@ -107,10 +109,11 @@
     "cell-undiscovered": "-",
     "cell-questionmarked": "?",
     "cell-empty": " ",
+
     "face-normal": ":)",
-    "face-suprise": ":O",
+    "face-surprise": ":O",
     "face-win": "B)",
-    "face-dead": ":c"
+    "face-dead": ":/"
   },
   "Dimensions": {
     "cell-size-x": 2,

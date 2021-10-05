@@ -41,7 +41,6 @@ namespace CMDSweep
             }
             rendering = true;
 
-
             if (mode == RefreshMode.ChangesOnly)
             {
                 if (lastRenderedGameState == null)
@@ -76,6 +75,22 @@ namespace CMDSweep
         private void UpdateStatBoard()
         {
             StyleData minesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
+            StyleData faceStyle = new StyleData(settings.Colors["face-fg"], settings.Colors["face-bg"]);
+
+            string face = ":)";
+            switch(CurrentState.Face)
+            {
+                default:
+                case Face.Normal:
+                    face = settings.Texts["face-normal"]; break;
+                case Face.Surprise:
+                    face = settings.Texts["face-surprise"];
+                    break;
+                case Face.Win:
+                    face = settings.Texts["face-win"]; break;
+                case Face.Dead:
+                    face = settings.Texts["face-dead"]; break;
+            }
 
             int right = renderer.Bounds.Width - settings.Dimensions["stat-padding-x"];
             int left = settings.Dimensions["stat-padding-x"];
@@ -83,6 +98,7 @@ namespace CMDSweep
             int top = settings.Dimensions["stat-padding-y"];
 
             renderer.PrintAtTile(top, left, minesLeftStyle, CurrentState.Time.ToString(@"\ h\:mm\:ss\ "));
+            renderer.PrintAtTile(top, center - face.Length/2, faceStyle, face);
             renderer.PrintAtTile(top, right - 5, minesLeftStyle, string.Format(" {0:D3} ",CurrentState.MinesLeft));
 
         }

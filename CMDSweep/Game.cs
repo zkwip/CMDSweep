@@ -41,7 +41,7 @@ namespace CMDSweep
             Visualizer = new BoardVisualizer(this);
 
 
-            refreshTimer = new Timer(200);
+            refreshTimer = new Timer(100);
             refreshTimer.Elapsed += TimerElapsed;
             refreshTimer.AutoReset = true;
             refreshTimer.Start();
@@ -75,7 +75,8 @@ namespace CMDSweep
         }
 
         private bool PlayStep(InputAction ia)
-        {            
+        {
+            CurrentState.Face = Face.Normal;
             switch (ia)
             {
                 case InputAction.Up:
@@ -232,6 +233,14 @@ namespace CMDSweep
         Help,
 
         Unknown,
+    }
+
+    public enum Face
+    {
+        Normal,
+        Surprise,
+        Win,
+        Dead,
     }
 
 }

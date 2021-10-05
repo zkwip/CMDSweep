@@ -17,7 +17,7 @@ namespace CMDSweep
         private int lives;
 
         // Constructors and cloners
-        private GameState(CellData[,] datas) { Cells = datas; }
+        private GameState(CellData[,] datas) { Cells = datas; Face = Face.Normal; }
 
         public GameState Clone() {
             return new GameState((CellData[,])Cells.Clone())
@@ -116,6 +116,8 @@ namespace CMDSweep
 
         public bool Paused { get => timePaused; }
 
+        public Face Face { get; set; }
+
         public int BoardWidth { get => Cells.GetLength(0); }
         public int BoardHeight { get => Cells.GetLength(1); }
         public int Mines { get => CountCells(x => x.Mine); }
@@ -143,6 +145,7 @@ namespace CMDSweep
         {
             Console.Title = "You win!";
             playerState = PlayerState.Win;
+            Face = Face.Win;
             FreezeGame();
         }
 
@@ -154,6 +157,7 @@ namespace CMDSweep
 
             Console.Title = "You died!";
             playerState = PlayerState.Dead;
+            Face = Face.Dead;
             FreezeGame();
         }
 
@@ -180,6 +184,8 @@ namespace CMDSweep
             // Beep if it's an invalid move 
             if (CellIsDiscovered(cursor)) return 0;
             if (CellIsFlagged(cursor)) return 0;
+
+            Face = Face.Surprise;
 
             // If needed, start the game
             if (playerState == PlayerState.NewGame) PlaceMines(cursor);
