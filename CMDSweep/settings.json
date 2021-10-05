@@ -5,6 +5,7 @@
       "Width": 10,
       "Height": 10,
       "Mines": 10,
+      "Lives": 1,
       "Safezone": 1,
       "DetectionRadius": 1,
       "WrapAround": false,
@@ -19,6 +20,7 @@
       "Width": 16,
       "Height": 16,
       "Mines": 40,
+      "Lives": 1,
       "Safezone": 1,
       "DetectionRadius": 1,
       "WrapAround": false,
@@ -33,6 +35,7 @@
       "Width": 30,
       "Height": 16,
       "Mines": 99,
+      "Lives": 1,
       "Safezone": 1,
       "DetectionRadius": 1,
       "WrapAround": false,
@@ -47,14 +50,15 @@
       "Width": 30,
       "Height": 16,
       "Mines": 99,
+      "Lives": 2,
       "Safezone": 1,
       "DetectionRadius": 1,
       "WrapAround": false,
       "QuestionMarkAllowed": false,
-      "FlagsAllowed": false,
-      "AutomaticDiscovery": false,
+      "FlagsAllowed": true,
+      "AutomaticDiscovery": true,
       "SubtractFlags": false,
-      "OnlyShowAtCursor": true
+      "OnlyShowAtCursor": false
     }
   ],
   "Colors": {
@@ -64,6 +68,7 @@
     "cell-bg-undiscovered": "DARKGRAY",
     "cell-fg-discovered": "BLACK",
     "cell-bg-discovered": "GRAY",
+
     "cell-1-discovered": "BLUE",
     "cell-2-discovered": "DARKGREEN",
     "cell-3-discovered": "RED",
@@ -75,6 +80,7 @@
     "cell-9-discovered": "DARKYELLOW",
     "cell-0-discovered": "GREEN",
 
+    "cell-mine-discovered":  "RED",
     "cell-selected-discovered": "WHITE",
     "cell-flagged": "RED",
     "cell-dead-wrong-flag": "RED",

@@ -157,6 +157,7 @@ namespace CMDSweep
                 case TileVisual.Discovered:         fg = settings.Colors["cell-fg-discovered"];     break;
                 case TileVisual.Undiscovered:       fg = settings.Colors["cell-fg-undiscovered"];   break;
                 case TileVisual.Flagged:            fg = settings.Colors["cell-flagged"];           break;
+                case TileVisual.DiscoveredMine:     fg = settings.Colors["cell-mine-discovered"];   break;
 
                 case TileVisual.DeadWrongFlag:      fg = settings.Colors["cell-dead-wrong-flag"];   break;
                 case TileVisual.DeadMine:           fg = settings.Colors["cell-dead-mine-missed"];  break;
@@ -164,7 +165,7 @@ namespace CMDSweep
                 case TileVisual.DeadMineFlagged:    fg = settings.Colors["cell-dead-mine-flagged"]; break;
                 case TileVisual.DeadDiscovered:     fg = settings.Colors["cell-fg-discovered"];     break;
                 case TileVisual.DeadUndiscovered:   fg = settings.Colors["cell-fg-undiscovered"];   break;
-                case TileVisual.QuestionMarked:     fg = settings.Colors["cell-questionmarked"];  break;
+                case TileVisual.QuestionMarked:     fg = settings.Colors["cell-questionmarked"];    break;
                 default:                            fg = settings.Colors["cell-fg-out-of-bounds"];  break;
             }
 
@@ -183,6 +184,7 @@ namespace CMDSweep
                     break;
 
                 case TileVisual.DeadMine:
+                case TileVisual.DiscoveredMine:
                 case TileVisual.DeadMineExploded:
                     text = settings.Texts["cell-mine"];
                     break;
@@ -222,7 +224,8 @@ namespace CMDSweep
                 case TileVisual.Discovered:
                 case TileVisual.DeadDiscovered:
                 case TileVisual.DeadMineExploded:
-                //case TileVisual.DeadMine:
+                case TileVisual.DiscoveredMine:
+                    //case TileVisual.DeadMine:
                     bg = settings.Colors["cell-bg-discovered"];
                     break;
 
@@ -264,6 +267,7 @@ namespace CMDSweep
             }
             else
             {
+                if (CurrentState.CellIsDiscovered(cl) && CurrentState.CellIsMine(cl)) return TileVisual.DiscoveredMine;
                 if (CurrentState.CellIsDiscovered(cl)) return TileVisual.Discovered;
                 if (CurrentState.CellIsFlagged(cl)) return TileVisual.Flagged;
                 if (CurrentState.CellIsQuestionMarked(cl)) return TileVisual.QuestionMarked;
@@ -277,6 +281,7 @@ namespace CMDSweep
             Flagged,
             QuestionMarked,
             Discovered,
+            DiscoveredMine,
 
             DeadUndiscovered,
             DeadDiscovered,

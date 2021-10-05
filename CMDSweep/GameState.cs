@@ -11,15 +11,10 @@ namespace CMDSweep
         private PlayerState playerState;
         private Difficulty difficulty;
 
-        //private int mineCount = 0;
-        //private int safeZone = 0;
-        //private int mineDetectRadius = 1;
-        //private bool QuestionMarkEnabled = true;
-        //private bool wrapAround = false;
-
         private DateTime startTime;
         private TimeSpan preTime;
         private bool timePaused = true;
+        private int lives;
 
         // Constructors and cloners
         private GameState(CellData[,] datas) { Cells = datas; }
@@ -30,6 +25,7 @@ namespace CMDSweep
                 playerState = this.playerState,
                 cursor = this.cursor,
                 difficulty = this.difficulty,
+                lives = this.lives,
 
                 startTime = this.startTime,
                 preTime = this.preTime,
@@ -54,7 +50,8 @@ namespace CMDSweep
 
                 startTime = DateTime.Now,
                 preTime = TimeSpan.Zero,
-                timePaused = true
+                timePaused = true,
+                lives = diff.Lives,
             };
         }
 
@@ -112,20 +109,25 @@ namespace CMDSweep
         private int CountSurroundingCells(CellLocation cl, Func<CellLocation, bool> callback, bool outsideAllowed)  => ApplySurroundingCells(cl, 0, (loc, sum) => sum + (callback(loc)?1:0), outsideAllowed);
 
         // Oneliner Board Properties
+        public PlayerState PlayerState { get => playerState; }
+        public Difficulty Difficulty { get => difficulty; }
+        public CellLocation Cursor { get => cursor; }
+        public TimeSpan Time { get => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime))); }
+
+        public bool Paused { get => timePaused; }
+
         public int BoardWidth { get => Cells.GetLength(0); }
         public int BoardHeight { get => Cells.GetLength(1); }
-        public int CountMines { get => CountCells(x => x.Mine); }
+        public int Mines { get => CountCells(x => x.Mine); }
         public int GameMines { get => difficulty.Mines; }
-        public int CountFlags { get => CountCells(x => x.Flagged == FlagMarking.Flagged); }
-        public int CountDiscovered { get => CountCells(x => x.Discovered); }
-        public int MinesLeft { get => GameMines - CountFlags; }
-        public CellLocation Cursor { get => cursor; }
-        public PlayerState PlayerState { get => playerState; }
-        public TimeSpan Time { get => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime))); }
-        public bool Paused { get => timePaused; }
+        public int Flags { get => CountCells(x => x.Flagged == FlagMarking.Flagged); }
+        public int Discovered { get => CountCells(x => x.Discovered); }
+        public int MinesLeft { get => GameMines - Flags - LivesLost; }
+        public int LivesLost { get => difficulty.Lives - lives; }
         public int Tiles { get =>  BoardHeight * BoardWidth; }
-        public double Discovery { get => (double)CountDiscovered / Tiles; }
-        public Difficulty Difficulty { get => difficulty; }
+
+        public double DiscoveryRate { get => (double) Discovered / Tiles; }
+        public double MineRate { get => (double)(LivesLost + Flags) / Mines; }
 
         // Oneliner Board Queries
         private bool CellOutsideBounds(CellLocation cl)         => (cl.X < 0 || cl.Y < 0 || cl.X >= BoardWidth || cl.Y >= BoardHeight);
@@ -144,12 +146,15 @@ namespace CMDSweep
             FreezeGame();
         }
 
-        public void Die()
+        public void LoseLife()
         {
+            FailAction();
+
+            if (--lives > 0) return; 
+
             Console.Title = "You died!";
             playerState = PlayerState.Dead;
             FreezeGame();
-            FailAction();
         }
 
         public void ResumeGame()
@@ -183,9 +188,9 @@ namespace CMDSweep
             int res = Discover(cursor);
 
             //Check for death
-            if (res < 0) Die();
+            if (res < 0) LoseLife();
 
-            if (CountDiscovered + CountMines == Tiles) Win();
+            if (Discovered + Mines + LivesLost == Tiles) Win();
             
             return res;
         }
@@ -203,7 +208,7 @@ namespace CMDSweep
 
             // Check for mine
             if (CellIsMine(cl)) return -1;
-
+            
             // Continue discovering if encountering an empty cell
             if (CellMineNumber(cl) == 0 && difficulty.AutomaticDiscovery)
                 return ApplySurroundingCells(cl, 0, (loc, b) => { int a = Discover(loc); return (a < 0 || b < 0) ? -1 : a + b + 1; }, difficulty.WrapAround);
@@ -213,6 +218,7 @@ namespace CMDSweep
         public int ToggleFlag()
         {
             if (!difficulty.FlagsAllowed) return FailAction();
+            if (CellIsDiscovered(cursor)) return FailAction();
 
             switch (Cell(cursor).Flagged) {
                 case FlagMarking.Flagged:

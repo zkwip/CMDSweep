@@ -34,7 +34,7 @@ namespace CMDSweepTest
             Assert.AreEqual(false, gs.CellIsMine(5, 5));
             Assert.AreEqual(false, gs.CellIsFlagged(5, 5));
 
-            Assert.AreEqual(mines, gs.CountMines);
+            Assert.AreEqual(mines, gs.Mines);
             Assert.AreEqual(mines, gs.MinesLeft);
             Assert.AreEqual(0, gs.CellMineNumber(5, 5));
 
@@ -44,7 +44,7 @@ namespace CMDSweepTest
             Assert.AreEqual(false, gs2.CellIsMine(5, 5));
             Assert.AreEqual(false, gs2.CellIsFlagged(5, 5));
 
-            Assert.AreEqual(mines, gs2.CountMines);
+            Assert.AreEqual(mines, gs2.Mines);
             Assert.AreEqual(mines, gs2.MinesLeft);
             Assert.AreEqual(0, gs2.CellMineNumber(5, 5));
 

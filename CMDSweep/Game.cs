@@ -102,6 +102,11 @@ namespace CMDSweep
                     CurrentState = CurrentState.Clone();
                     CurrentState.ToggleFlag();
                     break;
+                case InputAction.Quit:
+                    return false;
+                case InputAction.NewGame:
+                    InitialiseGame();
+                    break;
             }
 
             if (CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
@@ -132,12 +137,12 @@ namespace CMDSweep
 
         private bool HighScoreStep(InputAction ia)
         {
-            return false;
+            return false; // TODO
         }
 
         private bool MenuStep(InputAction ia)
         {
-            return false;
+            return false; // TODO
         }
 
         private GameSettings LoadSettings()
@@ -190,11 +195,14 @@ namespace CMDSweep
     public class Difficulty
     {
         public string Name;
+
         public int Width;
         public int Height;
         public int Mines;
+        public int Lives;
         public int Safezone;
         public int DetectionRadius;
+
         public bool FlagsAllowed;
         public bool QuestionMarkAllowed;
         public bool WrapAround;
