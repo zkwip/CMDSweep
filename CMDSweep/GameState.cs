@@ -196,7 +196,7 @@ namespace CMDSweep
             //Check for death
             if (res < 0) LoseLife();
 
-            if (Discovered + Mines + LivesLost == Tiles) Win();
+            if (Discovered + Mines - LivesLost == Tiles) Win();
             
             return res;
         }
