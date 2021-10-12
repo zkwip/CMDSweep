@@ -25,6 +25,16 @@ namespace CMDSweep
             Console.Clear();
         }
 
+        public void ClearScreen(StyleData data, int row) => ClearScreen(data, row, 0, Bounds.Width);
+        public void ClearScreen(StyleData data, int row, int col, int width) => ClearScreen(data, row, col, width, 1);
+        public void ClearScreen(StyleData data, int row, int col, int width, int height)
+        {
+            SendDataToConsole(data);
+            for (int r = row; r < row + height; r++)
+                PrintAtTile(r, col, data, "".PadLeft(width));
+            HideCursor();
+        }
+
         private void SendDataToConsole(StyleData data)
         {
             Console.ForegroundColor = data.Foreground;

@@ -7,6 +7,10 @@ namespace CMDSweep
         void PrintAtTile(int row, int col, StyleData data, string s);
         void SetCursor(int row, int col);
         void ClearScreen(StyleData data);
+        void ClearScreen(StyleData data, int row);
+        void ClearScreen(StyleData data, int row, int col, int width);
+        void ClearScreen(StyleData data, int row, int col, int width, int height);
+
         void SetTitle(string s);
         Bounds Bounds { get; }
 

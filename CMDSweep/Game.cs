@@ -233,6 +233,17 @@ namespace CMDSweep
         Help,
 
         Unknown,
+
+        One,
+        Two,
+        Three,
+        Four,
+        Five,
+        Six,
+        Seven,
+        Eight,
+        Nine,
+        Zero,
     }
 
     public enum Face

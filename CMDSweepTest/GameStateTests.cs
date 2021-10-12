@@ -10,13 +10,38 @@ namespace CMDSweepTest
         [TestMethod]
         public void NewGameTest()
         {
-            int width = 10;
-            int height = 20;
-            int mines = 30;
-            int safezone = 2;
-            int radius = 1;
+            // Random settings
+            Random r = new Random();
+            int width = r.Next(5,30);
+            int height = r.Next(5, 30);
+            int mines = r.Next(5, 30);
+            int safezone = r.Next(1,width / 2);
+            int detectionRadius = r.Next(1,safezone);
 
-            GameState gs = GameState.NewGame(width, height, mines, safezone, radius);
+            bool flags = (r.Next()%2 == 0);
+            bool question = (r.Next() % 2 == 0);
+            bool wrap = (r.Next() % 2 == 0);
+            bool sub = (r.Next() % 2 == 0);
+            bool onlycursor = (r.Next() % 2 == 0);
+            bool automatic = (r.Next() % 2 == 0);
+
+            Difficulty dif = new Difficulty()
+            {
+                Width = width,
+                Height = height,
+                Mines = mines,
+                Safezone = safezone,
+                DetectionRadius = detectionRadius,
+
+                FlagsAllowed = flags,
+                QuestionMarkAllowed = question,
+                WrapAround = wrap,
+                SubtractFlags = sub,
+                OnlyShowAtCursor = onlycursor,
+                AutomaticDiscovery = automatic,
+            };
+
+            GameState gs = GameState.NewGame(dif);
 
             Assert.AreEqual(width, gs.BoardWidth);
             Assert.AreEqual(height, gs.BoardHeight);
@@ -30,23 +55,25 @@ namespace CMDSweepTest
 
             gs.Dig();
 
-            Assert.AreEqual(true, gs.CellIsDiscovered(5,5));
-            Assert.AreEqual(false, gs.CellIsMine(5, 5));
-            Assert.AreEqual(false, gs.CellIsFlagged(5, 5));
+            CellLocation curs = new CellLocation(5, 5);
+
+            Assert.AreEqual(true, gs.CellIsDiscovered(curs));
+            Assert.AreEqual(false, gs.CellIsMine(curs));
+            Assert.AreEqual(false, gs.CellIsFlagged(curs));
 
             Assert.AreEqual(mines, gs.Mines);
             Assert.AreEqual(mines, gs.MinesLeft);
-            Assert.AreEqual(0, gs.CellMineNumber(5, 5));
+            Assert.AreEqual(0, gs.CellMineNumber(curs));
 
             GameState gs2 = gs.Clone();
 
-            Assert.AreEqual(true, gs2.CellIsDiscovered(5, 5));
-            Assert.AreEqual(false, gs2.CellIsMine(5, 5));
-            Assert.AreEqual(false, gs2.CellIsFlagged(5, 5));
+            Assert.AreEqual(true, gs2.CellIsDiscovered(curs));
+            Assert.AreEqual(false, gs2.CellIsMine(curs));
+            Assert.AreEqual(false, gs2.CellIsFlagged(curs));
 
             Assert.AreEqual(mines, gs2.Mines);
             Assert.AreEqual(mines, gs2.MinesLeft);
-            Assert.AreEqual(0, gs2.CellMineNumber(5, 5));
+            Assert.AreEqual(0, gs2.CellMineNumber(curs));
 
         }
     }

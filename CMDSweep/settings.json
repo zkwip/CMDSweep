@@ -93,6 +93,7 @@
     "border-fg": "BLACK",
     "stat-mines-fg": "RED",
     "stat-mines-bg": "DARKRED",
+    "stat-lives-lost":  "BLACK",
     "face-bg": "YELLOW",
     "face-fg": "BLACK"
   },
@@ -113,13 +114,19 @@
     "face-normal": ":)",
     "face-surprise": ":O",
     "face-win": "B)",
-    "face-dead": ":/"
+    "face-dead": ":/",
+
+    "stat-life": "♥",
+
+    "menu-left": "",
+    "menu-right": ""
   },
   "Dimensions": {
     "cell-size-x": 2,
     "cell-size-y": 1,
     "stat-padding-x": 2,
-    "stat-padding-y": 1
+    "stat-padding-y": 1,
+    "stat-padding-x-in-between": 2,
   },
   "Controls": {
     "Up": [ "UpArrow", "W" ],
@@ -128,8 +135,20 @@
     "Right": [ "RightArrow", "D" ],
     "Dig": [ "SpaceBar", "Enter" ],
     "Flag": [ "E", "F" ],
+
     "Quit": [ "Q", "Escape" ],
     "NewGame": [ "N", "F2", "R" ],
-    "Help":  ["F1","H"]
+    "Help": [ "F1", "H" ],
+
+    "One": [ "NumPad1", "D1" ],
+    "Two": [ "NumPad2", "D2" ],
+    "Three": [ "NumPad3", "D3" ],
+    "Four": [ "NumPad4", "D4" ],
+    "Five": [ "NumPad5", "D5" ],
+    "Six": [ "NumPad6", "D6" ],
+    "Seven": [ "NumPad7", "D7" ],
+    "Eight": [ "NumPad8", "D8" ],
+    "Nine": [ "NumPad9", "D9" ],
+    "Zero": [ "NumPad0", "D0" ]
   }
 }

@@ -29,7 +29,6 @@ namespace CMDSweep
         }
 
         GameState CurrentState { get => game.CurrentState; }
-
         
         public bool Visualize(RefreshMode mode)
         {
@@ -37,6 +36,7 @@ namespace CMDSweep
             if (rendering)
             {
                 if (mode != RefreshMode.ChangesOnly) lastRefresh = RefreshMode.Rescale;
+                
                 return false;
             }
             rendering = true;
@@ -74,11 +74,37 @@ namespace CMDSweep
 
         private void UpdateStatBoard()
         {
-            StyleData minesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
-            StyleData faceStyle = new StyleData(settings.Colors["face-fg"], settings.Colors["face-bg"]);
 
+            
+
+            int left = settings.Dimensions["stat-padding-x"];
+            int center = renderer.Bounds.Width / 2;
+            int right = renderer.Bounds.Width - settings.Dimensions["stat-padding-x"];
+
+            int top = settings.Dimensions["stat-padding-y"];
+
+            int minesStart = right - 5;
+            int livesStart = minesStart - (2*CurrentState.Difficulty.Lives) - 1 - settings.Dimensions["stat-padding-x-in-between"];
+
+            renderer.ClearScreen(hideStyle, top);
+
+            RenderTimeCounter(top, left);
+            RenderFace(top, center - 1);
+            RenderLifeCounter(top, livesStart);
+            RenderMineCounter(top, minesStart);
+
+        }
+
+        private void RenderTimeCounter(int row, int col)
+        {
+            StyleData clockStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
+            renderer.PrintAtTile(row, col, clockStyle, CurrentState.Time.ToString(@"\ h\:mm\:ss\ "));
+        }
+
+        private void RenderFace(int row, int col)
+        {
             string face = ":)";
-            switch(CurrentState.Face)
+            switch (CurrentState.Face)
             {
                 default:
                 case Face.Normal:
@@ -92,15 +118,30 @@ namespace CMDSweep
                     face = settings.Texts["face-dead"]; break;
             }
 
-            int right = renderer.Bounds.Width - settings.Dimensions["stat-padding-x"];
-            int left = settings.Dimensions["stat-padding-x"];
-            int center = renderer.Bounds.Width / 2;
-            int top = settings.Dimensions["stat-padding-y"];
+            StyleData faceStyle = new StyleData(settings.Colors["face-fg"], settings.Colors["face-bg"]);
+            renderer.PrintAtTile(row, col, faceStyle, face);
+        }
 
-            renderer.PrintAtTile(top, left, minesLeftStyle, CurrentState.Time.ToString(@"\ h\:mm\:ss\ "));
-            renderer.PrintAtTile(top, center - face.Length/2, faceStyle, face);
-            renderer.PrintAtTile(top, right - 5, minesLeftStyle, string.Format(" {0:D3} ",CurrentState.MinesLeft));
+        private void RenderMineCounter(int row, int col)
+        {
+            StyleData minesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
+            renderer.PrintAtTile(row, col, minesLeftStyle, string.Format(" {0:D3} ", CurrentState.MinesLeft));
+        }
 
+        private void RenderLifeCounter(int row, int col)
+        {
+            char life = settings.Texts["stat-life"][0];
+            StyleData livesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
+            StyleData livesGoneStyle = new StyleData(settings.Colors["stat-lives-lost"], settings.Colors["stat-mines-bg"]);
+
+            string atext = " ";
+            for (int i = 0; i < CurrentState.Difficulty.Lives - CurrentState.LivesLost; i++) atext += life + " ";
+
+            string btext = "";
+            for (int i = 0; i < CurrentState.LivesLost; i++) btext += life + " ";
+
+            renderer.PrintAtTile(row, col, livesLeftStyle, atext);
+            renderer.PrintAtTile(row, col + atext.Length, livesGoneStyle, btext);
         }
 
         bool UpdateDimensions()
