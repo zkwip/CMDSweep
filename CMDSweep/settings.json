@@ -80,7 +80,7 @@
     "cell-9-discovered": "DARKYELLOW",
     "cell-0-discovered": "GREEN",
 
-    "cell-mine-discovered":  "RED",
+    "cell-mine-discovered": "RED",
     "cell-selected-discovered": "WHITE",
     "cell-flagged": "RED",
     "cell-dead-wrong-flag": "RED",
@@ -93,9 +93,15 @@
     "border-fg": "BLACK",
     "stat-mines-fg": "RED",
     "stat-mines-bg": "DARKRED",
-    "stat-lives-lost":  "BLACK",
+    "stat-lives-lost": "BLACK",
     "face-bg": "YELLOW",
-    "face-fg": "BLACK"
+    "face-fg": "BLACK",
+
+    "menu-bg": "DARKGRAY",
+    "menu-fg": "BLACK",
+    "menu-fg-disabled": "GRAY",
+    "menu-bg-highlight": "GRAY",
+    "menu-fg-highlight": "BLACK"
   },
   "Texts": {
     "border-vertical": "║ ",
@@ -119,7 +125,12 @@
     "stat-life": "♥",
 
     "menu-left": "",
-    "menu-right": ""
+    "menu-right": "",
+    "menu-title": "CMD Sweeper",
+    "menu-choice-left": "< ",
+    "menu-choice-right": " >",
+    "menu-item-prefix": "  ",
+    "menu-item-prefix-selected": "> "
   },
   "Dimensions": {
     "cell-size-x": 2,
@@ -127,6 +138,13 @@
     "stat-padding-x": 2,
     "stat-padding-y": 1,
     "stat-padding-x-in-between": 2,
+    "menu-col1-width": 35,
+    "menu-col2-width": 15,
+    "menu-row-scale": 2,
+    "menu-title-space": 3,
+    "menu-rows": 8,
+    "menu-indent": 2,
+    "menu-box-padding": 2
   },
   "Controls": {
     "Up": [ "UpArrow", "W" ],

@@ -10,7 +10,7 @@ namespace CMDSweep
 
     public class Game
     {
-        enum RenderState
+        enum ApplicationState
         {
             Playing,
             Menu,
@@ -21,11 +21,12 @@ namespace CMDSweep
         Timer refreshTimer;
         Bounds screenBounds;
 
-        private RenderState renderState;
+        private ApplicationState appState;
 
         internal readonly GameSettings Settings;
         internal readonly IRenderer Renderer;
-        internal readonly BoardVisualizer Visualizer;
+        internal readonly BoardVisualizer BVis;
+        internal readonly MenuVisualizer MVis;
 
         public GameState CurrentState;
         public Difficulty CurrentDifficulty;
@@ -38,13 +39,17 @@ namespace CMDSweep
             Renderer = r;
             screenBounds = r.Bounds;
 
+            MVis = new MenuVisualizer(this);
+            BVis = new BoardVisualizer(this);
+            
+
             refreshTimer = new Timer(100);
             refreshTimer.Elapsed += TimerElapsed;
             refreshTimer.AutoReset = true;
 
             // Start a new game
-            InitialiseGame();
-            Visualizer = new BoardVisualizer(this);
+            //InitialiseGame();
+            InitialiseMenu();
             
             Refresh(RefreshMode.Rescale);
 
@@ -56,12 +61,12 @@ namespace CMDSweep
         private bool Step()
         {
             InputAction ia = ReadAction();
-            switch (renderState)
+            switch (appState)
             {
-                case RenderState.Playing: return PlayStep(ia);
-                case RenderState.Done: return DoneStep(ia);
-                case RenderState.Highscore: return HighScoreStep(ia);
-                case RenderState.Menu: return MenuStep(ia);
+                case ApplicationState.Playing: return PlayStep(ia);
+                case ApplicationState.Done: return DoneStep(ia);
+                case ApplicationState.Highscore: return HighScoreStep(ia);
+                case ApplicationState.Menu: return MenuStep(ia);
                 default: return false;
             }
         }
@@ -115,7 +120,7 @@ namespace CMDSweep
             {
                 refreshTimer.Stop();
                 Refresh(RefreshMode.Full);
-                renderState = RenderState.Done;
+                appState = ApplicationState.Done;
             }
             else
             {
@@ -148,7 +153,18 @@ namespace CMDSweep
 
         private bool MenuStep(InputAction ia)
         {
-            return false; // TODO
+            MVis.Visualize(RefreshMode.ChangesOnly);
+            switch (ia)
+            {
+                case InputAction.Quit:
+                    return false;
+                case InputAction.Dig:
+                case InputAction.NewGame:
+                    InitialiseGame();
+                    Refresh(RefreshMode.Full);
+                    break;
+            }
+            return true; // TODO
         }
 
         private GameSettings LoadSettings()
@@ -169,12 +185,12 @@ namespace CMDSweep
                 screenBounds = Renderer.Bounds;
             }
 
-            switch (renderState)
+            switch (appState)
             {
 
-                case RenderState.Playing:
-                case RenderState.Done:
-                    Visualizer.Visualize(mode);
+                case ApplicationState.Playing:
+                case ApplicationState.Done:
+                    BVis.Visualize(mode);
                     break;
                 default:
                     break;
@@ -184,8 +200,14 @@ namespace CMDSweep
 
         public void InitialiseGame()
         {
-            renderState = RenderState.Playing;
+            appState = ApplicationState.Playing;
             CurrentState = GameState.NewGame(CurrentDifficulty);
+        }
+
+        public void InitialiseMenu()
+        {
+            appState = ApplicationState.Menu;
+            MVis.Visualize(RefreshMode.Full);
         }
     }
 
