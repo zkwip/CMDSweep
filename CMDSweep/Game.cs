@@ -38,16 +38,15 @@ namespace CMDSweep
             Renderer = r;
             screenBounds = r.Bounds;
 
+            refreshTimer = new Timer(100);
+            refreshTimer.Elapsed += TimerElapsed;
+            refreshTimer.AutoReset = true;
+
             // Start a new game
             InitialiseGame();
             Visualizer = new BoardVisualizer(this);
             
             Refresh(RefreshMode.Rescale);
-
-            refreshTimer = new Timer(100);
-            refreshTimer.Elapsed += TimerElapsed;
-            refreshTimer.AutoReset = true;
-            refreshTimer.Start();
 
             while (Step());
             refreshTimer.Stop();
@@ -119,7 +118,10 @@ namespace CMDSweep
                 renderState = RenderState.Done;
             }
             else
+            {
+                if (!refreshTimer.Enabled) refreshTimer.Start();
                 Refresh(RefreshMode.ChangesOnly);
+            }
 
             return true;
         }
