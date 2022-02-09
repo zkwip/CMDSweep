@@ -32,21 +32,23 @@ namespace CMDSweep
 
         public Game(IRenderer r)
         {
+            // Set up
             Settings = LoadSettings();
             CurrentDifficulty = Settings.Difficulties[3];
             Renderer = r;
             screenBounds = r.Bounds;
 
+            // Start a new game
             InitialiseGame();
             Visualizer = new BoardVisualizer(this);
-
+            
+            Refresh(RefreshMode.Rescale);
 
             refreshTimer = new Timer(100);
             refreshTimer.Elapsed += TimerElapsed;
             refreshTimer.AutoReset = true;
             refreshTimer.Start();
 
-            Refresh(RefreshMode.Rescale);
             while (Step());
             refreshTimer.Stop();
         }
@@ -112,8 +114,9 @@ namespace CMDSweep
 
             if (CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
             {
-                renderState = RenderState.Done;
+                refreshTimer.Stop();
                 Refresh(RefreshMode.Full);
+                renderState = RenderState.Done;
             }
             else
                 Refresh(RefreshMode.ChangesOnly);

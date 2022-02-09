@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep
 {
-    class MenuVisualizer
+    public class MenuVisualizer
     {
         internal int textCol = 0;
         internal int optionCol = 0;
@@ -12,10 +12,19 @@ namespace CMDSweep
         public StyleData TextStyle { get; internal set; }
         public StyleData BackgroundStyle { get; internal set; }
 
+        public MenuList currentList;
+
         void Visualize(RefreshMode mode)
         {
 
         }
+    }
+
+    public class MenuList
+    {
+        public List<MenuItem> Items{ get; private set; }
+        public string Title { get; private set; }
+        public int Index { get; private set; }
     }
 
     enum MenuAction
@@ -28,7 +37,7 @@ namespace CMDSweep
         CloseAction,
     }
 
-    abstract class MenuItem
+    public abstract class MenuItem
     {
         internal abstract void RenderItem(int row, MenuVisualizer mv);
         internal MenuAction HandleDefaultMenuAction(InputAction ia)

@@ -170,6 +170,7 @@ namespace CMDSweep
         public void FreezeGame()
         {
             timePaused = true;
+            
             preTime = preTime + (DateTime.Now - startTime);
         }
 

@@ -14,6 +14,8 @@ namespace CMDSweep
         private int scaleX = 1;
         private int scaleY = 1;
         private bool rendering = false;
+        private bool renderWaiting = false;
+        private bool active = true;
 
         private GameState lastRenderedGameState;
         private readonly StyleData hideStyle;
@@ -29,28 +31,42 @@ namespace CMDSweep
         }
 
         GameState CurrentState { get => game.CurrentState; }
-        
+
         public bool Visualize(RefreshMode mode)
         {
-            //preventing race conditions while rendering
-            if (rendering)
-            {
-                if (mode != RefreshMode.ChangesOnly) lastRefresh = RefreshMode.Rescale;
-                
-                return false;
-            }
+            // Indicate there is stuff to redraw
+            renderWaiting = true;
+
+            // Mutex for the renderer
+            if (rendering) return false;
+
             rendering = true;
 
-            if (mode == RefreshMode.ChangesOnly)
+            // Actual render loop
+            while (renderWaiting)
             {
-                if (lastRenderedGameState == null)
-                    mode = RefreshMode.Full;
-                else if (CurrentState.PlayerState != lastRenderedGameState.PlayerState && mode == RefreshMode.ChangesOnly)
-                    mode = RefreshMode.Full;
+                renderWaiting = false;
+                ProcessVisualization(mode);
             }
 
-            List<CellLocation> changes;
-            if (mode != RefreshMode.ChangesOnly || lastRefresh == RefreshMode.Rescale)
+            rendering = false;
+            return true;
+        }
+        
+        public void ProcessVisualization(RefreshMode mode)
+        {
+            // Force a full rerender in case the screen has not been drawn before
+            if ((lastRenderedGameState == null) || 
+                (mode == RefreshMode.ChangesOnly && CurrentState.PlayerState != lastRenderedGameState.PlayerState) || 
+                (lastRefresh == RefreshMode.Rescale))
+            {
+                mode = RefreshMode.Full;
+            }
+
+
+            List<CellLocation> changes; 
+
+            if (mode != RefreshMode.ChangesOnly)
             {
                 lastRenderedGameState = CurrentState;
                 RenderFullBoard();
@@ -63,19 +79,12 @@ namespace CMDSweep
             }
 
             UpdateStatBoard();
-
-
             renderer.HideCursor(hideStyle);
-
             lastRefresh = mode;
-            rendering = false;
-            return true;
         }
 
         private void UpdateStatBoard()
         {
-
-            
 
             int left = settings.Dimensions["stat-padding-x"];
             int center = renderer.Bounds.Width / 2;
