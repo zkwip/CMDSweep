@@ -134,11 +134,12 @@
     "Down": [ "DownArrow", "S" ],
     "Right": [ "RightArrow", "D" ],
     "Dig": [ "SpaceBar", "Enter" ],
-    "Flag": [ "E", "F" ],
+    "Flag": [ "E", "F", "Insert" ],
 
     "Quit": [ "Q", "Escape" ],
     "NewGame": [ "N", "F2", "R" ],
     "Help": [ "F1", "H" ],
+    "Cheat": [ "C", "F5"],
 
     "One": [ "NumPad1", "D1" ],
     "Two": [ "NumPad2", "D2" ],

@@ -230,12 +230,14 @@ namespace CMDSweep
         Left,
         Down,
         Right,
+
         Dig,
         Flag,
 
         Quit,
         NewGame,
         Help,
+        Cheat,
 
         Unknown,
 

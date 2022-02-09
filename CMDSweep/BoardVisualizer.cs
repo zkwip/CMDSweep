@@ -25,11 +25,8 @@ namespace CMDSweep
             renderer = g.Renderer;
             settings = g.Settings;
             game = g;
-            UpdateDimensions();
             hideStyle = new StyleData(settings.Colors["cell-bg-out-of-bounds"], settings.Colors["cell-bg-out-of-bounds"], false); 
         }
-
-        GameState CurrentState { get => game.CurrentState; }
 
         public bool Visualize(RefreshMode mode)
         {
@@ -45,7 +42,7 @@ namespace CMDSweep
             while (renderWaiting)
             {
                 renderWaiting = false;
-                lastRenderedGameState = ProcessVisualization(mode, CurrentState, lastRenderedGameState);
+                lastRenderedGameState = ProcessVisualization(mode, game.CurrentState, lastRenderedGameState);
             }
 
             rendering = false;
@@ -92,23 +89,23 @@ namespace CMDSweep
 
             renderer.ClearScreen(hideStyle, top);
 
-            RenderTimeCounter(top, left);
-            RenderFace(top, center - 1);
-            RenderLifeCounter(top, livesStart);
-            RenderMineCounter(top, minesStart);
+            RenderTimeCounter(top, left, currentGS);
+            RenderFace(top, center - 1, currentGS);
+            RenderLifeCounter(top, livesStart, currentGS);
+            RenderMineCounter(top, minesStart, currentGS);
 
         }
 
-        private void RenderTimeCounter(int row, int col)
+        private void RenderTimeCounter(int row, int col, GameState currentGS)
         {
             StyleData clockStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
-            renderer.PrintAtTile(row, col, clockStyle, CurrentState.Time.ToString(@"\ h\:mm\:ss\ "));
+            renderer.PrintAtTile(row, col, clockStyle, currentGS.Time.ToString(@"\ h\:mm\:ss\ "));
         }
 
-        private void RenderFace(int row, int col)
+        private void RenderFace(int row, int col, GameState currentGS)
         {
             string face = ":)";
-            switch (CurrentState.Face)
+            switch (currentGS.Face)
             {
                 default:
                 case Face.Normal:
@@ -126,37 +123,37 @@ namespace CMDSweep
             renderer.PrintAtTile(row, col, faceStyle, face);
         }
 
-        private void RenderMineCounter(int row, int col)
+        private void RenderMineCounter(int row, int col, GameState currentGS)
         {
             StyleData minesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
-            renderer.PrintAtTile(row, col, minesLeftStyle, string.Format(" {0:D3} ", CurrentState.MinesLeft));
+            renderer.PrintAtTile(row, col, minesLeftStyle, string.Format(" {0:D3} ", currentGS.MinesLeft));
         }
 
-        private void RenderLifeCounter(int row, int col)
+        private void RenderLifeCounter(int row, int col, GameState currentGS)
         {
             char life = settings.Texts["stat-life"][0];
             StyleData livesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
             StyleData livesGoneStyle = new StyleData(settings.Colors["stat-lives-lost"], settings.Colors["stat-mines-bg"]);
 
             string atext = " ";
-            for (int i = 0; i < CurrentState.Difficulty.Lives - CurrentState.LivesLost; i++) atext += life + " ";
+            for (int i = 0; i < currentGS.Difficulty.Lives - currentGS.LivesLost; i++) atext += life + " ";
 
             string btext = "";
-            for (int i = 0; i < CurrentState.LivesLost; i++) btext += life + " ";
+            for (int i = 0; i < currentGS.LivesLost; i++) btext += life + " ";
 
             renderer.PrintAtTile(row, col, livesLeftStyle, atext);
             renderer.PrintAtTile(row, col + atext.Length, livesGoneStyle, btext);
         }
 
-        bool UpdateDimensions()
+        bool UpdateDimensions(GameState currentGS)
         {
             bool succes = true;
 
             scaleX = settings.Dimensions["cell-size-x"];
             scaleY = settings.Dimensions["cell-size-y"];
 
-            int reqWidth = CurrentState.BoardWidth * scaleX;
-            int reqHeight = CurrentState.BoardHeight * scaleY;
+            int reqWidth = currentGS.BoardWidth * scaleX;
+            int reqHeight = currentGS.BoardHeight * scaleY;
 
             offsetX = (renderer.Bounds.Width - reqWidth) / 2;
             offsetY = (renderer.Bounds.Height - reqHeight) / 2;
@@ -168,7 +165,7 @@ namespace CMDSweep
 
         void RenderFullBoard(GameState currentGS)
         {
-            if (UpdateDimensions())
+            if (UpdateDimensions(currentGS))
             {
                 renderer.ClearScreen(hideStyle);
                 RenderBorder(currentGS);
@@ -271,9 +268,9 @@ namespace CMDSweep
             }
 
             // Cursor
-            if (CurrentState.PlayerState != PlayerState.Dead && CurrentState.Cursor == cl)
+            if (currentGS.PlayerState != PlayerState.Dead && currentGS.Cursor == cl)
             {
-                if (!CurrentState.Difficulty.OnlyShowAtCursor || GetTileVisual(cl, currentGS) != TileVisual.Discovered || CurrentState.CellMineNumber(cl) <= 0)
+                if (!currentGS.Difficulty.OnlyShowAtCursor || GetTileVisual(cl, currentGS) != TileVisual.Discovered || currentGS.CellMineNumber(cl) <= 0)
                     fg = settings.Colors["cell-selected"];
                 if (text == settings.Texts["cell-undiscovered"] || text == settings.Texts["cell-empty"])
                     text = settings.Texts["cursor"];
