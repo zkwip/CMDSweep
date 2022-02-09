@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep
 {
-    public class GameState
+    public class GameBoardState
     {
         // Internals
         private CellData[,] Cells;
@@ -17,10 +17,10 @@ namespace CMDSweep
         private int lives;
 
         // Constructors and cloners
-        private GameState(CellData[,] datas) { Cells = datas; Face = Face.Normal; }
+        private GameBoardState(CellData[,] datas) { Cells = datas; Face = Face.Normal; }
 
-        public GameState Clone() {
-            return new GameState((CellData[,])Cells.Clone())
+        public GameBoardState Clone() {
+            return new GameBoardState((CellData[,])Cells.Clone())
             {
                 playerState = this.playerState,
                 cursor = this.cursor,
@@ -33,7 +33,7 @@ namespace CMDSweep
             };
         }
 
-        public static GameState NewGame(Difficulty diff)
+        public static GameBoardState NewGame(Difficulty diff)
         {
             int width = diff.Width;
             int height = diff.Height;
@@ -42,7 +42,7 @@ namespace CMDSweep
             int x = width / 2;
             int y = height / 2;
 
-            return new GameState(datas)
+            return new GameBoardState(datas)
             {
                 cursor = new CellLocation(x, y),
                 playerState = PlayerState.NewGame,
@@ -312,7 +312,7 @@ namespace CMDSweep
             return cursor;
         }
 
-        public List<CellLocation> CompareForChanges(GameState other)
+        public List<CellLocation> CompareForChanges(GameBoardState other)
         {
             List<CellLocation> res = new List<CellLocation>();
             for (int x = 0; x < BoardWidth; x++)

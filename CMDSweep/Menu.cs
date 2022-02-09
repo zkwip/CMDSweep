@@ -18,7 +18,7 @@ namespace CMDSweep
         internal int rowScale = 1;
 
         internal IRenderer Renderer { get => game.Renderer; }
-        internal Game game;
+        internal GameApp game;
 
         public StyleData MenuTextStyle { get; internal set; }
         public StyleData HighlightStyle { get; internal set; }
@@ -28,7 +28,7 @@ namespace CMDSweep
 
         internal Dictionary<string,ConsoleColor> Colors { get => game.Settings.Colors; }
 
-        public MenuVisualizer(Game g)
+        public MenuVisualizer(GameApp g)
         {
             game = g;
             MenuTextStyle = new StyleData(Colors["menu-fg"], Colors["menu-bg"]);

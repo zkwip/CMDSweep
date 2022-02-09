@@ -6,7 +6,7 @@ namespace CMDSweep
     public class BoardVisualizer
     {
         readonly IRenderer renderer;
-        readonly Game game;
+        readonly GameApp game;
         readonly GameSettings settings;
 
         private int offsetX = 0;
@@ -16,11 +16,11 @@ namespace CMDSweep
         private bool rendering = false;
         private bool renderWaiting = false;
 
-        private GameState lastRenderedGameState;
+        private GameBoardState lastRenderedGameState;
         private readonly StyleData hideStyle;
         private RefreshMode lastRefresh = RefreshMode.Rescale;
 
-        public BoardVisualizer(Game g)
+        public BoardVisualizer(GameApp g)
         {
             renderer = g.Renderer;
             settings = g.Settings;
@@ -49,7 +49,7 @@ namespace CMDSweep
             return true;
         }
         
-        public GameState ProcessVisualization(RefreshMode mode, GameState currentGS, GameState prevGS)
+        public GameBoardState ProcessVisualization(RefreshMode mode, GameBoardState currentGS, GameBoardState prevGS)
         {
             // Force a full rerender in case the screen has not been drawn before
             if (prevGS == null)
@@ -75,7 +75,7 @@ namespace CMDSweep
             return currentGS;
         }
 
-        private void UpdateStatBoard(GameState currentGS)
+        private void UpdateStatBoard(GameBoardState currentGS)
         {
 
             int left = settings.Dimensions["stat-padding-x"];
@@ -96,13 +96,13 @@ namespace CMDSweep
 
         }
 
-        private void RenderTimeCounter(int row, int col, GameState currentGS)
+        private void RenderTimeCounter(int row, int col, GameBoardState currentGS)
         {
             StyleData clockStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
             renderer.PrintAtTile(row, col, clockStyle, currentGS.Time.ToString(@"\ h\:mm\:ss\ "));
         }
 
-        private void RenderFace(int row, int col, GameState currentGS)
+        private void RenderFace(int row, int col, GameBoardState currentGS)
         {
             string face = ":)";
             switch (currentGS.Face)
@@ -123,13 +123,13 @@ namespace CMDSweep
             renderer.PrintAtTile(row, col, faceStyle, face);
         }
 
-        private void RenderMineCounter(int row, int col, GameState currentGS)
+        private void RenderMineCounter(int row, int col, GameBoardState currentGS)
         {
             StyleData minesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
             renderer.PrintAtTile(row, col, minesLeftStyle, string.Format(" {0:D3} ", currentGS.MinesLeft));
         }
 
-        private void RenderLifeCounter(int row, int col, GameState currentGS)
+        private void RenderLifeCounter(int row, int col, GameBoardState currentGS)
         {
             char life = settings.Texts["stat-life"][0];
             StyleData livesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
@@ -145,7 +145,7 @@ namespace CMDSweep
             renderer.PrintAtTile(row, col + atext.Length, livesGoneStyle, btext);
         }
 
-        bool UpdateDimensions(GameState currentGS)
+        bool UpdateDimensions(GameBoardState currentGS)
         {
             bool succes = true;
 
@@ -163,7 +163,7 @@ namespace CMDSweep
             return succes;
         }
 
-        void RenderFullBoard(GameState currentGS)
+        void RenderFullBoard(GameBoardState currentGS)
         {
             if (UpdateDimensions(currentGS))
             {
@@ -181,7 +181,7 @@ namespace CMDSweep
             }
         }
 
-        void RenderBorder(GameState currentGS)
+        void RenderBorder(GameBoardState currentGS)
         {
             StyleData data = new StyleData(settings.Colors["border-fg"], settings.Colors["cell-bg-out-of-bounds"],false);
 
@@ -204,7 +204,7 @@ namespace CMDSweep
             renderer.PrintAtTile(offsetY + currentGS.BoardHeight * scaleY, offsetX + currentGS.BoardWidth * scaleX, data, settings.Texts["border-corner-br"]);
         }
         
-        void RenderAtLocation(CellLocation cl, GameState currentGS)
+        void RenderAtLocation(CellLocation cl, GameBoardState currentGS)
         {
             int posX = offsetX + cl.X * scaleX;
             int posY = offsetY + cl.Y * scaleY;
@@ -306,7 +306,7 @@ namespace CMDSweep
             // It goes wrong here somewhere
         }
 
-        private TileVisual GetTileVisual(CellLocation cl, GameState currentGS)
+        private TileVisual GetTileVisual(CellLocation cl, GameBoardState currentGS)
         {
             if(currentGS.PlayerState == PlayerState.Dead)
             {

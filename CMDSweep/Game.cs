@@ -8,7 +8,7 @@ namespace CMDSweep
 {
     using Control = KeyValuePair<InputAction, List<ConsoleKey>>;
 
-    public class Game
+    public class GameApp
     {
         enum ApplicationState
         {
@@ -28,10 +28,10 @@ namespace CMDSweep
         internal readonly BoardVisualizer BVis;
         internal readonly MenuVisualizer MVis;
 
-        public GameState CurrentState;
+        public GameBoardState CurrentState;
         public Difficulty CurrentDifficulty;
 
-        public Game(IRenderer r)
+        public GameApp(IRenderer r)
         {
             // Set up
             Settings = LoadSettings();
@@ -201,7 +201,7 @@ namespace CMDSweep
         public void InitialiseGame()
         {
             appState = ApplicationState.Playing;
-            CurrentState = GameState.NewGame(CurrentDifficulty);
+            CurrentState = GameBoardState.NewGame(CurrentDifficulty);
         }
 
         public void InitialiseMenu()

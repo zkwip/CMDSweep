@@ -41,7 +41,7 @@ namespace CMDSweepTest
                 AutomaticDiscovery = automatic,
             };
 
-            GameState gs = GameState.NewGame(dif);
+            GameBoardState gs = GameBoardState.NewGame(dif);
 
             Assert.AreEqual(width, gs.BoardWidth);
             Assert.AreEqual(height, gs.BoardHeight);
@@ -65,7 +65,7 @@ namespace CMDSweepTest
             Assert.AreEqual(mines, gs.MinesLeft);
             Assert.AreEqual(0, gs.CellMineNumber(curs));
 
-            GameState gs2 = gs.Clone();
+            GameBoardState gs2 = gs.Clone();
 
             Assert.AreEqual(true, gs2.CellIsDiscovered(curs));
             Assert.AreEqual(false, gs2.CellIsMine(curs));

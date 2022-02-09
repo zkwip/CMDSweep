@@ -48,7 +48,7 @@
   <ItemGroup>
     <Compile Include="BoardVisualizer.cs" />
     <Compile Include="Game.cs" />
-    <Compile Include="GameState.cs" />
+    <Compile Include="Board.cs" />
     <Compile Include="IRenderer.cs" />
     <Compile Include="Menu.cs" />
     <Compile Include="Program.cs" />
