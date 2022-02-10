@@ -100,8 +100,10 @@
     "menu-bg": "DARKGRAY",
     "menu-fg": "BLACK",
     "menu-fg-disabled": "GRAY",
-    "menu-bg-highlight": "GRAY",
-    "menu-fg-highlight": "BLACK"
+    "menu-bg-highlight-box": "GRAY",
+    "menu-fg-highlight-box": "BLACK",
+    "menu-bg-highlight-title": "DARKGRAY",
+    "menu-fg-highlight-title": "WHITE"
   },
   "Texts": {
     "border-vertical": "║ ",
@@ -168,6 +170,8 @@
     "Seven": [ "NumPad7", "D7" ],
     "Eight": [ "NumPad8", "D8" ],
     "Nine": [ "NumPad9", "D9" ],
-    "Zero": [ "NumPad0", "D0" ]
+    "Zero": [ "NumPad0", "D0" ],
+
+    "Clear": [ "Backspace"]
   }
 }

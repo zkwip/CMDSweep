@@ -18,7 +18,6 @@ namespace CMDSweep
 
         private GameBoardState lastRenderedGameState;
         private readonly StyleData hideStyle;
-        private RefreshMode lastRefresh = RefreshMode.Rescale;
 
         public BoardVisualizer(GameApp g)
         {

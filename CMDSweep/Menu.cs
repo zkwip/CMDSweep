@@ -21,24 +21,18 @@ namespace CMDSweep
         internal GameApp game;
 
         public StyleData MenuTextStyle { get; internal set; }
-        public StyleData HighlightStyle { get; internal set; }
-
-
-        public MenuList currentList;
-
+        public StyleData FocusBoxStyle { get; internal set; }
+        public StyleData FocusTitleStyle { get; internal set; }
+        public MenuItem SelectedItem { get => CurrentList.Items[CurrentList.Index]; }
+        public MenuList CurrentList => game.currentMenuList;
         internal Dictionary<string,ConsoleColor> Colors { get => game.Settings.Colors; }
 
         public MenuVisualizer(GameApp g)
         {
             game = g;
             MenuTextStyle = new StyleData(Colors["menu-fg"], Colors["menu-bg"]);
-            HighlightStyle = new StyleData(Colors["menu-fg-highlight"], Colors["menu-bg-highlight"]);
-           
-            currentList = new MenuList("Main Menu");
-            currentList.Add(new MenuChoice<int>("Number", new List<int> { 1, 2, 3, 4, 5 }, x => x.ToString()));
-            currentList.Add(new MenuChoice<Difficulty>("Difficulty", game.Settings.Difficulties, x => x.Name));
-            currentList.Add(new MenuText("Button 1", "Col 2"));
-            currentList.Add(new MenuText("Button 2", "Hoi"));
+            FocusBoxStyle = new StyleData(Colors["menu-fg-highlight-box"], Colors["menu-bg-highlight-box"]);
+            FocusTitleStyle = new StyleData(Colors["menu-fg-highlight-title"], Colors["menu-bg-highlight-title"]);
 
         }
 
@@ -49,8 +43,8 @@ namespace CMDSweep
             Renderer.SetTitle(game.Settings.Texts["menu-title"]);
             UpdateMeasurements();
 
-            if (currentList == null) return false;
-            VisualizeList(currentList);
+            if (CurrentList == null) return false;
+            VisualizeList(CurrentList);
 
             return true;
         }
@@ -83,7 +77,7 @@ namespace CMDSweep
         private int MapIndexToRow(int i) => textRow + game.Settings.Dimensions["menu-row-scale"] * i; 
         private void RenderTitle(string title) => Renderer.PrintAtTile(titleRow, textCol, MenuTextStyle, title);
 
-        public string centerAlign(string text, int length)
+        public string CenterAlign(string text, int length)
         {
             int offset = (length - text.Length) / 2;
             text += "".PadRight(offset);
@@ -93,9 +87,13 @@ namespace CMDSweep
 
     public class MenuList
     {
+        public MenuList ParentMenu;
+        public GameApp Game;
+
         public List<MenuItem> Items{ get; private set; }
         public string Title { get; private set; }
         public int Index { get; private set; }
+        public MenuItem SelectedItem { get => Items[Index]; }
 
         public int SelectNext()
         {
@@ -104,7 +102,7 @@ namespace CMDSweep
             {
                 Index++;
                 if (Index >= Items.Count) Index -= Items.Count;
-                if (Items[Index].selectable) return Index;
+                if (SelectedItem.Selectable) return Index;
             }
             return Index;
         }
@@ -116,13 +114,14 @@ namespace CMDSweep
             {
                 Index--;
                 if (Index < 0) Index += Items.Count;
-                if (Items[Index].selectable) return Index;
+                if (SelectedItem.Selectable) return Index;
             }
             return Index;
         }
 
-        public MenuList(string title)
+        public MenuList(string title, GameApp game)
         {
+            Game = game;
             Items = new List<MenuItem>();
             Title = title;
             Index = 0;
@@ -133,24 +132,27 @@ namespace CMDSweep
             Items.Add(item);
             item.BindParent(this);
         }
-    }
 
-    enum MenuAction
-    {
-        None, 
+        internal bool HandleInput(InputAction ia)
+        {
+            if (ia == InputAction.Quit)
+            {
+                if (ParentMenu == null) return false;
+                else Game.OpenMenu(ParentMenu);
+            }
 
-        NextItem,
-        PreviousItem,
-        StartGame,
-        CloseAction,
+            if (SelectedItem != null) SelectedItem.HandleDefaultMenuAction(ia);
+            return true;
+        }
     }
 
     public abstract class MenuItem
     {
         internal string Title;
         internal abstract void RenderItemExtras(int row, MenuVisualizer mv, bool focus);
+        internal abstract bool HandleOtherActions(InputAction ia);
         internal MenuList Parent;
-        internal readonly bool selectable = true;
+        internal bool Selectable = true;
         public event EventHandler ValueChanged;
 
         internal virtual void OnValueChanged() => ValueChanged?.Invoke(this, EventArgs.Empty);
@@ -160,26 +162,32 @@ namespace CMDSweep
             Title = title;
         }
 
-        internal MenuAction HandleDefaultMenuAction(InputAction ia)
+        internal bool HandleDefaultMenuAction(InputAction ia)
         {
             switch (ia)
             {
                 case InputAction.Up:
-                    return MenuAction.PreviousItem;
+                    Parent.SelectPrevious();
+                    return true;
                 case InputAction.Down:
-                    return MenuAction.NextItem;
+                    Parent.SelectNext();
+                    return true;
                 default:
-                    return MenuAction.None;
+                    return HandleOtherActions(ia);
             }
         }
 
         internal void RenderItem(int row, MenuVisualizer mv, bool focus)
         {
             string pref = focus ? mv.game.Settings.Texts["menu-item-prefix-selected"] : mv.game.Settings.Texts["menu-item-prefix"];
+            StyleData styl = focus ? mv.FocusTitleStyle : mv.MenuTextStyle;
 
             mv.Renderer.ClearScreen(mv.MenuTextStyle, row, mv.textCol, mv.colsNeeded);
-            mv.Renderer.PrintAtTile(row, mv.prefixCol, mv.MenuTextStyle, pref);
-            mv.Renderer.PrintAtTile(row, mv.textCol, mv.MenuTextStyle, Title);
+            
+            // chevron
+            //mv.Renderer.PrintAtTile(row, mv.prefixCol, styl, pref);
+
+            mv.Renderer.PrintAtTile(row, mv.textCol, styl, Title);
             RenderItemExtras(row, mv, focus);
         }
 
@@ -192,58 +200,175 @@ namespace CMDSweep
         internal MenuText(string title, string sub = "") : base(title)
         {
             Subtitle = sub;
+            Selectable = false;
         }
 
-        // todo: button actions
+        internal override bool HandleOtherActions(InputAction ia) => false;
 
         internal override void RenderItemExtras(int row, MenuVisualizer mv, bool focus)
         {
-            StyleData s = focus ? mv.HighlightStyle : mv.MenuTextStyle;
-            mv.Renderer.PrintAtTile(row, mv.optionTextCol, s, Subtitle);
+            StyleData s = focus ? mv.FocusBoxStyle : mv.MenuTextStyle;
+            mv.Renderer.PrintAtTile(row, mv.optionTextCol, mv.MenuTextStyle, mv.CenterAlign(Subtitle, mv.optionWidth));
+        }
+    }
+
+    class MenuButton : MenuItem
+    {
+        internal string Subtitle;
+        internal MenuButton(string title, string sub = "") : base("[ " + title + " ]") => Subtitle = sub;
+
+        internal override bool HandleOtherActions(InputAction ia)
+        {
+            if (ia == InputAction.Dig) OnValueChanged();
+            return (ia == InputAction.Dig);
+        }
+
+        internal override void RenderItemExtras(int row, MenuVisualizer mv, bool focus)
+        {
+            //StyleData s = focus ? mv.FocusBoxStyle : mv.MenuTextStyle;
+            //mv.Renderer.PrintAtTile(row, mv.textCol, s, Title);
         }
     }
 
     class MenuChoice<TOption> : MenuItem
     {
-        private List<TOption> opts;
-        private int selectedIndex = 0;
-        private readonly Func<TOption, string> display;
+        private List<TOption> Options;
+        private int SelectedIndex = 0;
+        private readonly Func<TOption, string> Display;
+        public bool Enabled = true;
 
-        internal MenuChoice(string title, List<TOption> options, Func<TOption, string> Display) : base(title)
+        public MenuChoice(string title, List<TOption> options, Func<TOption, string> Display) : base(title)
         {
-            opts = new List<TOption>(options);
-            display = Display;
+            Options = new List<TOption>(options);
+            this.Display = Display;
             Title = title;
         }
 
-        public TOption Selected => opts[selectedIndex];
-        public string SelectedName => display(Selected);
-        public int Index { get => selectedIndex; set => SetIndex(value); }
+        public TOption SelectedOption => Options[SelectedIndex];
+        public string SelectedName => Display(SelectedOption);
+        public int Index { get => SelectedIndex; set => SetIndex(value); }
+
+        internal override bool HandleOtherActions(InputAction ia)
+        {
+            switch (ia)
+            {
+                case InputAction.Right:
+                    Index++;
+                    return true;
+                case InputAction.Left:
+                    Index--;
+                    return true;
+            }
+
+            return false;
+        }
 
         private void SetIndex(int value)
         {
-            selectedIndex = 0;
-            if (opts.Count == 0) return;
-            selectedIndex = value;
-            while (selectedIndex >= opts.Count) selectedIndex -= opts.Count;
-            while (selectedIndex < 0) selectedIndex += opts.Count;
+            SelectedIndex = 0;
+            if (Options.Count == 0) return;
+
+            SelectedIndex = value;
+            while (SelectedIndex >= Options.Count) SelectedIndex -= Options.Count;
+            while (SelectedIndex < 0) SelectedIndex += Options.Count;
         }
 
-        public void Select(TOption option)
+        public bool Select(TOption option)
         {
-            int id = opts.IndexOf(option);
-            selectedIndex = id;
+            int id = Options.IndexOf(option);
+            if (id != -1) SelectedIndex = id;
+            return (id != -1);
         }
 
         override internal void RenderItemExtras(int row, MenuVisualizer mv, bool focus)
         {
-            string text = mv.centerAlign(display(opts[selectedIndex]),mv.optionWidth);
-            StyleData styl = focus ? mv.HighlightStyle : mv.MenuTextStyle;
+            string text = mv.CenterAlign(SelectedName, mv.optionWidth);
+            StyleData styl = focus ? mv.FocusBoxStyle : mv.MenuTextStyle;
 
-            mv.Renderer.PrintAtTile(row, mv.optionCol, mv.MenuTextStyle, mv.game.Settings.Texts["menu-choice-left"]);
-            mv.Renderer.PrintAtTile(row, mv.optionTextCol, styl, text);
-            mv.Renderer.PrintAtTile(row, mv.optionTextEndCol, mv.MenuTextStyle, mv.game.Settings.Texts["menu-choice-right"]);
+            if (Enabled)
+            {
+                mv.Renderer.PrintAtTile(row, mv.optionCol, mv.MenuTextStyle, mv.game.Settings.Texts["menu-choice-left"]);
+                mv.Renderer.PrintAtTile(row, mv.optionTextCol, styl, text);
+                mv.Renderer.PrintAtTile(row, mv.optionTextEndCol, mv.MenuTextStyle, mv.game.Settings.Texts["menu-choice-right"]);
+            }
+            else
+            {
+                mv.Renderer.PrintAtTile(row, mv.optionTextCol, styl, text);
+            }
+        }
+    }
+
+    class MenuNumberRange : MenuChoice<int>
+    {
+        public readonly int Min;
+        public readonly int Max;
+
+        public MenuNumberRange(string title, int min, int max) : base(title, Range(min, max), x => x.ToString())
+        {
+            Min = min;
+            Max = max;
         }
 
+        static List<int> Range(int min, int max)
+        {
+            List<int> res = new List<int>();
+            for (int i = min; i <= max; i++) res.Add(i);
+            return res;
+        }
+
+        internal override bool HandleOtherActions(InputAction ia)
+        {
+            switch (ia)
+            {
+                case InputAction.Right:
+                    Index++;
+                    return true;
+                case InputAction.Left:
+                    Index--;
+                    return true;
+                case InputAction.Clear:
+                    return TryBackspace();
+
+                case InputAction.One: return TryAdd(1);
+                case InputAction.Two: return TryAdd(2);
+                case InputAction.Three: return TryAdd(3);
+                case InputAction.Four: return TryAdd(4);
+                case InputAction.Five: return TryAdd(5);
+                case InputAction.Six: return TryAdd(6);
+                case InputAction.Seven: return TryAdd(7);
+                case InputAction.Eight: return TryAdd(8);
+                case InputAction.Nine: return TryAdd(9);
+                case InputAction.Zero: return TryAdd(0);
+            }
+
+            return false;
+        }
+
+        private bool TryBackspace()
+        {
+            int num = SelectedOption;
+            int newnum = num / 10;
+            if (!Select(newnum)) return Select(Min);
+            return true;
+        }
+
+        private bool TryAdd(int digit)
+        {
+            int num = SelectedOption;
+            int newnum = num * 10 + digit;
+
+            if (!Select(newnum))
+            {
+                //Should remove the first digit?
+                newnum = newnum % (int)Math.Pow(10, Math.Floor(Math.Log10(newnum)));
+                if (!Select(newnum)) return Select(Max);
+            }
+            return true;
+        }
+    }
+
+    class MenuBoolOption : MenuChoice<bool>
+    {
+        public MenuBoolOption(string title) : base(title, new List<bool>() { false, true }, x => x ? "Yes" : "No") { }
     }
 }

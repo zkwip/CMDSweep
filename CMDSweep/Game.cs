@@ -16,6 +16,7 @@ namespace CMDSweep
             Menu,
             Done,
             Highscore,
+            Quit,
         }
 
         Timer refreshTimer;
@@ -28,8 +29,12 @@ namespace CMDSweep
         internal readonly BoardVisualizer BVis;
         internal readonly MenuVisualizer MVis;
 
+        public MenuList currentMenuList;
         public GameBoardState CurrentState;
         public Difficulty CurrentDifficulty;
+
+        public MenuList MainMenu;
+        public MenuList SettingsMenu;
 
         public GameApp(IRenderer r)
         {
@@ -42,16 +47,14 @@ namespace CMDSweep
             MVis = new MenuVisualizer(this);
             BVis = new BoardVisualizer(this);
             
+            BuildMenus();
 
             refreshTimer = new Timer(100);
             refreshTimer.Elapsed += TimerElapsed;
             refreshTimer.AutoReset = true;
 
-            // Start a new game
-            //InitialiseGame();
-            InitialiseMenu();
-            
-            Refresh(RefreshMode.Rescale);
+            // Testing
+            OpenMenu(MainMenu);
 
             while (Step());
             refreshTimer.Stop();
@@ -60,6 +63,7 @@ namespace CMDSweep
 
         private bool Step()
         {
+            if (appState == ApplicationState.Quit) return false;
             InputAction ia = ReadAction();
             switch (appState)
             {
@@ -67,6 +71,8 @@ namespace CMDSweep
                 case ApplicationState.Done: return DoneStep(ia);
                 case ApplicationState.Highscore: return HighScoreStep(ia);
                 case ApplicationState.Menu: return MenuStep(ia);
+
+                case ApplicationState.Quit:
                 default: return false;
             }
         }
@@ -110,7 +116,8 @@ namespace CMDSweep
                     CurrentState.ToggleFlag();
                     break;
                 case InputAction.Quit:
-                    return false;
+                    OpenMenu(MainMenu);
+                    break;
                 case InputAction.NewGame:
                     InitialiseGame();
                     break;
@@ -136,11 +143,11 @@ namespace CMDSweep
             switch (ia)
             {
                 case InputAction.Quit:
-                    return false;
+                    OpenMenu(MainMenu);
+                    break;
                 case InputAction.Dig:
                 case InputAction.NewGame:
                     InitialiseGame();
-                    Refresh(RefreshMode.Full);
                     break;
             }
             return true;
@@ -153,18 +160,9 @@ namespace CMDSweep
 
         private bool MenuStep(InputAction ia)
         {
-            MVis.Visualize(RefreshMode.ChangesOnly);
-            switch (ia)
-            {
-                case InputAction.Quit:
-                    return false;
-                case InputAction.Dig:
-                case InputAction.NewGame:
-                    InitialiseGame();
-                    Refresh(RefreshMode.Full);
-                    break;
-            }
-            return true; // TODO
+            bool res = currentMenuList.HandleInput(ia); // TODO
+            Refresh(RefreshMode.ChangesOnly);
+            return res;
         }
 
         private GameSettings LoadSettings()
@@ -179,6 +177,8 @@ namespace CMDSweep
         
         private void Refresh(RefreshMode mode)
         {
+            if (appState != ApplicationState.Playing) refreshTimer.Stop();
+
             if (screenBounds != Renderer.Bounds)
             {
                 mode = RefreshMode.Rescale;
@@ -192,22 +192,84 @@ namespace CMDSweep
                 case ApplicationState.Done:
                     BVis.Visualize(mode);
                     break;
+                case ApplicationState.Menu:
+                    MVis.Visualize(mode);
+                    break;
                 default:
                     break;
             }
-
         }
 
         public void InitialiseGame()
         {
+            refreshTimer.Stop();
             appState = ApplicationState.Playing;
             CurrentState = GameBoardState.NewGame(CurrentDifficulty);
+            Refresh(RefreshMode.Full);
         }
 
-        public void InitialiseMenu()
+        public void BuildMenus()
         {
+            MainMenu = new MenuList("Main Menu", this);
+
+            SettingsMenu = new MenuList("Settings", this);
+            SettingsMenu.ParentMenu = MainMenu;
+
+            MenuItem StartButton = new MenuButton("Start New Game");
+            StartButton.ValueChanged += (i, o) => InitialiseGame();
+            MainMenu.Add(StartButton);
+
+            MenuItem HighButton = new MenuButton("High scores");
+            HighButton.ValueChanged += (i, o) => ShowHighscores();
+            MainMenu.Add(HighButton);
+
+            MenuItem SettingsButton = new MenuButton("Settings");
+            SettingsButton.ValueChanged += (i, o) => OpenMenu(SettingsMenu);
+            MainMenu.Add(SettingsButton);
+
+            MenuItem QuitButton = new MenuButton("Quit");
+            QuitButton.ValueChanged += (i, o) => QuitGame();
+            MainMenu.Add(QuitButton);
+
+
+            SettingsMenu.Add(new MenuChoice<Difficulty>("Difficulty", Settings.Difficulties, x => x.Name));
+            SettingsMenu.Add(new MenuNumberRange("Width", 5, 1000));
+            SettingsMenu.Add(new MenuNumberRange("Height", 5, 1000));
+            SettingsMenu.Add(new MenuNumberRange("Mines", 1, 10000));
+            SettingsMenu.Add(new MenuNumberRange("Lives", 1, 100));
+
+            SettingsMenu.Add(new MenuText("Advanced"));
+            SettingsMenu.Add(new MenuNumberRange("Safe Zone", 1, 100));
+            SettingsMenu.Add(new MenuNumberRange("Counting Radius", 1, 100));
+            SettingsMenu.Add(new MenuBoolOption("Counting Wraps Around"));
+            SettingsMenu.Add(new MenuBoolOption("Flags Allowed"));
+            SettingsMenu.Add(new MenuBoolOption("Question Marks Allowed"));
+            SettingsMenu.Add(new MenuBoolOption("Automatic Discovery"));
+            SettingsMenu.Add(new MenuBoolOption("Subtract Flags From Count"));
+            SettingsMenu.Add(new MenuBoolOption("Only Show Numbers At Cursor"));
+        }
+
+        private void ShowHighscores()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void QuitGame()
+        {
+            appState = ApplicationState.Quit;
+        }
+
+        public void OpenMenu(MenuList menu) { 
+            refreshTimer.Stop();
+            currentMenuList = menu;
             appState = ApplicationState.Menu;
-            MVis.Visualize(RefreshMode.Full);
+            Refresh(RefreshMode.Full);
+        }
+
+        public void ContinueGame()
+        {
+            appState = ApplicationState.Playing;
+            Refresh(RefreshMode.Full);
         }
     }
 
@@ -273,6 +335,7 @@ namespace CMDSweep
         Eight,
         Nine,
         Zero,
+        Clear,
     }
 
     public enum Face
