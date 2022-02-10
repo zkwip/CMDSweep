@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Timers;
+﻿using System.Timers;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System;
+using System.IO;
 
 namespace CMDSweep
 {

@@ -1,7 +1,5 @@
-﻿using System;
-
-namespace CMDSweep
-{
+﻿namespace CMDSweep
+{ 
     class Program
     {
         static void Main(string[] args)
