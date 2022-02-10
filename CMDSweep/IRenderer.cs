@@ -25,6 +25,18 @@ namespace CMDSweep
 
         public static bool operator ==(Bounds b1, Bounds b2) => b1.Width == b2.Width && b1.Height == b2.Height;
         public static bool operator !=(Bounds b1, Bounds b2) => b1.Width != b2.Width || b1.Height != b2.Height;
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Width, Height);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Bounds bounds &&
+                   Width == bounds.Width &&
+                   Height == bounds.Height;
+        }
     }
 
 

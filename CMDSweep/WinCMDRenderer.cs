@@ -16,7 +16,7 @@ namespace CMDSweep
 
         public void ClearScreen(StyleData data)
         {
-            SendDataToConsole(data);
+            SetConsoleStyle(data);
             HideCursor();
             Console.Clear();
         }
@@ -25,13 +25,13 @@ namespace CMDSweep
         public void ClearScreen(StyleData data, int row, int col, int width) => ClearScreen(data, row, col, width, 1);
         public void ClearScreen(StyleData data, int row, int col, int width, int height)
         {
-            SendDataToConsole(data);
+            SetConsoleStyle(data);
             for (int r = row; r < row + height; r++)
                 PrintAtTile(r, col, data, "".PadLeft(width));
             HideCursor();
         }
 
-        private void SendDataToConsole(StyleData data)
+        private void SetConsoleStyle(StyleData data)
         {
             Console.ForegroundColor = data.Foreground;
             Console.BackgroundColor = data.Background;
@@ -57,14 +57,14 @@ namespace CMDSweep
 
         public void HideCursor(StyleData data)
         {
-            SendDataToConsole(data);
+            SetConsoleStyle(data);
             HideCursor();
         }
 
         public void PrintAtTile(int row, int col, StyleData data, string s)
         {
             SetCursor(row, col);
-            SendDataToConsole(data);
+            SetConsoleStyle(data);
             Console.Write(s);
         }
 

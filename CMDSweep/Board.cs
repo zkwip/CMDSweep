@@ -406,6 +406,18 @@ namespace CMDSweep
             return c1.X != c2.X ||
                    c1.Y != c2.Y;
         }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is CellLocation location &&
+                   X == location.X &&
+                   Y == location.Y;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(X, Y);
+        }
     }
 
     public struct CellData
@@ -416,10 +428,6 @@ namespace CMDSweep
         public FlagMarking Flagged;
         public bool QuestionMarked;
 
-        public override bool Equals(object obj)
-        {
-            return obj is CellData && Equals((CellData)obj);
-        }
 
         public static bool operator ==(CellData c1, CellData c2)
         {
@@ -433,6 +441,20 @@ namespace CMDSweep
             return c1.Mine != c2.Mine ||
                    c1.Discovered != c2.Discovered ||
                    c1.Flagged != c2.Flagged;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is CellData data &&
+                   Mine == data.Mine &&
+                   Discovered == data.Discovered &&
+                   Flagged == data.Flagged &&
+                   QuestionMarked == data.QuestionMarked;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Mine, Discovered, Flagged, QuestionMarked);
         }
     }
 

@@ -59,7 +59,7 @@ namespace CMDSweep
             while (Step()) ;
             refreshTimer.Stop();
         }
-        private void TimerElapsed(object sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
+        private void TimerElapsed(object? sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
 
         private bool Step()
         {
@@ -170,7 +170,10 @@ namespace CMDSweep
             using (StreamReader r = new StreamReader("settings.json"))
             {
                 string json = r.ReadToEnd();
-                return JsonConvert.DeserializeObject<GameSettings>(json);
+
+                GameSettings? gs = JsonConvert.DeserializeObject<GameSettings>(json);
+                if (gs != null) throw new Exception("Failed to load settings");
+                return gs!;
             }
         }
 
@@ -259,8 +262,10 @@ namespace CMDSweep
             appState = ApplicationState.Quit;
         }
 
-        public void OpenMenu(MenuList menu)
+        public void OpenMenu(MenuList? menu)
         {
+            if (menu == null) return;
+
             refreshTimer.Stop();
             currentMenuList = menu;
             appState = ApplicationState.Menu;
@@ -274,6 +279,7 @@ namespace CMDSweep
         }
     }
 
+    #pragma warning disable CS0649 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     internal class GameSettings
     {
         public List<Difficulty> Difficulties;
@@ -282,6 +288,8 @@ namespace CMDSweep
         public Dictionary<string, int> Dimensions;
         public Dictionary<InputAction, List<ConsoleKey>> Controls;
     }
+
+    #pragma warning restore CS0649 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public class Difficulty
     {

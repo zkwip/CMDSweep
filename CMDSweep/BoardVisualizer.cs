@@ -16,7 +16,7 @@ namespace CMDSweep
         private bool rendering = false;
         private bool renderWaiting = false;
 
-        private GameBoardState lastRenderedGameState;
+        private GameBoardState? lastRenderedGameState;
         private readonly StyleData hideStyle;
 
         public BoardVisualizer(GameApp g)
@@ -48,18 +48,16 @@ namespace CMDSweep
             return true;
         }
 
-        public GameBoardState ProcessVisualization(RefreshMode mode, GameBoardState currentGS, GameBoardState prevGS)
+        public GameBoardState? ProcessVisualization(RefreshMode mode, GameBoardState? currentGS, GameBoardState? prevGS)
         {
             // Force a full rerender in case the screen has not been drawn before
-            if (prevGS == null)
-                mode = RefreshMode.Full;
-            if (mode == RefreshMode.ChangesOnly && currentGS.PlayerState != prevGS.PlayerState)
-                mode = RefreshMode.Full;
+            if (currentGS == null) return null;
 
-            List<CellLocation> changes;
-
-            if (mode == RefreshMode.ChangesOnly)
+            if (prevGS == null) { }
+            else if (mode == RefreshMode.ChangesOnly && currentGS.PlayerState != prevGS.PlayerState) { }
+            else if (mode == RefreshMode.ChangesOnly)
             {
+                List<CellLocation> changes;
                 changes = currentGS.CompareForChanges(prevGS);
                 foreach (CellLocation cl in changes) RenderAtLocation(cl, currentGS);
             }
