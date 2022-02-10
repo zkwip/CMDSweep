@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMDSweep", "CMDSweep\CMDSweep.csproj", "{6C12B337-DE88-4D57-8542-1A97E805FC66}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMDSweep", "CMDSweep\CMDSweep.csproj", "{6C12B337-DE88-4D57-8542-1A97E805FC66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

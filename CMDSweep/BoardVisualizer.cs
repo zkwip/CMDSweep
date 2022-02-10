@@ -24,7 +24,7 @@ namespace CMDSweep
             renderer = g.Renderer;
             settings = g.Settings;
             game = g;
-            hideStyle = new StyleData(settings.Colors["cell-bg-out-of-bounds"], settings.Colors["cell-bg-out-of-bounds"], false); 
+            hideStyle = new StyleData(settings.Colors["cell-bg-out-of-bounds"], settings.Colors["cell-bg-out-of-bounds"], false);
         }
 
         public bool Visualize(RefreshMode mode)
@@ -47,7 +47,7 @@ namespace CMDSweep
             rendering = false;
             return true;
         }
-        
+
         public GameBoardState ProcessVisualization(RefreshMode mode, GameBoardState currentGS, GameBoardState prevGS)
         {
             // Force a full rerender in case the screen has not been drawn before
@@ -67,7 +67,7 @@ namespace CMDSweep
             {
                 RenderFullBoard(currentGS);
             }
-            
+
             UpdateStatBoard(currentGS);
             renderer.HideCursor(hideStyle);
 
@@ -84,7 +84,7 @@ namespace CMDSweep
             int top = settings.Dimensions["stat-padding-y"];
 
             int minesStart = right - 5;
-            int livesStart = minesStart - (2* currentGS.Difficulty.Lives) - 1 - settings.Dimensions["stat-padding-x-in-between"];
+            int livesStart = minesStart - (2 * currentGS.Difficulty.Lives) - 1 - settings.Dimensions["stat-padding-x-in-between"];
 
             renderer.ClearScreen(hideStyle, top);
 
@@ -182,7 +182,7 @@ namespace CMDSweep
 
         void RenderBorder(GameBoardState currentGS)
         {
-            StyleData data = new StyleData(settings.Colors["border-fg"], settings.Colors["cell-bg-out-of-bounds"],false);
+            StyleData data = new StyleData(settings.Colors["border-fg"], settings.Colors["cell-bg-out-of-bounds"], false);
 
             renderer.PrintAtTile(offsetY - scaleY, offsetX - scaleX, data, settings.Texts["border-corner-tl"]);
             for (int x = 0; x < currentGS.BoardWidth; x++)
@@ -202,28 +202,28 @@ namespace CMDSweep
                 renderer.PrintAtTile(offsetY + currentGS.BoardHeight * scaleY, offsetX + x * scaleX, data, settings.Texts["border-horizontal"]);
             renderer.PrintAtTile(offsetY + currentGS.BoardHeight * scaleY, offsetX + currentGS.BoardWidth * scaleX, data, settings.Texts["border-corner-br"]);
         }
-        
+
         void RenderAtLocation(CellLocation cl, GameBoardState currentGS)
         {
             int posX = offsetX + cl.X * scaleX;
             int posY = offsetY + cl.Y * scaleY;
-            
+
             ConsoleColor fg;
             switch (GetTileVisual(cl, currentGS))
             {
-                case TileVisual.Discovered:         fg = settings.Colors["cell-fg-discovered"];     break;
-                case TileVisual.Undiscovered:       fg = settings.Colors["cell-fg-undiscovered"];   break;
-                case TileVisual.Flagged:            fg = settings.Colors["cell-flagged"];           break;
-                case TileVisual.DiscoveredMine:     fg = settings.Colors["cell-mine-discovered"];   break;
+                case TileVisual.Discovered: fg = settings.Colors["cell-fg-discovered"]; break;
+                case TileVisual.Undiscovered: fg = settings.Colors["cell-fg-undiscovered"]; break;
+                case TileVisual.Flagged: fg = settings.Colors["cell-flagged"]; break;
+                case TileVisual.DiscoveredMine: fg = settings.Colors["cell-mine-discovered"]; break;
 
-                case TileVisual.DeadWrongFlag:      fg = settings.Colors["cell-dead-wrong-flag"];   break;
-                case TileVisual.DeadMine:           fg = settings.Colors["cell-dead-mine-missed"];  break;
-                case TileVisual.DeadMineExploded:   fg = settings.Colors["cell-dead-mine-hit"];     break;
-                case TileVisual.DeadMineFlagged:    fg = settings.Colors["cell-dead-mine-flagged"]; break;
-                case TileVisual.DeadDiscovered:     fg = settings.Colors["cell-fg-discovered"];     break;
-                case TileVisual.DeadUndiscovered:   fg = settings.Colors["cell-fg-undiscovered"];   break;
-                case TileVisual.QuestionMarked:     fg = settings.Colors["cell-questionmarked"];    break;
-                default:                            fg = settings.Colors["cell-fg-out-of-bounds"];  break;
+                case TileVisual.DeadWrongFlag: fg = settings.Colors["cell-dead-wrong-flag"]; break;
+                case TileVisual.DeadMine: fg = settings.Colors["cell-dead-mine-missed"]; break;
+                case TileVisual.DeadMineExploded: fg = settings.Colors["cell-dead-mine-hit"]; break;
+                case TileVisual.DeadMineFlagged: fg = settings.Colors["cell-dead-mine-flagged"]; break;
+                case TileVisual.DeadDiscovered: fg = settings.Colors["cell-fg-discovered"]; break;
+                case TileVisual.DeadUndiscovered: fg = settings.Colors["cell-fg-undiscovered"]; break;
+                case TileVisual.QuestionMarked: fg = settings.Colors["cell-questionmarked"]; break;
+                default: fg = settings.Colors["cell-fg-out-of-bounds"]; break;
             }
 
             string text = settings.Texts["cell-empty"];
@@ -257,7 +257,7 @@ namespace CMDSweep
                     if (num > 0 && (currentGS.Cursor == cl || !currentGS.Difficulty.OnlyShowAtCursor))
                     {
                         text = num.ToString();
-                        fg = settings.Colors[string.Format("cell-{0}-discovered", num%10)];
+                        fg = settings.Colors[string.Format("cell-{0}-discovered", num % 10)];
                     }
                     else
                     {
@@ -276,7 +276,7 @@ namespace CMDSweep
             }
 
             ConsoleColor bg;
-            switch(GetTileVisual(cl, currentGS))
+            switch (GetTileVisual(cl, currentGS))
             {
                 case TileVisual.Discovered:
                 case TileVisual.DeadDiscovered:
@@ -291,13 +291,13 @@ namespace CMDSweep
                     break;
             }
 
-            StyleData data = new StyleData(fg,bg,false);
-            
+            StyleData data = new StyleData(fg, bg, false);
+
             // Padding
             int padRight = 0;
             if (text.Length < scaleX) padRight = scaleX - text.Length;
             int padLeft = padRight / 2;
-            padRight = scaleX-padLeft;
+            padRight = scaleX - padLeft;
 
             // Actual rendering
             renderer.PrintAtTile(posY, posX, data, " ".PadLeft(padLeft));
@@ -307,7 +307,7 @@ namespace CMDSweep
 
         private TileVisual GetTileVisual(CellLocation cl, GameBoardState currentGS)
         {
-            if(currentGS.PlayerState == PlayerState.Dead)
+            if (currentGS.PlayerState == PlayerState.Dead)
             {
                 if (currentGS.CellIsMine(cl))
                 {

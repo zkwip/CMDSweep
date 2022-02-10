@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CMDSweep
 {
@@ -15,7 +11,7 @@ namespace CMDSweep
 
         public Bounds Bounds
         {
-            get {  return new Bounds(Console.WindowWidth, Console.WindowHeight);}
+            get { return new Bounds(Console.WindowWidth, Console.WindowHeight); }
         }
 
         public void ClearScreen(StyleData data)

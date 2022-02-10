@@ -25,7 +25,7 @@ namespace CMDSweep
         public StyleData FocusTitleStyle { get; internal set; }
         public MenuItem SelectedItem { get => CurrentList.Items[CurrentList.Index]; }
         public MenuList CurrentList => game.currentMenuList;
-        internal Dictionary<string,ConsoleColor> Colors { get => game.Settings.Colors; }
+        internal Dictionary<string, ConsoleColor> Colors { get => game.Settings.Colors; }
 
         public MenuVisualizer(GameApp g)
         {
@@ -74,7 +74,7 @@ namespace CMDSweep
                 list.Items[i].RenderItem(MapIndexToRow(i), this, list.Index == i);
         }
 
-        private int MapIndexToRow(int i) => textRow + game.Settings.Dimensions["menu-row-scale"] * i; 
+        private int MapIndexToRow(int i) => textRow + game.Settings.Dimensions["menu-row-scale"] * i;
         private void RenderTitle(string title) => Renderer.PrintAtTile(titleRow, textCol, MenuTextStyle, title);
 
         public string CenterAlign(string text, int length)
@@ -90,7 +90,7 @@ namespace CMDSweep
         public MenuList ParentMenu;
         public GameApp Game;
 
-        public List<MenuItem> Items{ get; private set; }
+        public List<MenuItem> Items { get; private set; }
         public string Title { get; private set; }
         public int Index { get; private set; }
         public MenuItem SelectedItem { get => Items[Index]; }
@@ -183,7 +183,7 @@ namespace CMDSweep
             StyleData styl = focus ? mv.FocusTitleStyle : mv.MenuTextStyle;
 
             mv.Renderer.ClearScreen(mv.MenuTextStyle, row, mv.textCol, mv.colsNeeded);
-            
+
             // chevron
             //mv.Renderer.PrintAtTile(row, mv.prefixCol, styl, pref);
 

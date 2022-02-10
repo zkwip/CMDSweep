@@ -1,8 +1,8 @@
-﻿using System.Timers;
-using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Timers;
 
 namespace CMDSweep
 {
@@ -46,7 +46,7 @@ namespace CMDSweep
 
             MVis = new MenuVisualizer(this);
             BVis = new BoardVisualizer(this);
-            
+
             BuildMenus();
 
             refreshTimer = new Timer(100);
@@ -56,7 +56,7 @@ namespace CMDSweep
             // Testing
             OpenMenu(MainMenu);
 
-            while (Step());
+            while (Step()) ;
             refreshTimer.Stop();
         }
         private void TimerElapsed(object sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
@@ -174,7 +174,7 @@ namespace CMDSweep
             }
         }
 
-        
+
         private void Refresh(RefreshMode mode)
         {
             if (appState != ApplicationState.Playing) refreshTimer.Stop();
@@ -259,7 +259,8 @@ namespace CMDSweep
             appState = ApplicationState.Quit;
         }
 
-        public void OpenMenu(MenuList menu) { 
+        public void OpenMenu(MenuList menu)
+        {
             refreshTimer.Stop();
             currentMenuList = menu;
             appState = ApplicationState.Menu;
