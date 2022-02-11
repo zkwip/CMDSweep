@@ -35,6 +35,7 @@ namespace CMDSweep
 
         public MenuList MainMenu;
         public MenuList SettingsMenu;
+        public MenuList AdvancedSettingsMenu;
 
         public GameApp(IRenderer r)
         {
@@ -172,8 +173,8 @@ namespace CMDSweep
                 string json = r.ReadToEnd();
 
                 GameSettings? gs = JsonConvert.DeserializeObject<GameSettings>(json);
-                if (gs != null) throw new Exception("Failed to load settings");
-                return gs!;
+                if (gs == null) throw new Exception("Failed to load settings");
+                return gs;
             }
         }
 
@@ -208,7 +209,9 @@ namespace CMDSweep
             refreshTimer.Stop();
             appState = ApplicationState.Playing;
             CurrentState = GameBoardState.NewGame(CurrentDifficulty);
-            Refresh(RefreshMode.Full);
+
+            Refresh(RefreshMode.Rescale);
+            Renderer.SetTitle(appState.ToString());
         }
 
         public void BuildMenus()
@@ -218,6 +221,9 @@ namespace CMDSweep
             SettingsMenu = new MenuList("Settings", this);
             SettingsMenu.ParentMenu = MainMenu;
 
+            AdvancedSettingsMenu = new MenuList("Advanced", this);
+            AdvancedSettingsMenu.ParentMenu = SettingsMenu;
+
             MenuItem StartButton = new MenuButton("Start New Game");
             StartButton.ValueChanged += (i, o) => InitialiseGame();
             MainMenu.Add(StartButton);
@@ -226,32 +232,93 @@ namespace CMDSweep
             HighButton.ValueChanged += (i, o) => ShowHighscores();
             MainMenu.Add(HighButton);
 
-            MenuItem SettingsButton = new MenuButton("Settings");
-            SettingsButton.ValueChanged += (i, o) => OpenMenu(SettingsMenu);
-            MainMenu.Add(SettingsButton);
+            CreateMenuButton(MainMenu, "Settings", SettingsMenu);
 
             MenuItem QuitButton = new MenuButton("Quit");
             QuitButton.ValueChanged += (i, o) => QuitGame();
             MainMenu.Add(QuitButton);
 
+            /*
+            MenuChoice<Difficulty> DifficultyOption = new MenuChoice<Difficulty>("Difficulty", Settings.Difficulties, x => x.Name);
+            DifficultyOption.ValueChanged += (i, o) => ChangePreset(DifficultyOption);
+            SettingsMenu.Add(DifficultyOption);
+            */
 
-            SettingsMenu.Add(new MenuChoice<Difficulty>("Difficulty", Settings.Difficulties, x => x.Name));
-            SettingsMenu.Add(new MenuNumberRange("Width", 5, 1000));
-            SettingsMenu.Add(new MenuNumberRange("Height", 5, 1000));
-            SettingsMenu.Add(new MenuNumberRange("Mines", 1, 10000));
-            SettingsMenu.Add(new MenuNumberRange("Lives", 1, 100));
+            CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", Settings.Difficulties, x => x.Name), x => x, (d, val) => this.CurrentDifficulty = val);
 
-            SettingsMenu.Add(new MenuText("Advanced"));
-            SettingsMenu.Add(new MenuNumberRange("Safe Zone", 1, 100));
-            SettingsMenu.Add(new MenuNumberRange("Counting Radius", 1, 100));
-            SettingsMenu.Add(new MenuBoolOption("Counting Wraps Around"));
-            SettingsMenu.Add(new MenuBoolOption("Flags Allowed"));
-            SettingsMenu.Add(new MenuBoolOption("Question Marks Allowed"));
-            SettingsMenu.Add(new MenuBoolOption("Automatic Discovery"));
-            SettingsMenu.Add(new MenuBoolOption("Subtract Flags From Count"));
-            SettingsMenu.Add(new MenuBoolOption("Only Show Numbers At Cursor"));
+            CreateSettingsItem(SettingsMenu, new MenuNumberRange("Width", 5, 1000), x => x.Width, (d, val) => d.Width = val);
+            CreateSettingsItem(SettingsMenu, new MenuNumberRange("Height", 5, 1000), x => x.Height, (d, val) => d.Height = val);
+            CreateSettingsItem(SettingsMenu, new MenuNumberRange("Mines", 1, 10000), x => x.Mines, (d, val) => d.Mines = val);
+            CreateSettingsItem(SettingsMenu, new MenuNumberRange("Lives", 1, 100), x => x.Lives, (d, val) => d.Lives = val);
+
+            CreateMenuButton(SettingsMenu, "Advanced", AdvancedSettingsMenu);
+
+            CreateSettingsItem(AdvancedSettingsMenu, new MenuNumberRange("Safe Zone", 1, 100), x => x.Safezone, (d, val) => d.Safezone = val);
+            CreateSettingsItem(AdvancedSettingsMenu, new MenuNumberRange("Counting Radius", 1, 100), x => x.DetectionRadius, (d, val) => d.DetectionRadius = val);
+
+            CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Counting Wraps Around"), x => x.WrapAround, (d, val) => d.WrapAround = val);
+            CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Flags Allowed"), x => x.FlagsAllowed, (d, val) => d.FlagsAllowed = val);
+            CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Question Marks Allowed"), x => x.QuestionMarkAllowed, (d, val) => d.QuestionMarkAllowed = val);
+            CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Automatic Discovery"), x => x.AutomaticDiscovery, (d, val) => d.AutomaticDiscovery = val);
+            CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Subtract Flags From Count"), x => x.SubtractFlags, (d, val) => d.SubtractFlags = val);
+            CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Only Show Numbers At Cursor"), x => x.OnlyShowAtCursor, (d, val) => d.OnlyShowAtCursor = val);
         }
 
+        private event EventHandler DifficultyChanged;
+
+        private void CreateMenuButton(MenuList Parent, string title, MenuList Linked)
+        {
+            MenuItem res = new MenuButton(title);
+            res.ValueChanged += (i, o) => OpenMenu(Linked);
+            Parent.Add(res);
+        }
+
+        private void CreateSettingsItem<TOption>(MenuList Parent, MenuChoice<TOption> Item, Func<Difficulty, TOption> Read, Action<Difficulty, TOption> Write)
+        {
+            // Changing the difficulty itself works differently
+            if (Item is MenuChoice<Difficulty> choice)
+                Item.ValueChanged += (i, o) => ChangePreset(choice);
+            else
+                Item.ValueChanged += (i, o) => { ForkCurrentDifficulty(Write, Item.SelectedOption); };
+
+            // Change the value when the difficulty is changed
+            DifficultyChanged += (i, o) => SelectValue(Item, Read(CurrentDifficulty));
+            SelectValue(Item, Read(CurrentDifficulty));
+
+
+            Parent.Add(Item);
+        }
+
+        private void SelectValue<TOption>(MenuChoice<TOption> Item, TOption value)
+        {
+            if (!Item.Select(value, true)) throw new Exception("Selected item not in the list");
+        }
+
+        private void ForkCurrentDifficulty<TOption>(Action<Difficulty, TOption> Write, TOption Value)
+        {
+            // Create a new custom difficulty if you are changing from another preset
+            if (CurrentDifficulty.Name != "Custom")
+            {
+                CurrentDifficulty = CurrentDifficulty.Clone("Custom");
+                Settings.Difficulties.RemoveAll(dif => dif.Name == "Custom");
+                Settings.Difficulties.Add(CurrentDifficulty);
+            }
+
+            Write(CurrentDifficulty, Value);
+            DifficultyChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void ChangePreset(MenuChoice<Difficulty> choice) 
+        {
+            Difficulty d = choice.SelectedOption;
+            if (d == null) return;
+            if (d.Name == "Custom") return;
+
+            CurrentDifficulty = d;
+            DifficultyChanged?.Invoke(this, EventArgs.Empty);
+            Renderer.SetTitle("Invoked");
+        }
+        
         private void ShowHighscores()
         {
             throw new NotImplementedException();
@@ -308,6 +375,64 @@ namespace CMDSweep
         public bool SubtractFlags;
         public bool OnlyShowAtCursor;
         public bool AutomaticDiscovery;
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Difficulty difficulty &&
+                   Name == difficulty.Name &&
+                   Width == difficulty.Width &&
+                   Height == difficulty.Height &&
+                   Mines == difficulty.Mines &&
+                   Lives == difficulty.Lives &&
+                   Safezone == difficulty.Safezone &&
+                   DetectionRadius == difficulty.DetectionRadius &&
+                   FlagsAllowed == difficulty.FlagsAllowed &&
+                   QuestionMarkAllowed == difficulty.QuestionMarkAllowed &&
+                   WrapAround == difficulty.WrapAround &&
+                   SubtractFlags == difficulty.SubtractFlags &&
+                   OnlyShowAtCursor == difficulty.OnlyShowAtCursor &&
+                   AutomaticDiscovery == difficulty.AutomaticDiscovery;
+        }
+
+        public override int GetHashCode()
+        {
+            HashCode hash = new HashCode();
+            hash.Add(Name);
+            hash.Add(Width);
+            hash.Add(Height);
+            hash.Add(Mines);
+            hash.Add(Lives);
+            hash.Add(Safezone);
+            hash.Add(DetectionRadius);
+            hash.Add(FlagsAllowed);
+            hash.Add(QuestionMarkAllowed);
+            hash.Add(WrapAround);
+            hash.Add(SubtractFlags);
+            hash.Add(OnlyShowAtCursor);
+            hash.Add(AutomaticDiscovery);
+            return hash.ToHashCode();
+        }
+
+        internal Difficulty Clone() => Clone(this.Name);
+        internal Difficulty Clone(string name)
+        {
+            return new Difficulty()
+            {
+                Name = name,
+                Width = this.Width,
+                Height = this.Height,
+                Mines = this.Mines,
+                Lives = this.Lives,
+                Safezone = this.Safezone,
+                DetectionRadius = this.DetectionRadius,
+                FlagsAllowed = this.FlagsAllowed,
+                QuestionMarkAllowed = this.QuestionMarkAllowed,
+                WrapAround = this.WrapAround,
+                SubtractFlags = this.SubtractFlags,
+                OnlyShowAtCursor = this.OnlyShowAtCursor,
+                AutomaticDiscovery = this.AutomaticDiscovery
+            };
+        }
     }
 
     public enum RefreshMode

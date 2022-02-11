@@ -17,13 +17,16 @@ namespace CMDSweep
         internal int textRow = 0;
         internal int rowScale = 1;
 
+        internal int scrollDepth = 0;
+        internal int maxRows = 4;
+
         internal IRenderer Renderer { get => game.Renderer; }
         internal GameApp game;
 
         public StyleData MenuTextStyle { get; internal set; }
         public StyleData FocusBoxStyle { get; internal set; }
         public StyleData FocusTitleStyle { get; internal set; }
-        public MenuItem SelectedItem { get => CurrentList.Items[CurrentList.Index]; }
+        public MenuItem SelectedItem { get => CurrentList.Items[CurrentList.FocusIndex]; }
         public MenuList CurrentList => game.currentMenuList;
         internal Dictionary<string, ConsoleColor> Colors { get => game.Settings.Colors; }
 
@@ -53,6 +56,8 @@ namespace CMDSweep
         {
             Dictionary<string, int> dims = game.Settings.Dimensions;
 
+            // Column calculations
+
             optionWidth = dims["menu-col2-width"];
             colsNeeded = dims["menu-indent"] + dims["menu-col1-width"] + optionWidth + 2 * dims["menu-box-padding"];
 
@@ -62,16 +67,21 @@ namespace CMDSweep
             optionTextCol = optionCol + dims["menu-box-padding"];
             optionTextEndCol = optionCol + optionWidth + dims["menu-box-padding"];
 
-            int rowsNeeded = 2 + dims["menu-title-space"] + dims["menu-row-scale"] * (dims["menu-rows"] - 1);
+
+            // Row calculations
+            maxRows = dims["menu-rows"];
+            int rowsNeeded = 2 + dims["menu-title-space"] + dims["menu-row-scale"] * (maxRows - 1);
             titleRow = Math.Max(0, Renderer.Bounds.Height - rowsNeeded) / 2;
             textRow = titleRow + 1 + dims["menu-title-space"];
         }
 
         private void VisualizeList(MenuList list)
         {
+            scrollDepth = list.FixScroll(scrollDepth, maxRows);
             RenderTitle(list.Title);
-            for (int i = 0; i < list.Items.Count; i++)
-                list.Items[i].RenderItem(MapIndexToRow(i), this, list.Index == i);
+            for (int i = 0; i + scrollDepth < list.Items.Count && i < maxRows; i++)
+                list.Items[i + scrollDepth].RenderItem(MapIndexToRow(i), this, list.FocusIndex == i + scrollDepth);
+            Renderer.HideCursor(MenuTextStyle);
         }
 
         private int MapIndexToRow(int i) => textRow + game.Settings.Dimensions["menu-row-scale"] * i;
@@ -92,31 +102,32 @@ namespace CMDSweep
 
         public List<MenuItem> Items { get; private set; }
         public string Title { get; private set; }
-        public int Index { get; private set; }
-        public MenuItem SelectedItem { get => Items[Index]; }
+        public int FocusIndex { get; private set; }
+        public MenuItem FocusedItem { get => Items[FocusIndex]; }
+        public int Length { get => Items.Count; }
 
-        public int SelectNext()
+        public int FocusNext()
         {
-            if (Items.Count == 0) return Index;
+            if (Length == 0) return FocusIndex;
             for (int i = 0; i < 100; i++)
             {
-                Index++;
-                if (Index >= Items.Count) Index -= Items.Count;
-                if (SelectedItem.Selectable) return Index;
+                FocusIndex++;
+                if (FocusIndex >= Length) FocusIndex -= Length;
+                if (FocusedItem.Focusable) return FocusIndex;
             }
-            return Index;
+            return FocusIndex;
         }
 
-        public int SelectPrevious()
+        public int FocusPrevious()
         {
-            if (Items.Count == 0) return Index;
+            if (Length == 0) return FocusIndex;
             for (int i = 0; i < 100; i++)
             {
-                Index--;
-                if (Index < 0) Index += Items.Count;
-                if (SelectedItem.Selectable) return Index;
+                FocusIndex--;
+                if (FocusIndex < 0) FocusIndex += Length;
+                if (FocusedItem.Focusable) return FocusIndex;
             }
-            return Index;
+            return FocusIndex;
         }
 
         public MenuList(string title, GameApp game)
@@ -124,7 +135,7 @@ namespace CMDSweep
             Game = game;
             Items = new List<MenuItem>();
             Title = title;
-            Index = 0;
+            FocusIndex = 0;
         }
 
         public void Add(MenuItem item)
@@ -141,39 +152,50 @@ namespace CMDSweep
                 else Game.OpenMenu(ParentMenu);
             }
 
-            if (SelectedItem != null) SelectedItem.HandleDefaultMenuAction(ia);
+            if (FocusedItem != null) FocusedItem.HandleMenuAction(ia);
             return true;
+        }
+
+        internal int FixScroll(int depth, int maxRows)
+        {
+            int space = 1;
+            int end = Length - maxRows;
+            while (depth > 0 && depth > FocusIndex - space) depth--;
+            while (depth < end && depth <= FocusIndex + space - maxRows) depth++;
+            return depth;
         }
     }
 
     public abstract class MenuItem
     {
         internal string Title;
-        internal abstract void RenderItemExtras(int row, MenuVisualizer mv, bool focus);
-        internal abstract bool HandleOtherActions(InputAction ia);
+        internal bool Focusable = true;
         internal MenuList Parent;
-        internal bool Selectable = true;
+
         public event EventHandler ValueChanged;
+        internal abstract void RenderItemExtras(int row, MenuVisualizer mv, bool focus);
+        internal abstract bool HandleItemActions(InputAction ia);
 
         internal virtual void OnValueChanged() => ValueChanged?.Invoke(this, EventArgs.Empty);
+        internal void BindParent(MenuList menuList) => Parent = menuList;
 
         internal MenuItem(string title)
         {
             Title = title;
         }
 
-        internal bool HandleDefaultMenuAction(InputAction ia)
+        internal bool HandleMenuAction(InputAction ia)
         {
             switch (ia)
             {
                 case InputAction.Up:
-                    Parent.SelectPrevious();
+                    Parent.FocusPrevious();
                     return true;
                 case InputAction.Down:
-                    Parent.SelectNext();
+                    Parent.FocusNext();
                     return true;
                 default:
-                    return HandleOtherActions(ia);
+                    return HandleItemActions(ia);
             }
         }
 
@@ -191,7 +213,6 @@ namespace CMDSweep
             RenderItemExtras(row, mv, focus);
         }
 
-        internal void BindParent(MenuList menuList) => Parent = menuList;
     }
 
     class MenuText : MenuItem
@@ -200,10 +221,10 @@ namespace CMDSweep
         internal MenuText(string title, string sub = "") : base(title)
         {
             Subtitle = sub;
-            Selectable = false;
+            Focusable = false;
         }
 
-        internal override bool HandleOtherActions(InputAction ia) => false;
+        internal override bool HandleItemActions(InputAction ia) => false;
 
         internal override void RenderItemExtras(int row, MenuVisualizer mv, bool focus)
         {
@@ -217,7 +238,7 @@ namespace CMDSweep
         internal string Subtitle;
         internal MenuButton(string title, string sub = "") : base("[ " + title + " ]") => Subtitle = sub;
 
-        internal override bool HandleOtherActions(InputAction ia)
+        internal override bool HandleItemActions(InputAction ia)
         {
             if (ia == InputAction.Dig) OnValueChanged();
             return (ia == InputAction.Dig);
@@ -239,7 +260,7 @@ namespace CMDSweep
 
         public MenuChoice(string title, List<TOption> options, Func<TOption, string> Display) : base(title)
         {
-            Options = new List<TOption>(options);
+            Options = options;
             this.Display = Display;
             Title = title;
         }
@@ -248,7 +269,7 @@ namespace CMDSweep
         public string SelectedName => Display(SelectedOption);
         public int Index { get => SelectedIndex; set => SetIndex(value); }
 
-        internal override bool HandleOtherActions(InputAction ia)
+        internal override bool HandleItemActions(InputAction ia)
         {
             switch (ia)
             {
@@ -271,12 +292,17 @@ namespace CMDSweep
             SelectedIndex = value;
             while (SelectedIndex >= Options.Count) SelectedIndex -= Options.Count;
             while (SelectedIndex < 0) SelectedIndex += Options.Count;
+            OnValueChanged();
         }
 
-        public bool Select(TOption option)
+        public bool Select(TOption option, bool silent = false)
         {
             int id = Options.IndexOf(option);
-            if (id != -1) SelectedIndex = id;
+            if (id != -1)
+            {
+                if (silent) SelectedIndex = id;
+                else Index = id;
+            }
             return (id != -1);
         }
 
@@ -316,7 +342,7 @@ namespace CMDSweep
             return res;
         }
 
-        internal override bool HandleOtherActions(InputAction ia)
+        internal override bool HandleItemActions(InputAction ia)
         {
             switch (ia)
             {

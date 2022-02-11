@@ -55,9 +55,10 @@ namespace CMDSweep
             Console.CursorVisible = false;
         }
 
-        public void HideCursor(StyleData data)
+        public void HideCursor(StyleData data) => HideCursor(data.Background);
+        public void HideCursor(ConsoleColor c)
         {
-            SetConsoleStyle(data);
+            SetConsoleStyle(new StyleData(c, c));
             HideCursor();
         }
 

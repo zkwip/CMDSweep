@@ -53,18 +53,15 @@ namespace CMDSweep
             // Force a full rerender in case the screen has not been drawn before
             if (currentGS == null) return null;
 
-            if (prevGS == null) { }
-            else if (mode == RefreshMode.ChangesOnly && currentGS.PlayerState != prevGS.PlayerState) { }
+            if (prevGS == null) RenderFullBoard(currentGS);
+            else if (mode == RefreshMode.ChangesOnly && currentGS.PlayerState != prevGS.PlayerState) RenderFullBoard(currentGS);
             else if (mode == RefreshMode.ChangesOnly)
             {
                 List<CellLocation> changes;
                 changes = currentGS.CompareForChanges(prevGS);
                 foreach (CellLocation cl in changes) RenderAtLocation(cl, currentGS);
             }
-            else
-            {
-                RenderFullBoard(currentGS);
-            }
+            else RenderFullBoard(currentGS);
 
             UpdateStatBoard(currentGS);
             renderer.HideCursor(hideStyle);
@@ -90,7 +87,6 @@ namespace CMDSweep
             RenderFace(top, center - 1, currentGS);
             RenderLifeCounter(top, livesStart, currentGS);
             RenderMineCounter(top, minesStart, currentGS);
-
         }
 
         private void RenderTimeCounter(int row, int col, GameBoardState currentGS)
