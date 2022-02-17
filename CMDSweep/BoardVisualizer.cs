@@ -71,31 +71,26 @@ namespace CMDSweep
                 if (prevGS == null) 
                     mode = RefreshMode.Full; // No history: Full render
 
-                else if (mode == RefreshMode.ChangesOnly)
+                if (mode == RefreshMode.ChangesOnly)
                 {
                     if (ScrollBoard(curGS)) mode = RefreshMode.Scroll; // Scrolling
                     if (curGS.PlayerState != prevGS.PlayerState) mode = RefreshMode.Full; // Player Mode changed
                 }
 
                 //Render
-                lastRenderedGameState = ProcessVisualization(mode, game.CurrentState, lastRenderedGameState);
+                renderer.SetTitle(mode.ToString());
+                if (mode == RefreshMode.ChangesOnly)
+                    RenderBoardChanges(curGS, prevGS!);
+                else
+                    RenderFullBoard(curGS);
+
+                RenderStatBoard(curGS);
+                renderer.HideCursor(hideStyle);
+                lastRenderedGameState = curGS;
             }
 
             rendering = false;
             return true;
-        }
-
-        private GameBoardState ProcessVisualization(RefreshMode mode, GameBoardState currentGS, GameBoardState? prevGS)
-        {
-            if (mode == RefreshMode.ChangesOnly) 
-                RenderBoardChanges(currentGS, prevGS!);
-            else 
-                RenderFullBoard(currentGS);
-
-            RenderStatBoard(currentGS);
-            renderer.HideCursor(hideStyle);
-
-            return currentGS;
         }
 
         private void RenderBoardChanges(GameBoardState curGS, GameBoardState prevGS)
@@ -136,22 +131,6 @@ namespace CMDSweep
             RenderLifeCounter(bar.GetPoint("lives", "bar"), currentGS);
             RenderMineCounter(bar.GetPoint("mines", "bar"), currentGS);
 
-
-            // OLD
-            /*
-            Rectangle barBox = new Rectangle(0, 0, renderer.Bounds.Width, 1);
-            barBox = barBox.Shrink(settings.Dimensions["stat-padding-x"], settings.Dimensions["stat-padding-y"]);
-
-            Point minesStart = new Point(barBox.Right - 5, barBox.MidLine);
-            Point livesStart = minesStart.Shifted(-(2 * currentGS.Difficulty.Lives) - 1 - settings.Dimensions["stat-padding-x-in-between"], barBox.MidLine);
-            Point faceStart = new Point(barBox.CenterLine + 1,barBox.MidLine);
-
-            renderer.ClearScreen(hideStyle, barBox.Top);
-
-            RenderClock(barBox.TopLeft, currentGS);
-            RenderFace(faceStart, currentGS);
-            RenderLifeCounter(livesStart, currentGS);
-            RenderMineCounter(minesStart, currentGS);*/
         }
 
         private void RenderClock(Point p, GameBoardState currentGS)
@@ -208,7 +187,8 @@ namespace CMDSweep
             // Check if the cursor is outside the scroll safe zone
             if (CursorInScrollSafezone(gs)) return false;
 
-            Viewport.Shift(ScrollSafeZone.OffsetOutOfBounds(gs.Cursor));
+            Offset offset = ScrollSafeZone.OffsetOutOfBounds(gs.Cursor);
+            Viewport.Shift(offset);
 
             ScrollValidMask = ScrollValidMask.Intersect(MapToRender(Viewport));
 

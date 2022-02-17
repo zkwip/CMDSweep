@@ -62,14 +62,17 @@ namespace CMDSweep
             Top = y;
             Width = width;
             Height = height;
+
+            Fix();
         }
         public Rectangle(LinearRange hor, LinearRange ver)
         {
             Left = hor.Start;
             Top = ver.Start;
-
             Width = hor.Length;
             Height = ver.Length;
+
+            Fix();
         }
 
         public Rectangle(Point topleft, Point bottomright)
@@ -111,17 +114,20 @@ namespace CMDSweep
         public override int GetHashCode() => HashCode.Combine(Left, Top, Width, Height);
 
         public Rectangle Clone() => new(Left, Top, Width, Height);
-        public Rectangle Grow(int left, int top, int right, int bottom) => new(Left - left, Top - top, Width + left + 2 * right, Height + top + (2 * bottom));
-        public Rectangle Grow(int hor, int ver) => Grow(hor, ver, hor, ver);
+        public Rectangle Grow(int left, int top, int right, int bottom) => new(
+                Left - left, 
+                Top - top, 
+                Width + left + right, 
+                Height + top + bottom
+            );
         public Rectangle Grow(int size) => Grow(size, size, size, size);
 
         public Rectangle Shrink(int left, int top, int right, int bottom) => Grow(-left, -top, -right, -bottom);
-        public Rectangle Shrink(int hor, int ver) => Grow(-hor, -ver, -hor, -ver);
         public Rectangle Shrink(int size) => Grow(-size, -size, -size, -size);
         public bool Contains(Point p) => Contains(p.X, p.Y);
         public bool Contains(int x, int y) => x >= Left && y >= Top && x < Right && y < Bottom;
 
-        public bool Contains(Rectangle r) => Contains(TopLeft) && Contains(BottomRight);
+        public bool Contains(Rectangle r) => Contains(r.TopLeft) && Contains(r.BottomRight.Shifted(-1,-1));
         public Rectangle Intersect(Rectangle other)
         {
             int l = Left > other.Left ? Left : other.Left;

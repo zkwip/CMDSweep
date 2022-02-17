@@ -211,7 +211,6 @@ namespace CMDSweep
             CurrentState = GameBoardState.NewGame(CurrentDifficulty);
 
             Refresh(RefreshMode.Full);
-            Renderer.SetTitle(appState.ToString());
         }
 
         public void BuildMenus()
