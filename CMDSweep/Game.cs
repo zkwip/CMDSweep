@@ -20,19 +20,21 @@ namespace CMDSweep
         }
 
         Timer refreshTimer;
-        Bounds screenBounds;
 
         private ApplicationState appState;
 
+        // Modules
         internal readonly GameSettings Settings;
         internal readonly IRenderer Renderer;
         internal readonly BoardVisualizer BVis;
         internal readonly MenuVisualizer MVis;
 
+        // Curent States
         public MenuList currentMenuList;
         public GameBoardState CurrentState;
         public Difficulty CurrentDifficulty;
 
+        // Sorta Globals
         public MenuList MainMenu;
         public MenuList SettingsMenu;
         public MenuList AdvancedSettingsMenu;
@@ -43,7 +45,6 @@ namespace CMDSweep
             Settings = LoadSettings();
             CurrentDifficulty = Settings.Difficulties[3];
             Renderer = r;
-            screenBounds = r.Bounds;
 
             MVis = new MenuVisualizer(this);
             BVis = new BoardVisualizer(this);
@@ -54,7 +55,6 @@ namespace CMDSweep
             refreshTimer.Elapsed += TimerElapsed;
             refreshTimer.AutoReset = true;
 
-            // Testing
             OpenMenu(MainMenu);
 
             while (Step()) ;
@@ -65,6 +65,7 @@ namespace CMDSweep
         private bool Step()
         {
             if (appState == ApplicationState.Quit) return false;
+
             InputAction ia = ReadAction();
             switch (appState)
             {
@@ -90,6 +91,7 @@ namespace CMDSweep
         private bool PlayStep(InputAction ia)
         {
             CurrentState.Face = Face.Normal;
+            Renderer.SetTitle(CurrentState.PlayerState.ToString());
             switch (ia)
             {
                 case InputAction.Up:
@@ -124,7 +126,12 @@ namespace CMDSweep
                     break;
             }
 
-            if (CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
+            if (CurrentState.PlayerState == PlayerState.Playing)
+            {
+                if (!refreshTimer.Enabled) refreshTimer.Start();
+                Refresh(RefreshMode.ChangesOnly);
+            }
+            else if(CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
             {
                 refreshTimer.Stop();
                 Refresh(RefreshMode.Full);
@@ -132,7 +139,6 @@ namespace CMDSweep
             }
             else
             {
-                if (!refreshTimer.Enabled) refreshTimer.Start();
                 Refresh(RefreshMode.ChangesOnly);
             }
 
@@ -183,12 +189,6 @@ namespace CMDSweep
         {
             if (appState != ApplicationState.Playing) refreshTimer.Stop();
 
-            if (screenBounds != Renderer.Bounds)
-            {
-                mode = RefreshMode.Rescale;
-                screenBounds = Renderer.Bounds;
-            }
-
             switch (appState)
             {
 
@@ -210,7 +210,7 @@ namespace CMDSweep
             appState = ApplicationState.Playing;
             CurrentState = GameBoardState.NewGame(CurrentDifficulty);
 
-            Refresh(RefreshMode.Rescale);
+            Refresh(RefreshMode.Full);
             Renderer.SetTitle(appState.ToString());
         }
 
@@ -237,12 +237,6 @@ namespace CMDSweep
             MenuItem QuitButton = new MenuButton("Quit");
             QuitButton.ValueChanged += (i, o) => QuitGame();
             MainMenu.Add(QuitButton);
-
-            /*
-            MenuChoice<Difficulty> DifficultyOption = new MenuChoice<Difficulty>("Difficulty", Settings.Difficulties, x => x.Name);
-            DifficultyOption.ValueChanged += (i, o) => ChangePreset(DifficultyOption);
-            SettingsMenu.Add(DifficultyOption);
-            */
 
             CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", Settings.Difficulties, x => x.Name), x => x, (d, val) => this.CurrentDifficulty = val);
 
@@ -437,9 +431,10 @@ namespace CMDSweep
 
     public enum RefreshMode
     {
-        Rescale = 2,
-        Full = 1,
-        ChangesOnly = 0,
+        None = 0,
+        ChangesOnly = 1,
+        Scroll = 2,
+        Full = 3,
     }
 
     enum InputAction

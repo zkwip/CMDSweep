@@ -9,15 +9,22 @@ namespace CMDSweep
         readonly GameApp game;
         readonly GameSettings settings;
 
-        private int offsetX = 0;
-        private int offsetY = 0;
+        private int offsetX => RenderMask.Left - Viewport.Left * scaleX;
+        private int offsetY => RenderMask.Top - Viewport.Top * scaleY;
+
         private int scaleX = 1;
         private int scaleY = 1;
+
         private bool rendering = false;
-        private bool renderWaiting = false;
+        private RefreshMode modeWaiting = RefreshMode.None;
+
+        Rectangle ScrollValidMask; // the area that is still valid (board space)
+        Rectangle RenderMask; // the area the board can be drawn into (screen space
+        Rectangle Viewport; // rendermask mapped to board space
 
         private GameBoardState? lastRenderedGameState;
         private readonly StyleData hideStyle;
+
 
         public BoardVisualizer(GameApp g)
         {
@@ -25,22 +32,52 @@ namespace CMDSweep
             settings = g.Settings;
             game = g;
             hideStyle = new StyleData(settings.Colors["cell-bg-out-of-bounds"], settings.Colors["cell-bg-out-of-bounds"], false);
+            RenderMask = Rectangle.Zero;
+            Viewport = Rectangle.Zero;
+            ScrollValidMask = Rectangle.Zero;
+        }
+
+        private void SetVisQueue(RefreshMode mode)
+        {
+            if (mode > modeWaiting) modeWaiting = mode;
         }
 
         public bool Visualize(RefreshMode mode)
         {
             // Indicate there is stuff to redraw
-            renderWaiting = true;
+            SetVisQueue(mode);
 
             // Mutex for the renderer
             if (rendering) return false;
-
             rendering = true;
 
             // Actual render loop
-            while (renderWaiting)
+            while (modeWaiting != RefreshMode.None)
             {
-                renderWaiting = false;
+                // Reset queue
+                mode = modeWaiting;
+                modeWaiting = RefreshMode.None;
+
+                GameBoardState? prevGS = lastRenderedGameState;
+                GameBoardState? curGS = game.CurrentState;
+
+                // Decide what to render
+                if (curGS == null) 
+                    continue; // Skip; Nothing to render
+
+                if (UpdateOffsets(curGS)) 
+                    mode = RefreshMode.Full; // Console changed size
+
+                if (prevGS == null) 
+                    mode = RefreshMode.Full; // No history: Full render
+
+                else if (mode == RefreshMode.ChangesOnly)
+                {
+                    if (ScrollBoard(curGS)) mode = RefreshMode.Scroll; // Scrolling
+                    if (curGS.PlayerState != prevGS.PlayerState) mode = RefreshMode.Full; // Player Mode changed
+                }
+
+                //Render
                 lastRenderedGameState = ProcessVisualization(mode, game.CurrentState, lastRenderedGameState);
             }
 
@@ -48,54 +85,82 @@ namespace CMDSweep
             return true;
         }
 
-        public GameBoardState? ProcessVisualization(RefreshMode mode, GameBoardState? currentGS, GameBoardState? prevGS)
+        private GameBoardState ProcessVisualization(RefreshMode mode, GameBoardState currentGS, GameBoardState? prevGS)
         {
-            // Force a full rerender in case the screen has not been drawn before
-            if (currentGS == null) return null;
+            if (mode == RefreshMode.ChangesOnly) 
+                RenderBoardChanges(currentGS, prevGS!);
+            else 
+                RenderFullBoard(currentGS);
 
-            if (prevGS == null) RenderFullBoard(currentGS);
-            else if (mode == RefreshMode.ChangesOnly && currentGS.PlayerState != prevGS.PlayerState) RenderFullBoard(currentGS);
-            else if (mode == RefreshMode.ChangesOnly)
-            {
-                List<CellLocation> changes;
-                changes = currentGS.CompareForChanges(prevGS);
-                foreach (CellLocation cl in changes) RenderAtLocation(cl, currentGS);
-            }
-            else RenderFullBoard(currentGS);
-
-            UpdateStatBoard(currentGS);
+            RenderStatBoard(currentGS);
             renderer.HideCursor(hideStyle);
 
             return currentGS;
         }
 
-        private void UpdateStatBoard(GameBoardState currentGS)
+        private void RenderBoardChanges(GameBoardState curGS, GameBoardState prevGS)
         {
-
-            int left = settings.Dimensions["stat-padding-x"];
-            int center = renderer.Bounds.Width / 2;
-            int right = renderer.Bounds.Width - settings.Dimensions["stat-padding-x"];
-
-            int top = settings.Dimensions["stat-padding-y"];
-
-            int minesStart = right - 5;
-            int livesStart = minesStart - (2 * currentGS.Difficulty.Lives) - 1 - settings.Dimensions["stat-padding-x-in-between"];
-
-            renderer.ClearScreen(hideStyle, top);
-
-            RenderTimeCounter(top, left, currentGS);
-            RenderFace(top, center - 1, currentGS);
-            RenderLifeCounter(top, livesStart, currentGS);
-            RenderMineCounter(top, minesStart, currentGS);
+            List<Point> changes;
+            changes = curGS.CompareForChanges(prevGS);
+            foreach (Point cl in changes) RenderCell(cl, curGS);
         }
 
-        private void RenderTimeCounter(int row, int col, GameBoardState currentGS)
+        private void RenderStatBoard(GameBoardState currentGS)
+        {
+            TableGrid bar = new();
+            bar.Bounds = new(renderer.Bounds.HorizontalRange, LinearRange.Zero);
+
+            int vpad = settings.Dimensions["stat-padding-x"];
+            int hpad = settings.Dimensions["stat-padding-y"];
+
+            // Rows
+            bar.AddRow(hpad, 0);
+            bar.AddRow(1, 0, "bar");
+            bar.AddRow(hpad, 0);
+
+            // Columns
+            bar.AddColumn(vpad, 0);
+            bar.AddColumn(6, 0, "clock");
+            bar.AddColumn(vpad, 1);
+            bar.AddColumn(4, 0, "face");
+            bar.AddColumn(vpad, 1);
+            bar.AddColumn(5, 0, "lives");
+            bar.AddColumn(settings.Dimensions["stat-padding-x-in-between"], 0);
+            bar.AddColumn(6, 0, "mines");
+            bar.AddColumn(vpad, 0);
+
+            renderer.ClearScreen(hideStyle, bar.Bounds);
+
+            RenderClock(bar.GetPoint("clock","bar"), currentGS);
+            RenderFace(bar.GetPoint("face", "bar"), currentGS);
+            RenderLifeCounter(bar.GetPoint("lives", "bar"), currentGS);
+            RenderMineCounter(bar.GetPoint("mines", "bar"), currentGS);
+
+
+            // OLD
+            /*
+            Rectangle barBox = new Rectangle(0, 0, renderer.Bounds.Width, 1);
+            barBox = barBox.Shrink(settings.Dimensions["stat-padding-x"], settings.Dimensions["stat-padding-y"]);
+
+            Point minesStart = new Point(barBox.Right - 5, barBox.MidLine);
+            Point livesStart = minesStart.Shifted(-(2 * currentGS.Difficulty.Lives) - 1 - settings.Dimensions["stat-padding-x-in-between"], barBox.MidLine);
+            Point faceStart = new Point(barBox.CenterLine + 1,barBox.MidLine);
+
+            renderer.ClearScreen(hideStyle, barBox.Top);
+
+            RenderClock(barBox.TopLeft, currentGS);
+            RenderFace(faceStart, currentGS);
+            RenderLifeCounter(livesStart, currentGS);
+            RenderMineCounter(minesStart, currentGS);*/
+        }
+
+        private void RenderClock(Point p, GameBoardState currentGS)
         {
             StyleData clockStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
-            renderer.PrintAtTile(row, col, clockStyle, currentGS.Time.ToString(@"\ h\:mm\:ss\ "));
+            renderer.PrintAtTile(p, clockStyle, currentGS.Time.ToString(@"\ h\:mm\:ss\ "));
         }
 
-        private void RenderFace(int row, int col, GameBoardState currentGS)
+        private void RenderFace(Point p, GameBoardState currentGS)
         {
             string face = ":)";
             switch (currentGS.Face)
@@ -104,8 +169,7 @@ namespace CMDSweep
                 case Face.Normal:
                     face = settings.Texts["face-normal"]; break;
                 case Face.Surprise:
-                    face = settings.Texts["face-surprise"];
-                    break;
+                    face = settings.Texts["face-surprise"];break;
                 case Face.Win:
                     face = settings.Texts["face-win"]; break;
                 case Face.Dead:
@@ -113,16 +177,16 @@ namespace CMDSweep
             }
 
             StyleData faceStyle = new StyleData(settings.Colors["face-fg"], settings.Colors["face-bg"]);
-            renderer.PrintAtTile(row, col, faceStyle, face);
+            renderer.PrintAtTile(p, faceStyle, face);
         }
 
-        private void RenderMineCounter(int row, int col, GameBoardState currentGS)
+        private void RenderMineCounter(Point p, GameBoardState currentGS)
         {
             StyleData minesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
-            renderer.PrintAtTile(row, col, minesLeftStyle, string.Format(" {0:D3} ", currentGS.MinesLeft));
+            renderer.PrintAtTile(p, minesLeftStyle, string.Format(" {0:D3} ", currentGS.MinesLeft));
         }
 
-        private void RenderLifeCounter(int row, int col, GameBoardState currentGS)
+        private void RenderLifeCounter(Point p, GameBoardState currentGS)
         {
             char life = settings.Texts["stat-life"][0];
             StyleData livesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
@@ -134,79 +198,109 @@ namespace CMDSweep
             string btext = "";
             for (int i = 0; i < currentGS.LivesLost; i++) btext += life + " ";
 
-            renderer.PrintAtTile(row, col, livesLeftStyle, atext);
-            renderer.PrintAtTile(row, col + atext.Length, livesGoneStyle, btext);
+            renderer.PrintAtTile(p, livesLeftStyle, atext);
+            renderer.PrintAtTile(p.Shifted(atext.Length, 0), livesGoneStyle, btext);
+        }
+        Rectangle ScrollSafeZone => Viewport.Shrink(settings.Dimensions["scroll-safezone"]);
+        bool CursorInScrollSafezone(GameBoardState gs) => ScrollSafeZone.Contains(gs.Cursor);
+        bool ScrollBoard(GameBoardState gs)
+        {
+            // Check if the cursor is outside the scroll safe zone
+            if (CursorInScrollSafezone(gs)) return false;
+
+            Viewport.Shift(ScrollSafeZone.OffsetOutOfBounds(gs.Cursor));
+
+            ScrollValidMask = ScrollValidMask.Intersect(MapToRender(Viewport));
+
+            return true;
         }
 
-        bool UpdateDimensions(GameBoardState currentGS)
+        private Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
+        private Point MapToRender(Point p) => new(offsetX + p.X * scaleX, offsetY + p.Y * scaleY);
+
+        bool UpdateOffsets(GameBoardState currentGS)
         {
-            bool succes = true;
+            if (currentGS == null) return true;
+            if (Viewport == null) Viewport = currentGS.Board.Clone();
 
             scaleX = settings.Dimensions["cell-size-x"];
             scaleY = settings.Dimensions["cell-size-y"];
 
-            int reqWidth = currentGS.BoardWidth * scaleX;
-            int reqHeight = currentGS.BoardHeight * scaleY;
+            int barheight = 1 + 2 * settings.Dimensions["stat-padding-y"];
 
-            offsetX = (renderer.Bounds.Width - reqWidth) / 2;
-            offsetY = (renderer.Bounds.Height - reqHeight) / 2;
+            Rectangle consoleBounds = renderer.Bounds; // Whole Console
+            Rectangle newRenderMask = consoleBounds.Shrink(0, barheight, 0, 0); // Area that the board can be drawn into
 
-            if (offsetX < scaleX || offsetY < scaleY) succes = false;
+            // Return if the measurements did not change
+            if (RenderMask is Rectangle r && r.Equals(newRenderMask)) return false;
 
-            return succes;
+            // Reset render shortcuts
+            RenderMask = newRenderMask;
+            ScrollValidMask = Rectangle.Zero;
+
+            // Create a new viewport to fit
+            Rectangle newVP = this.Viewport.Clone();
+            newVP.Width = RenderMask.Width / scaleX;
+            newVP.Height = RenderMask.Height / scaleY;
+
+            // Align the new viewport as best as we can
+            if (Viewport.Equals(Rectangle.Zero))
+                newVP.CenterOn(currentGS.Board.Center);
+            else
+                newVP.CenterOn(Viewport.Center);
+
+            Viewport = newVP;
+            ScrollBoard(currentGS);
+
+            return true;
         }
 
         void RenderFullBoard(GameBoardState currentGS)
         {
-            if (UpdateDimensions(currentGS))
-            {
-                renderer.ClearScreen(hideStyle);
-                RenderBorder(currentGS);
-                for (int y = 0; y < currentGS.BoardHeight; y++)
-                {
-                    for (int x = 0; x < currentGS.BoardWidth; x++) RenderAtLocation(new CellLocation(x, y), currentGS);
-                }
-                renderer.HideCursor(hideStyle);
-            }
-            else
-            {
-                // TDOD: Handle a board that does not fit on screen
-            }
+            // Border
+            renderer.ClearScreen(hideStyle);
+            RenderBorder(currentGS);
+
+            // Tiles
+            Viewport.Intersect(currentGS.Board).ForAll((x, y) => RenderCell(new Point(x, y), currentGS));
+            renderer.HideCursor(hideStyle);
+            ScrollValidMask = RenderMask.Clone();
         }
+
+        void MappedPrint(Point p, StyleData data, string s) => renderer.PrintAtTile(MapToRender(p), data, s);
+        void MappedPrint(int x, int y, StyleData data, string s) => MappedPrint(new Point(x, y), data, s);
 
         void RenderBorder(GameBoardState currentGS)
         {
             StyleData data = new StyleData(settings.Colors["border-fg"], settings.Colors["cell-bg-out-of-bounds"], false);
 
-            renderer.PrintAtTile(offsetY - scaleY, offsetX - scaleX, data, settings.Texts["border-corner-tl"]);
-            for (int x = 0; x < currentGS.BoardWidth; x++)
-                renderer.PrintAtTile(offsetY - scaleY, offsetX + x * scaleX, data, settings.Texts["border-horizontal"]);
+            // Top
+            MappedPrint(-1,-1, data, settings.Texts["border-corner-tl"]);
+            for (int x = 0; x < currentGS.BoardWidth; x++) MappedPrint(x, -1, data, settings.Texts["border-horizontal"]);
+            MappedPrint(currentGS.BoardWidth, -1, data, settings.Texts["border-corner-tr"]);
 
-            renderer.PrintAtTile(offsetY - scaleY, offsetX + currentGS.BoardWidth * scaleX, data, settings.Texts["border-corner-tr"]);
-
+            // Sides
             for (int y = 0; y < currentGS.BoardHeight; y++)
             {
-                renderer.PrintAtTile(offsetY + y * scaleY, offsetX - scaleX, data, settings.Texts["border-vertical"]);
-                renderer.PrintAtTile(offsetY + y * scaleY, offsetX + currentGS.BoardWidth * scaleX, data, settings.Texts["border-vertical"]);
+                MappedPrint(-1, y, data, settings.Texts["border-vertical"]);
+                MappedPrint(currentGS.BoardWidth, y, data, settings.Texts["border-vertical"]);
             }
 
-
-            renderer.PrintAtTile(offsetY + currentGS.BoardHeight * scaleY, offsetX - scaleX, data, settings.Texts["border-corner-bl"]);
-            for (int x = 0; x < currentGS.BoardWidth; x++)
-                renderer.PrintAtTile(offsetY + currentGS.BoardHeight * scaleY, offsetX + x * scaleX, data, settings.Texts["border-horizontal"]);
-            renderer.PrintAtTile(offsetY + currentGS.BoardHeight * scaleY, offsetX + currentGS.BoardWidth * scaleX, data, settings.Texts["border-corner-br"]);
+            // Bottom
+            MappedPrint(-1, currentGS.BoardHeight, data, settings.Texts["border-corner-bl"]);
+            for (int x = 0; x < currentGS.BoardWidth; x++) MappedPrint(x, currentGS.BoardHeight, data, settings.Texts["border-horizontal"]);
+            MappedPrint(currentGS.BoardWidth, currentGS.BoardHeight, data, settings.Texts["border-corner-br"]);
         }
 
-        void RenderAtLocation(CellLocation cl, GameBoardState currentGS)
+        void RenderCell(Point cl, GameBoardState currentGS)
         {
-            int posX = offsetX + cl.X * scaleX;
-            int posY = offsetY + cl.Y * scaleY;
 
             ConsoleColor fg;
             switch (GetTileVisual(cl, currentGS))
             {
                 case TileVisual.Discovered: fg = settings.Colors["cell-fg-discovered"]; break;
                 case TileVisual.Undiscovered: fg = settings.Colors["cell-fg-undiscovered"]; break;
+                case TileVisual.UndiscoveredGrid: fg = settings.Colors["cell-fg-undiscovered-grid"]; break;
                 case TileVisual.Flagged: fg = settings.Colors["cell-flagged"]; break;
                 case TileVisual.DiscoveredMine: fg = settings.Colors["cell-mine-discovered"]; break;
 
@@ -225,6 +319,7 @@ namespace CMDSweep
             {
                 case TileVisual.Undiscovered:
                 case TileVisual.DeadUndiscovered:
+                case TileVisual.UndiscoveredGrid:
                     text = settings.Texts["cell-undiscovered"];
                     break;
 
@@ -248,7 +343,7 @@ namespace CMDSweep
                 case TileVisual.Discovered:
                     int num = currentGS.CellMineNumber(cl);
                     if (currentGS.Difficulty.SubtractFlags) num = currentGS.CellSubtractedMineNumber(cl);
-                    if (num > 0 && (currentGS.Cursor == cl || !currentGS.Difficulty.OnlyShowAtCursor))
+                    if (num > 0 && (currentGS.Cursor.Equals(cl) || !currentGS.Difficulty.OnlyShowAtCursor))
                     {
                         text = num.ToString();
                         fg = settings.Colors[string.Format("cell-{0}-discovered", num % 10)];
@@ -261,7 +356,7 @@ namespace CMDSweep
             }
 
             // Cursor
-            if (currentGS.PlayerState != PlayerState.Dead && currentGS.Cursor == cl)
+            if (currentGS.PlayerState != PlayerState.Dead && currentGS.Cursor.Equals(cl))
             {
                 if (!currentGS.Difficulty.OnlyShowAtCursor || GetTileVisual(cl, currentGS) != TileVisual.Discovered || currentGS.CellMineNumber(cl) <= 0)
                     fg = settings.Colors["cell-selected"];
@@ -280,6 +375,10 @@ namespace CMDSweep
                     bg = settings.Colors["cell-bg-discovered"];
                     break;
 
+                case TileVisual.UndiscoveredGrid:
+                    bg = settings.Colors["cell-bg-undiscovered-grid"];
+                    break;
+
                 default:
                     bg = settings.Colors["cell-bg-undiscovered"];
                     break;
@@ -294,12 +393,11 @@ namespace CMDSweep
             padRight = scaleX - padLeft;
 
             // Actual rendering
-            renderer.PrintAtTile(posY, posX, data, " ".PadLeft(padLeft));
-            renderer.PrintAtTile(posY, posX, data, text.PadRight(padRight));
-            // It goes wrong here somewhere
+            MappedPrint(cl, data, " ".PadLeft(padLeft));
+            MappedPrint(cl, data, text.PadRight(padRight));
         }
 
-        private TileVisual GetTileVisual(CellLocation cl, GameBoardState currentGS)
+        private TileVisual GetTileVisual(Point cl, GameBoardState currentGS)
         {
             if (currentGS.PlayerState == PlayerState.Dead)
             {
@@ -322,6 +420,8 @@ namespace CMDSweep
                 if (currentGS.CellIsDiscovered(cl)) return TileVisual.Discovered;
                 if (currentGS.CellIsFlagged(cl)) return TileVisual.Flagged;
                 if (currentGS.CellIsQuestionMarked(cl)) return TileVisual.QuestionMarked;
+                if ((cl.X) % settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
+                if ((cl.Y) % settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
                 else return TileVisual.Undiscovered;
             }
         }
@@ -340,7 +440,7 @@ namespace CMDSweep
             DeadMineExploded,
             DeadMineFlagged,
             DeadWrongFlag,
+            UndiscoveredGrid,
         }
-
     }
 }

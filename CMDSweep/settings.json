@@ -64,8 +64,10 @@
   "Colors": {
     "cell-fg-out-of-bounds": "WHITE",
     "cell-bg-out-of-bounds": "DARKGRAY",
-    "cell-fg-undiscovered": "GRAY",
+    "cell-fg-undiscovered": "DARKGRAY",
     "cell-bg-undiscovered": "DARKGRAY",
+    "cell-fg-undiscovered-grid": "GRAY",
+    "cell-bg-undiscovered-grid": "DARKGRAY",
     "cell-fg-discovered": "BLACK",
     "cell-bg-discovered": "GRAY",
 
@@ -128,13 +130,15 @@
 
     "menu-left": "",
     "menu-right": "",
-    "menu-title": "CMD Sweeper",
+    "menu-title": "Line Of Command: Sweeper",
     "menu-choice-left": "< ",
     "menu-choice-right": " >",
     "menu-item-prefix": "  ",
     "menu-item-prefix-selected": "> "
   },
   "Dimensions": {
+    "scroll-safezone": 2,
+    "cell-grid-size": 5,
     "cell-size-x": 2,
     "cell-size-y": 1,
     "stat-padding-x": 2,

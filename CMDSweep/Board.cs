@@ -7,7 +7,7 @@ namespace CMDSweep
     {
         // Internals
         private CellData[,] Cells;
-        private CellLocation cursor;
+        private Point cursor;
         private PlayerState playerState;
         private Difficulty difficulty;
 
@@ -17,14 +17,14 @@ namespace CMDSweep
         private int lives;
 
         // Constructors and cloners
-        private GameBoardState(CellData[,] datas) { Cells = datas; Face = Face.Normal; }
+        private GameBoardState(CellData[,] datas) { Cells = datas; Face = Face.Normal; cursor = Board.Center; }
 
         public GameBoardState Clone()
         {
             return new GameBoardState((CellData[,])Cells.Clone())
             {
                 playerState = this.playerState,
-                cursor = this.cursor,
+                cursor = this.cursor.Clone(),
                 difficulty = this.difficulty,
                 lives = this.lives,
 
@@ -40,12 +40,9 @@ namespace CMDSweep
             int height = diff.Height;
 
             CellData[,] datas = new CellData[width, height];
-            int x = width / 2;
-            int y = height / 2;
 
             return new GameBoardState(datas)
             {
-                cursor = new CellLocation(x, y),
                 playerState = PlayerState.NewGame,
                 difficulty = diff,
 
@@ -64,28 +61,28 @@ namespace CMDSweep
             return sum;
         }
 
-        internal TOut ApplyAllCells<TOut>(TOut zero, Func<CellLocation, TOut, TOut> fold)
+        internal TOut ApplyAllCells<TOut>(TOut zero, Func<Point, TOut, TOut> fold)
         {
             TOut res = zero;
             for (int x = 0; x < BoardWidth; x++)
             {
                 for (int y = 0; y < BoardHeight; y++)
                 {
-                    CellLocation loc = new CellLocation(x, y);
+                    Point loc = new Point(x, y);
                     res = fold(loc, res);
                 }
             }
             return res;
         }
 
-        internal TOut ApplySurroundingCells<TOut>(CellLocation cl, TOut zero, Func<CellLocation, TOut, TOut> fold, bool wrap)
+        internal TOut ApplySurroundingCells<TOut>(Point cl, TOut zero, Func<Point, TOut, TOut> fold, bool wrap)
         {
             TOut res = zero;
             for (int ax = cl.X - difficulty.DetectionRadius; ax <= cl.X + difficulty.DetectionRadius; ax++)
             {
                 for (int ay = cl.Y - difficulty.DetectionRadius; ay <= cl.Y + difficulty.DetectionRadius; ay++)
                 {
-                    CellLocation loc = new CellLocation(ax, ay);
+                    Point loc = new Point(ax, ay);
                     if (wrap || !CellOutsideBounds(loc))
                         res = fold(Wrap(loc), res);
                 }
@@ -93,7 +90,7 @@ namespace CMDSweep
             return res;
         }
 
-        private T CheckCell<T>(CellLocation cl, Func<CellData, T> check, T dflt)
+        private T CheckCell<T>(Point cl, Func<CellData, T> check, T dflt)
         {
             if (CellOutsideBounds(cl))
             {
@@ -104,42 +101,43 @@ namespace CMDSweep
             return check(Cell(cl));
         }
 
-        private CellData Cell(CellLocation cl) => Cells[cl.X, cl.Y];
+        private CellData Cell(Point cl) => Cells[cl.X, cl.Y];
 
-        private int CountSurroundingCells(CellLocation cl, Func<CellData, bool> callback, bool outsideAllowed) => CountSurroundingCells(cl, (cl2) => CheckCell(cl2, callback, false), outsideAllowed);
-        private int CountSurroundingCells(CellLocation cl, Func<CellLocation, bool> callback, bool outsideAllowed) => ApplySurroundingCells(cl, 0, (loc, sum) => sum + (callback(loc) ? 1 : 0), outsideAllowed);
+        private int CountSurroundingCells(Point cl, Func<CellData, bool> callback, bool outsideAllowed) => CountSurroundingCells(cl, (cl2) => CheckCell(cl2, callback, false), outsideAllowed);
+        private int CountSurroundingCells(Point cl, Func<Point, bool> callback, bool outsideAllowed) => ApplySurroundingCells(cl, 0, (loc, sum) => sum + (callback(loc) ? 1 : 0), outsideAllowed);
 
         // Oneliner Board Properties
-        public PlayerState PlayerState { get => playerState; }
-        public Difficulty Difficulty { get => difficulty; }
-        public CellLocation Cursor { get => cursor; }
-        public TimeSpan Time { get => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime))); }
+        public PlayerState PlayerState => playerState; 
+        public Difficulty Difficulty => difficulty; 
+        public Point Cursor => cursor.Clone(); 
+        public TimeSpan Time => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime))); 
 
-        public bool Paused { get => timePaused; }
+        public bool Paused => timePaused; 
 
         public Face Face { get; set; }
 
-        public int BoardWidth { get => Cells.GetLength(0); }
-        public int BoardHeight { get => Cells.GetLength(1); }
-        public int Mines { get => CountCells(x => x.Mine); }
-        public int GameMines { get => difficulty.Mines; }
-        public int Flags { get => CountCells(x => x.Flagged == FlagMarking.Flagged); }
-        public int Discovered { get => CountCells(x => x.Discovered); }
-        public int MinesLeft { get => GameMines - Flags - LivesLost; }
-        public int LivesLost { get => difficulty.Lives - lives; }
-        public int Tiles { get => BoardHeight * BoardWidth; }
+        public int BoardWidth => Cells.GetLength(0); 
+        public int BoardHeight => Cells.GetLength(1); 
+        public int Mines => CountCells(x => x.Mine); 
+        public int GameMines => difficulty.Mines; 
+        public int Flags => CountCells(x => x.Flagged == FlagMarking.Flagged); 
+        public int Discovered => CountCells(x => x.Discovered); 
+        public int MinesLeft => GameMines - Flags - LivesLost; 
+        public int LivesLost => difficulty.Lives - lives; 
+        public int Tiles => BoardHeight * BoardWidth; 
 
-        public double DiscoveryRate { get => (double)Discovered / Tiles; }
-        public double MineRate { get => (double)(LivesLost + Flags) / Mines; }
+        public double DiscoveryRate => (double)Discovered / Tiles; 
+        public double MineRate => (double)(LivesLost + Flags) / Mines; 
+        internal Rectangle Board => new(0, 0, BoardWidth, BoardHeight);
 
         // Oneliner Board Queries
-        private bool CellOutsideBounds(CellLocation cl) => (cl.X < 0 || cl.Y < 0 || cl.X >= BoardWidth || cl.Y >= BoardHeight);
-        public bool CellIsMine(CellLocation cl) => CheckCell(cl, c => c.Mine, false);
-        public bool CellIsFlagged(CellLocation cl) => CheckCell(cl, c => c.Flagged == FlagMarking.Flagged, false);
-        public bool CellIsDiscovered(CellLocation cl) => CheckCell(cl, c => c.Discovered, false);
-        public bool CellIsQuestionMarked(CellLocation cl) => CheckCell(cl, c => c.Flagged == FlagMarking.QuestionMarked, false);
-        public int CellMineNumber(CellLocation cl) => CountSurroundingCells(cl, c => c.Mine, difficulty.WrapAround);
-        public int CellSubtractedMineNumber(CellLocation cl) => CellMineNumber(cl) - CountSurroundingCells(cl, c => c.Flagged == FlagMarking.Flagged, difficulty.WrapAround);
+        private bool CellOutsideBounds(Point cl) => !Board.Contains(cl);
+        public bool CellIsMine(Point cl) => CheckCell(cl, c => c.Mine, false);
+        public bool CellIsFlagged(Point cl) => CheckCell(cl, c => c.Flagged == FlagMarking.Flagged, false);
+        public bool CellIsDiscovered(Point cl) => CheckCell(cl, c => c.Discovered, false);
+        public bool CellIsQuestionMarked(Point cl) => CheckCell(cl, c => c.Flagged == FlagMarking.QuestionMarked, false);
+        public int CellMineNumber(Point cl) => CountSurroundingCells(cl, c => c.Mine, difficulty.WrapAround);
+        public int CellSubtractedMineNumber(Point cl) => CellMineNumber(cl) - CountSurroundingCells(cl, c => c.Flagged == FlagMarking.Flagged, difficulty.WrapAround);
 
         //Other queries
         public void Win()
@@ -203,7 +201,7 @@ namespace CMDSweep
             return res;
         }
 
-        public int Discover(CellLocation cl)
+        public int Discover(Point cl)
         {
             // Check discoverable
             if (CellOutsideBounds(cl)) return 0;
@@ -244,7 +242,7 @@ namespace CMDSweep
 
         }
 
-        public int Flag(CellLocation cl)
+        public int Flag(Point cl)
         {
             int res = CellIsFlagged(cl) ? 0 : 1;
 
@@ -252,7 +250,7 @@ namespace CMDSweep
             return res;
         }
 
-        public int Unflag(CellLocation cl)
+        public int Unflag(Point cl)
         {
             int res = CellIsFlagged(cl) ? -1 : 0;
 
@@ -260,7 +258,7 @@ namespace CMDSweep
             return res;
         }
 
-        public int QuestionMark(CellLocation cl)
+        public int QuestionMark(Point cl)
         {
             int res = CellIsFlagged(cl) ? -1 : 0;
 
@@ -268,8 +266,9 @@ namespace CMDSweep
             return res;
         }
 
-        public CellLocation Wrap(CellLocation cl)
+        public Point Wrap(Point cl)
         {
+            cl = cl.Clone();
             while (cl.X < 0) cl.X += BoardWidth;
             while (cl.X >= BoardWidth) cl.X -= BoardWidth;
 
@@ -279,7 +278,7 @@ namespace CMDSweep
             return cl;
         }
 
-        public int Distance(CellLocation cl1, CellLocation cl2)
+        public int Distance(Point cl1, Point cl2)
         {
             int xdist = Math.Abs(cl1.X - cl2.X);
             int ydist = Math.Abs(cl1.Y - cl2.Y);
@@ -292,36 +291,36 @@ namespace CMDSweep
 
             return Math.Max(xdist, ydist);
         }
-        public CellLocation MoveCursor(Direction d)
+        public Point MoveCursor(Direction d)
         {
             switch (d)
             {
                 case Direction.Down:
-                    return SetCursor(new CellLocation(cursor.X, cursor.Y + 1));
+                    return SetCursor(new Point(cursor.X, cursor.Y + 1));
                 case Direction.Up:
-                    return SetCursor(new CellLocation(cursor.X, cursor.Y - 1));
+                    return SetCursor(new Point(cursor.X, cursor.Y - 1));
                 case Direction.Left:
-                    return SetCursor(new CellLocation(cursor.X - 1, cursor.Y));
+                    return SetCursor(new Point(cursor.X - 1, cursor.Y));
                 case Direction.Right:
-                    return SetCursor(new CellLocation(cursor.X + 1, cursor.Y));
+                    return SetCursor(new Point(cursor.X + 1, cursor.Y));
             }
             return cursor;
         }
 
-        public CellLocation SetCursor(CellLocation cl)
+        public Point SetCursor(Point cl)
         {
             cursor = Wrap(cl);
             return cursor;
         }
 
-        public List<CellLocation> CompareForChanges(GameBoardState other)
+        public List<Point> CompareForChanges(GameBoardState other)
         {
-            List<CellLocation> res = new List<CellLocation>();
+            List<Point> res = new List<Point>();
             for (int x = 0; x < BoardWidth; x++)
             {
                 for (int y = 0; y < BoardHeight; y++)
                 {
-                    if (Cells[x, y] != other.Cells[x, y]) res.Add(new CellLocation(x, y));
+                    if (Cells[x, y] != other.Cells[x, y]) res.Add(new Point(x, y));
                 }
             }
 
@@ -329,23 +328,21 @@ namespace CMDSweep
 
             if (difficulty.SubtractFlags)
             {
-                List<CellLocation> li = new List<CellLocation>();
-                foreach (CellLocation cl in res)
+                List<Point> li = new List<Point>();
+                foreach (Point cl in res)
                 {
                     li = ApplySurroundingCells(cl, li, (loc, list) => { if (!list.Contains(loc)) list.Add(loc); return list; }, difficulty.WrapAround);
                 }
                 res = li;
             }
 
-            if (this.cursor != other.cursor)
-            {
-                res.Add(cursor);
-                res.Add(other.cursor);
-            }
+            res.Add(cursor);
+            res.Add(other.cursor);
+
             return res;
         }
 
-        private void PlaceMines(CellLocation cl)
+        private void PlaceMines(Point cl)
         {
             int minesLeftToPlace = difficulty.Mines;
             int placementFailures = 0;
@@ -362,7 +359,7 @@ namespace CMDSweep
                 int px = rng.Next() % BoardWidth;
                 int py = rng.Next() % BoardHeight;
 
-                CellLocation pos = new CellLocation(px, py);
+                Point pos = new Point(px, py);
 
                 if (Distance(cl, pos) <= difficulty.Safezone)
                     continue; // No mines at start
@@ -385,38 +382,6 @@ namespace CMDSweep
 
             playerState = PlayerState.Playing;
             ResumeGame();
-        }
-    }
-
-    public struct CellLocation
-    {
-        public CellLocation(int x, int y) { X = x; Y = y; }
-
-        public int X;
-        public int Y;
-
-        public static bool operator ==(CellLocation c1, CellLocation c2)
-        {
-            return c1.X == c2.X &&
-                   c1.Y == c2.Y;
-        }
-
-        public static bool operator !=(CellLocation c1, CellLocation c2)
-        {
-            return c1.X != c2.X ||
-                   c1.Y != c2.Y;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is CellLocation location &&
-                   X == location.X &&
-                   Y == location.Y;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(X, Y);
         }
     }
 

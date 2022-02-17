@@ -4,41 +4,17 @@ namespace CMDSweep
 {
     public interface IRenderer
     {
-        void PrintAtTile(int row, int col, StyleData data, string s);
-        void SetCursor(int row, int col);
-        void ClearScreen(StyleData data);
-        void ClearScreen(StyleData data, int row);
-        void ClearScreen(StyleData data, int row, int col, int width);
-        void ClearScreen(StyleData data, int row, int col, int width, int height);
+        bool PrintAtTile(Point p, StyleData data, string s);
+        bool SetCursor(Point p);
+        bool ClearScreen(StyleData data);
+        bool ClearScreen(StyleData data, Rectangle r);
+        bool ClearScreen(StyleData data, int row) => ClearScreen(data, new Rectangle(0, row, Bounds.Width, 0));
 
         void SetTitle(string s);
-        Bounds Bounds { get; }
+        Rectangle Bounds { get; }
 
         void HideCursor(StyleData styleOutOfBounds);
     }
-
-    public struct Bounds
-    {
-        public Bounds(int w, int h) { Width = w; Height = h; }
-        public readonly int Width;
-        public readonly int Height;
-
-        public static bool operator ==(Bounds b1, Bounds b2) => b1.Width == b2.Width && b1.Height == b2.Height;
-        public static bool operator !=(Bounds b1, Bounds b2) => b1.Width != b2.Width || b1.Height != b2.Height;
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Width, Height);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is Bounds bounds &&
-                   Width == bounds.Width &&
-                   Height == bounds.Height;
-        }
-    }
-
 
     public struct StyleData
     {

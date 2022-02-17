@@ -4,31 +4,27 @@ namespace CMDSweep
 {
     class WinCMDRenderer : IRenderer
     {
-        public WinCMDRenderer()
-        {
-
-        }
-
-        public Bounds Bounds
-        {
-            get { return new Bounds(Console.WindowWidth, Console.WindowHeight); }
-        }
-
-        public void ClearScreen(StyleData data)
+        public WinCMDRenderer() { }
+        public Rectangle Bounds => new(0, 0, Console.WindowWidth, Console.WindowHeight);
+        
+        public bool ClearScreen(StyleData data)
         {
             SetConsoleStyle(data);
             HideCursor();
             Console.Clear();
+            return true;
         }
-
-        public void ClearScreen(StyleData data, int row) => ClearScreen(data, row, 0, Bounds.Width);
-        public void ClearScreen(StyleData data, int row, int col, int width) => ClearScreen(data, row, col, width, 1);
-        public void ClearScreen(StyleData data, int row, int col, int width, int height)
+        
+        public bool ClearScreen(StyleData data, Rectangle rec)
         {
             SetConsoleStyle(data);
-            for (int r = row; r < row + height; r++)
-                PrintAtTile(r, col, data, "".PadLeft(width));
+
+            rec = rec.Intersect(Bounds);
+
+            for (int row = rec.Top; row < rec.Bottom; row++) PrintAtTile(new Point(row, rec.Left), data, "".PadLeft(rec.Width));
+            
             HideCursor();
+            return true;
         }
 
         private void SetConsoleStyle(StyleData data)
@@ -37,21 +33,16 @@ namespace CMDSweep
             Console.BackgroundColor = data.Background;
         }
 
-        public void SetCursor(int row, int col)
+        public bool SetCursor(Point p)
         {
-            try
-            {
-                Console.SetCursorPosition(col, row);
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                //todo
-            }
+            if (!Bounds.Contains(p)) return false;
+            Console.SetCursorPosition(p.X, p.Y);
+            return true;
         }
 
         public void HideCursor()
         {
-            SetCursor(0, 0);
+            SetCursor(Bounds.TopLeft);
             Console.CursorVisible = false;
         }
 
@@ -62,11 +53,16 @@ namespace CMDSweep
             HideCursor();
         }
 
-        public void PrintAtTile(int row, int col, StyleData data, string s)
+        public bool PrintAtTile(Point p, StyleData data, string s)
         {
-            SetCursor(row, col);
+            if (!Bounds.Contains(p)) return false;
+            if (Bounds.Right - p.X < s.Length) s = s.Substring(0, Bounds.Right - p.X);
+
+            SetCursor(p);
             SetConsoleStyle(data);
             Console.Write(s);
+
+            return true; 
         }
 
         public void SetTitle(string s)
