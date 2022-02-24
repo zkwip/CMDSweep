@@ -5,6 +5,11 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <StartupObject>CMDSweep.Program</StartupObject>
+    <AssemblyName>CMDSweep</AssemblyName>
+    <Authors>Joep Bernards</Authors>
+	<Version>0.4.0</Version>
+	<PackageProjectUrl>https://github.com/zkwip/CMDSweep</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

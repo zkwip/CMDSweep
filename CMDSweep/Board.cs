@@ -64,30 +64,38 @@ namespace CMDSweep
         internal TOut ApplyAllCells<TOut>(TOut zero, Func<Point, TOut, TOut> fold)
         {
             TOut res = zero;
+            ForAllCells((p2) => { res = fold(p2, res); });
+            return res;
+        }
+
+        internal TOut ApplySurroundingCells<TOut>(Point p, TOut zero, Func<Point, TOut, TOut> fold, bool wrap)
+        {
+            TOut res = zero;
+            ForAllSurroundingCells(p, (p2) => { res = fold(p2, res); }, wrap);
+            return res;
+        }
+
+        internal void ForAllSurroundingCells(Point p, Action<Point> act, bool wrap)
+        {
+            for (int ax = p.X - difficulty.DetectionRadius; ax <= p.X + difficulty.DetectionRadius; ax++)
+            {
+                for (int ay = p.Y - difficulty.DetectionRadius; ay <= p.Y + difficulty.DetectionRadius; ay++)
+                {
+                    Point loc = new Point(ax, ay);
+                    if (wrap || !CellOutsideBounds(loc)) act(Wrap(loc));
+                }
+            }
+        }
+
+        internal void ForAllCells(Action<Point> act)
+        {
             for (int x = 0; x < BoardWidth; x++)
             {
                 for (int y = 0; y < BoardHeight; y++)
                 {
-                    Point loc = new Point(x, y);
-                    res = fold(loc, res);
+                    act(new Point(x, y));
                 }
             }
-            return res;
-        }
-
-        internal TOut ApplySurroundingCells<TOut>(Point cl, TOut zero, Func<Point, TOut, TOut> fold, bool wrap)
-        {
-            TOut res = zero;
-            for (int ax = cl.X - difficulty.DetectionRadius; ax <= cl.X + difficulty.DetectionRadius; ax++)
-            {
-                for (int ay = cl.Y - difficulty.DetectionRadius; ay <= cl.Y + difficulty.DetectionRadius; ay++)
-                {
-                    Point loc = new Point(ax, ay);
-                    if (wrap || !CellOutsideBounds(loc))
-                        res = fold(Wrap(loc), res);
-                }
-            }
-            return res;
         }
 
         private T CheckCell<T>(Point cl, Func<CellData, T> check, T dflt)
@@ -203,22 +211,43 @@ namespace CMDSweep
 
         public int Discover(Point cl)
         {
-            // Check discoverable
-            if (CellOutsideBounds(cl)) return 0;
-            if (CellIsDiscovered(cl)) return 0;
-            if (CellIsFlagged(cl)) return 0;
+            List<Point> points = new List<Point>();
+            points.Add(cl);
 
-            // Discover
-            Cells[cl.X, cl.Y].Discovered = true;
-            Cells[cl.X, cl.Y].Flagged = FlagMarking.Unflagged;
+            int sum = 0;
+            bool mineHit = false;
 
-            // Check for mine
-            if (CellIsMine(cl)) return -1;
+            while (points.Count > 0)
+            {
+                cl = points[0];
+                points.RemoveAt(0);
 
-            // Continue discovering if encountering an empty cell
-            if (CellMineNumber(cl) == 0 && difficulty.AutomaticDiscovery)
-                return ApplySurroundingCells(cl, 0, (loc, b) => { int a = Discover(loc); return (a < 0 || b < 0) ? -1 : a + b + 1; }, difficulty.WrapAround);
-            return 1;
+                // Check discoverable
+                if (CellOutsideBounds(cl)) continue;
+                if (CellIsDiscovered(cl)) continue;
+                if (CellIsFlagged(cl)) continue;
+
+                // Discover
+                Cells[cl.X, cl.Y].Discovered = true;
+                Cells[cl.X, cl.Y].Flagged = FlagMarking.Unflagged;
+
+                // Check for mine
+                if (CellIsMine(cl))
+                {
+                    mineHit = true;
+                    break;
+                }
+
+                // Continue discovering if encountering an empty cell
+                if (CellMineNumber(cl) == 0 && difficulty.AutomaticDiscovery)
+                {
+                    ForAllSurroundingCells(cl, (p) => points.Add(p), difficulty.WrapAround);
+                }
+                sum += 1;
+            }
+
+            if (mineHit) return -1;
+            return sum;
         }
 
         public int ToggleFlag()

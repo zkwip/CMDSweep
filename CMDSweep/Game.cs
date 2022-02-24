@@ -91,7 +91,6 @@ namespace CMDSweep
         private bool PlayStep(InputAction ia)
         {
             CurrentState.Face = Face.Normal;
-            Renderer.SetTitle(CurrentState.PlayerState.ToString());
             switch (ia)
             {
                 case InputAction.Up:
@@ -309,7 +308,6 @@ namespace CMDSweep
 
             CurrentDifficulty = d;
             DifficultyChanged?.Invoke(this, EventArgs.Empty);
-            Renderer.SetTitle("Invoked");
         }
         
         private void ShowHighscores()

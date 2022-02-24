@@ -71,14 +71,13 @@ namespace CMDSweep
                 if (prevGS == null) 
                     mode = RefreshMode.Full; // No history: Full render
 
-                if (mode == RefreshMode.ChangesOnly)
+                else if (mode == RefreshMode.ChangesOnly) // else to implicitly exclude the case where prevGS is null
                 {
                     if (ScrollBoard(curGS)) mode = RefreshMode.Scroll; // Scrolling
                     if (curGS.PlayerState != prevGS.PlayerState) mode = RefreshMode.Full; // Player Mode changed
                 }
 
                 //Render
-                renderer.SetTitle(mode.ToString());
                 if (mode == RefreshMode.ChangesOnly)
                     RenderBoardChanges(curGS, prevGS!);
                 else
