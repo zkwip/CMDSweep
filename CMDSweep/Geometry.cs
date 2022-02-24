@@ -145,6 +145,14 @@ namespace CMDSweep
             }
         }
 
+        public void ForAll(Action<Point> callback)
+        {
+            for (int x = Left; x < Right; x++)
+            {
+                for (int y = Top; y < Bottom; y++) callback(new(x, y));
+            }
+        }
+
         public Offset CenterOn(Point p) => Shift(Offset.FromChange(Center, p));
         public Offset ShiftTo(Point p) => Shift(Offset.FromChange(TopLeft, p));
 

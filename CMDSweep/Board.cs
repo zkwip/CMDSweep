@@ -342,18 +342,18 @@ namespace CMDSweep
             return cursor;
         }
 
-        public List<Point> CompareForChanges(GameBoardState other)
+        public List<Point> CompareForChanges(GameBoardState other, Rectangle? area = null)
         {
+            // Build a list of changed cells
             List<Point> res = new List<Point>();
-            for (int x = 0; x < BoardWidth; x++)
-            {
-                for (int y = 0; y < BoardHeight; y++)
-                {
-                    if (Cells[x, y] != other.Cells[x, y]) res.Add(new Point(x, y));
-                }
-            }
 
-            res = ApplyAllCells(res, (loc, r) => { if (Cell(loc) != other.Cell(loc)) r.Add(loc); return r; });
+            if (area == null)
+                Board.ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
+            else if (difficulty.SubtractFlags) // overfit because a flag change outside can technically change the view inside the viewport :)
+                Board.Intersect(area.Grow(difficulty.DetectionRadius)).ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
+            else 
+                Board.Intersect(area).ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
+
 
             if (difficulty.SubtractFlags)
             {

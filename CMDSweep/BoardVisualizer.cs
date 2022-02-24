@@ -95,7 +95,7 @@ namespace CMDSweep
         private void RenderBoardChanges(GameBoardState curGS, GameBoardState prevGS)
         {
             List<Point> changes;
-            changes = curGS.CompareForChanges(prevGS);
+            changes = curGS.CompareForChanges(prevGS, Viewport);
             foreach (Point cl in changes) RenderCell(cl, curGS);
         }
 
