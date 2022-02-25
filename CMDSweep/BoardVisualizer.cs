@@ -81,7 +81,6 @@ namespace CMDSweep
                             mode = RefreshMode.Full; // Player Mode changed
                     }
 
-                    Console.Title = mode.ToString();
                     //Render
                     if (mode == RefreshMode.Full)
                     {
