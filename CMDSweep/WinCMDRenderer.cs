@@ -1,12 +1,37 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using System.Timers;
 
 namespace CMDSweep
 {
     class WinCMDRenderer : IRenderer
     {
-        public WinCMDRenderer() { }
+        public WinCMDRenderer() {
+            Timer t = new Timer(50);
+            t.Elapsed += resizeTesterElapsed;
+            t.Start();
+            lastBounds = Bounds;
+        }
+
+        protected virtual void OnBoundsChanged(BoundsChangedEventArgs args)
+        {
+            BoundsChanged?.Invoke(this, args);
+        }
+
+        private void resizeTesterElapsed(object? sender, ElapsedEventArgs e)
+        {
+            if (!lastBounds.Equals(Bounds))
+            {
+                OnBoundsChanged(new(lastBounds,Bounds));
+                lastBounds = Bounds;
+            }
+        }
+
         public Rectangle Bounds => new(0, 0, Console.WindowWidth, Console.WindowHeight);
-        
+        private Rectangle lastBounds;
+
+        public event EventHandler BoundsChanged;
+
         public bool ClearScreen(StyleData data)
         {
             SetConsoleStyle(data);
@@ -25,6 +50,14 @@ namespace CMDSweep
             
             HideCursor();
             return true;
+        }
+
+        public void CopyArea(Rectangle oldArea, Rectangle newArea)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                Console.MoveBufferArea(oldArea.Left, oldArea.Top, oldArea.Width, oldArea.Height, newArea.Left, newArea.Top);
+            else
+                throw new NotImplementedException();
         }
 
         private void SetConsoleStyle(StyleData data)

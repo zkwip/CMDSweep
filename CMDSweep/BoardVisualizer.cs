@@ -19,8 +19,8 @@ namespace CMDSweep
         private RefreshMode modeWaiting = RefreshMode.None;
 
         Rectangle ScrollValidMask; // the area that is still valid (board space)
-        Rectangle RenderMask; // the area the board can be drawn into (screen space
-        Rectangle Viewport; // rendermask mapped to board space
+        Rectangle RenderMask; // the area the board can be drawn into (screen space)
+        Rectangle Viewport; // rendermask mapped to (board space)
 
         private GameBoardState? lastRenderedGameState;
         private readonly StyleData hideStyle;
@@ -46,46 +46,59 @@ namespace CMDSweep
         {
             // Indicate there is stuff to redraw
             SetVisQueue(mode);
-
-            // Mutex for the renderer
+            
+            // Defer renderer
             if (rendering) return false;
             rendering = true;
 
             // Actual render loop
             while (modeWaiting != RefreshMode.None)
             {
-                // Reset queue
-                mode = modeWaiting;
-                modeWaiting = RefreshMode.None;
-
-                GameBoardState? prevGS = lastRenderedGameState;
-                GameBoardState? curGS = game.CurrentState;
-
-                // Decide what to render
-                if (curGS == null) 
-                    continue; // Skip; Nothing to render
-
-                if (UpdateOffsets(curGS)) 
-                    mode = RefreshMode.Full; // Console changed size
-
-                if (prevGS == null) 
-                    mode = RefreshMode.Full; // No history: Full render
-
-                else if (mode == RefreshMode.ChangesOnly) // else to implicitly exclude the case where prevGS is null
+                lock (renderer)
                 {
-                    if (ScrollBoard(curGS)) mode = RefreshMode.Scroll; // Scrolling
-                    if (curGS.PlayerState != prevGS.PlayerState) mode = RefreshMode.Full; // Player Mode changed
+                    // Reset queue
+                    mode = modeWaiting;
+                    modeWaiting = RefreshMode.None;
+
+                    GameBoardState? prevGS = lastRenderedGameState;
+                    GameBoardState? curGS = game.CurrentState;
+
+                    // Decide what to render
+                    if (curGS == null)
+                        continue; // Skip; Nothing to render
+
+                    if (UpdateOffsets(curGS))
+                        mode = RefreshMode.Full; // Console changed size
+
+                    if (prevGS == null)
+                        mode = RefreshMode.Full; // No history: Full render
+
+                    else if (mode == RefreshMode.ChangesOnly) // else to implicitly exclude the case where prevGS is null
+                    {
+                        if (!CursorInScrollSafezone(curGS))
+                            mode = RefreshMode.Scroll; // Scrolling
+                        if (curGS.PlayerState != prevGS.PlayerState)
+                            mode = RefreshMode.Full; // Player Mode changed
+                    }
+
+                    Console.Title = mode.ToString();
+                    //Render
+                    if (mode == RefreshMode.Full)
+                    {
+                        RenderFullBoard(curGS);
+                    }
+                    else
+                    {
+                        if (mode == RefreshMode.Scroll)
+                            ScrollBoard(curGS);
+
+                        RenderBoardChanges(curGS, prevGS!);
+                    }
+
+                    RenderStatBoard(curGS);
+                    renderer.HideCursor(hideStyle);
+                    lastRenderedGameState = curGS;
                 }
-
-                //Render
-                if (mode == RefreshMode.ChangesOnly)
-                    RenderBoardChanges(curGS, prevGS!);
-                else
-                    RenderFullBoard(curGS);
-
-                RenderStatBoard(curGS);
-                renderer.HideCursor(hideStyle);
-                lastRenderedGameState = curGS;
             }
 
             rendering = false;
@@ -183,16 +196,52 @@ namespace CMDSweep
         bool CursorInScrollSafezone(GameBoardState gs) => ScrollSafeZone.Contains(gs.Cursor);
         bool ScrollBoard(GameBoardState gs)
         {
-            // Check if the cursor is outside the scroll safe zone
-            if (CursorInScrollSafezone(gs)) return false;
-
+            // Change the offset
             Offset offset = ScrollSafeZone.OffsetOutOfBounds(gs.Cursor);
-            Viewport.Shift(offset);
+            Rectangle nvp = Viewport.Shifted(offset);
+            ScrollValidMask = ScrollValidMask.Intersect(nvp);
 
-            ScrollValidMask = ScrollValidMask.Intersect(MapToRender(Viewport));
+            Rectangle oldArea = MapToRender(ScrollValidMask);
+            Viewport.Shift(offset);
+            if (oldArea.Area > 0) renderer.CopyArea(oldArea, MapToRender(ScrollValidMask));
+
+            Viewport.ForAll(p => { if (!ScrollValidMask.Contains(p)) RenderViewPortCell(p, gs); });
+            RenderBorder(gs);
+
+            ScrollValidMask = Viewport.Clone();
 
             return true;
         }
+
+        private void RenderViewPortCell(Point p, GameBoardState gs)
+        {
+            if (gs.Board.Contains(p)) RenderCell(p, gs);
+            else if (gs.Board.Grow(1).Contains(p)) RenderBorderCell(p, gs);
+            else ClearCell(p);
+        }
+
+        private void RenderBorderCell(Point p, GameBoardState gs)
+        {
+            StyleData data = new StyleData(settings.Colors["border-fg"], settings.Colors["cell-bg-out-of-bounds"], false);
+
+            // Corners
+            if (p.Equals(new Point(-1,-1))) 
+                MappedPrint(p.X, p.Y, data, settings.Texts["border-corner-tl"]);
+            else if (p.Equals(new Point(gs.BoardWidth, -1))) 
+                MappedPrint(p.X, p.Y, data, settings.Texts["border-corner-tr"]);
+            else if (p.Equals(new Point(-1, gs.BoardHeight)))
+                MappedPrint(p.X, p.Y, data, settings.Texts["border-corner-bl"]);
+            else if (p.Equals(new Point(gs.BoardWidth, gs.BoardHeight)))
+                MappedPrint(p.X, p.Y, data, settings.Texts["border-corner-br"]);
+
+            // Edges
+            else if (p.Y == -1 || p.Y == gs.BoardHeight)
+                MappedPrint(p.X, p.Y, data, settings.Texts["border-horizontal"]);
+            else if (p.X == -1 || p.X == gs.BoardWidth)
+                MappedPrint(p.X, p.Y, data, settings.Texts["border-vertical"]);
+        }
+
+        private void ClearCell(Point p) => MappedPrint(p, hideStyle, "  ");
 
         private Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
         private Point MapToRender(Point p) => new(offsetX + p.X * scaleX, offsetY + p.Y * scaleY);
@@ -229,7 +278,6 @@ namespace CMDSweep
                 newVP.CenterOn(Viewport.Center);
 
             Viewport = newVP;
-            ScrollBoard(currentGS);
 
             return true;
         }
@@ -243,10 +291,14 @@ namespace CMDSweep
             // Tiles
             Viewport.Intersect(currentGS.Board).ForAll((x, y) => RenderCell(new Point(x, y), currentGS));
             renderer.HideCursor(hideStyle);
-            ScrollValidMask = RenderMask.Clone();
+            ScrollValidMask = Viewport.Clone();
         }
 
-        void MappedPrint(Point p, StyleData data, string s) => renderer.PrintAtTile(MapToRender(p), data, s);
+        void MappedPrint(Point p, StyleData data, string s)
+        { 
+            if (Viewport.Contains(p))
+                renderer.PrintAtTile(MapToRender(p), data, s); 
+        }
         void MappedPrint(int x, int y, StyleData data, string s) => MappedPrint(new Point(x, y), data, s);
 
         void RenderBorder(GameBoardState currentGS)

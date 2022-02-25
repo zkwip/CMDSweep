@@ -56,6 +56,8 @@ namespace CMDSweep
         public LinearRange HorizontalRange => new(Left, Width);
         public LinearRange VerticalRange => new(Top, Height);
 
+        public int Area => Width * Height;
+
         public Rectangle(int x, int y, int width, int height)
         {
             Left = x;
@@ -134,6 +136,8 @@ namespace CMDSweep
             int t = Top > other.Top ? Top : other.Top;
             int r = Right < other.Right ? Right : other.Right;
             int b = Bottom < other.Bottom ? Bottom : other.Bottom;
+
+            if (b < t || r < l) return Rectangle.Zero;
             return new Rectangle(l, t, r - l, b - t);
         }
 
@@ -178,10 +182,10 @@ namespace CMDSweep
             int x = 0;
             int y = 0;
 
-            if (p.X > Right) x = p.X - Right;
-            if (p.Y > Bottom) y = p.Y - Bottom;
             if (p.X < Left) x = p.X - Left;
             if (p.Y < Top) y = p.Y - Top;
+            if (p.X >= Right) x = p.X - Right + 1;
+            if (p.Y >= Bottom) y = p.Y - Bottom + 1;
 
             return new Offset(x, y);
         }

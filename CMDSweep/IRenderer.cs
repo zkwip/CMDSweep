@@ -14,6 +14,18 @@ namespace CMDSweep
         Rectangle Bounds { get; }
 
         void HideCursor(StyleData styleOutOfBounds);
+
+        public event EventHandler BoundsChanged;
+
+        void CopyArea(Rectangle oldArea, Rectangle newArea);
+    }
+
+    public class BoundsChangedEventArgs : EventArgs
+    {
+        public Rectangle NewBounds { get; }
+        public Rectangle OldBounds { get; }
+
+        public BoundsChangedEventArgs(Rectangle o, Rectangle n) { NewBounds = n; OldBounds = o;}
     }
 
     public struct StyleData

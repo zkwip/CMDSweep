@@ -59,7 +59,15 @@ namespace CMDSweep
 
             while (Step()) ;
             refreshTimer.Stop();
+
+            Renderer.BoundsChanged += Renderer_BoundsChanged;
         }
+
+        private void Renderer_BoundsChanged(object? sender, EventArgs e)
+        {
+            if (e is BoundsChangedEventArgs be) Refresh(RefreshMode.Full);
+        }
+
         private void TimerElapsed(object? sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
 
         private bool Step()
