@@ -89,7 +89,7 @@ namespace CMDSweep
 
         private InputAction ReadAction()
         {
-            ConsoleKey key = Console.ReadKey().Key;
+            ConsoleKey key = Console.ReadKey(true).Key;
             foreach (Control ctrl in Settings.Controls)
                 if (ctrl.Value.Contains(key))
                     return ctrl.Key;
