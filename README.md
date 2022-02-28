@@ -1,6 +1,6 @@
 # Line of Command: The Sweep
 A command line interpretation of the classic minesweeper, but a bit fancier. 
-It is based on .NET 6 and targets Windows and support for other operating systems might follow later.
+It is based on .NET 6 and targets Windows. Support for other operating systems might follow later.
 
 ## Game objectives
 The goal of the game is to flag all the mines on the playing field. Because of that, you must figure out where they are. You want to discover all tiles of the board, except for the ones with a mine, since digging in a tile with a mine will cause it to explode, ouch. 
