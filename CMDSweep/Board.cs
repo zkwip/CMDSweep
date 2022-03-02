@@ -15,6 +15,7 @@ namespace CMDSweep
         private TimeSpan preTime;
         private bool timePaused = true;
         private int lives;
+        internal bool highscore = false;
 
         // Constructors and cloners
         private GameBoardState(CellData[,] datas) { Cells = datas; Face = Face.Normal; cursor = Board.Center; }

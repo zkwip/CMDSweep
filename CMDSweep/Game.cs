@@ -42,6 +42,7 @@ namespace CMDSweep
         internal MenuList MainMenu;
         internal MenuList SettingsMenu;
         internal MenuList AdvancedSettingsMenu;
+        private bool showhighscore = false;
 
         public GameApp(IRenderer r)
         {
@@ -145,7 +146,7 @@ namespace CMDSweep
             else if(CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
             {
                 refreshTimer.Stop();
-                if (CurrentState.PlayerState == PlayerState.Win) CheckHighscore(CurrentState);
+                if (CurrentState.PlayerState == PlayerState.Win) CurrentState.highscore = CheckHighscore(CurrentState);
                 Refresh(RefreshMode.Full);
                 appState = ApplicationState.Done;
             }
@@ -157,7 +158,7 @@ namespace CMDSweep
             return true;
         }
 
-        private void CheckHighscore(GameBoardState currentState)
+        private bool CheckHighscore(GameBoardState currentState)
         {
             TimeSpan time = currentState.Time;
             List<HighscoreRecord> scores = CurrentDifficulty.Highscores;
@@ -169,10 +170,17 @@ namespace CMDSweep
 
             if (scores.Count < highscoreEntries)
             {
-                scores.Add(new() { Time = time, Name = "Test", Date = DateTime.Now });
+                scores.Add(new() { 
+                    Time = time, 
+                    Name = "Test", 
+                    Date = DateTime.Now 
+                });
+
                 scores.Sort((x, y) => (x.Time - y.Time).Milliseconds);
                 WriteSave(SaveData);
+                return true;
             }
+            return false;
         }
 
         private bool DoneStep(InputAction ia)
