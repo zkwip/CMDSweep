@@ -31,7 +31,7 @@ namespace CMDSweep
             renderer = g.Renderer;
             settings = g.Settings;
             game = g;
-            hideStyle = new StyleData(settings.Colors["cell-bg-out-of-bounds"], settings.Colors["cell-bg-out-of-bounds"], false);
+            hideStyle = settings.GetStyle("cell-bg-out-of-bounds", "cell-bg-out-of-bounds");
             RenderMask = Rectangle.Zero;
             Viewport = Rectangle.Zero;
             ScrollValidMask = Rectangle.Zero;
@@ -46,7 +46,7 @@ namespace CMDSweep
         {
             // Indicate there is stuff to redraw
             SetVisQueue(mode);
-            
+
             // Defer renderer
             if (rendering) return false;
             rendering = true;
@@ -95,6 +95,10 @@ namespace CMDSweep
                     }
 
                     RenderStatBoard(curGS);
+
+                    if (curGS.PlayerState == PlayerState.Win) RenderPopup("You won! \n \n Test");
+                    if (curGS.PlayerState == PlayerState.Dead) RenderPopup("You died! \n \n Test");
+
                     renderer.HideCursor(hideStyle);
                     lastRenderedGameState = curGS;
                 }
@@ -102,6 +106,66 @@ namespace CMDSweep
 
             rendering = false;
             return true;
+        }
+
+        private void RenderPopup(string text)
+        {
+            int xpad = settings.Dimensions["popup-padding-x"];
+            int ypad = settings.Dimensions["popup-padding-y"];
+            StyleData style = settings.GetStyle("popup");
+
+            int horRoom = renderer.Bounds.Width - (4 * xpad);
+            int verRoom = renderer.Bounds.Height - (4 * ypad);
+
+            List<String> lines = new(text.Split('\n'));
+            int broadest = 0;
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                // Wrapping
+                if (lines[i].Length > horRoom)
+                {
+                    string line = lines[i];
+
+                    int breakpoint = horRoom;
+                    for (int j = 0; j < horRoom; j++) if (line[j] == ' ') breakpoint = j;
+
+                    lines.RemoveAt(i);
+                    lines.Insert(i, line.Substring(0, breakpoint));
+                    lines.Insert(i + 1, line.Substring(0, breakpoint + 1));
+                }
+
+                broadest = Math.Max(broadest, lines[i].Length);
+            }
+
+            Rectangle textbox = new Rectangle(0, 0, broadest, lines.Count);
+            textbox.CenterOn(renderer.Bounds.Center);
+
+            RenderPopupBox(style, textbox.Grow(xpad, ypad, xpad, ypad), "popup-border");
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                renderer.PrintAtTile(textbox.TopLeft.Shifted(0, i), style, lines[i]);
+            }
+
+        }
+
+        private void RenderPopupBox(StyleData style, Rectangle r, string border)
+        {
+            renderer.ClearScreen(style, r);
+
+            r = r.Shrink(0,0,1,1); // since it is exclusive
+            r.HorizontalRange.ForEach((i) => renderer.PrintAtTile(new(i,r.Top), style, settings.Texts[border + "-side-top"]));
+            r.HorizontalRange.ForEach((i) => renderer.PrintAtTile(new(i, r.Bottom), style, settings.Texts[border + "-side-bottom"]));
+
+            r.VerticalRange.ForEach((i) => renderer.PrintAtTile(new(r.Left, i), style, settings.Texts[border + "-side-left"]));
+            r.VerticalRange.ForEach((i) => renderer.PrintAtTile(new(r.Right, i), style, settings.Texts[border + "-side-right"]));
+
+            renderer.PrintAtTile(r.TopLeft, style, settings.Texts[border + "-corner-tl"]);
+            renderer.PrintAtTile(r.BottomLeft, style, settings.Texts[border + "-corner-bl"]);
+            renderer.PrintAtTile(r.TopRight, style, settings.Texts[border + "-corner-tr"]);
+            renderer.PrintAtTile(r.BottomRight, style, settings.Texts[border + "-corner-br"]);
+
         }
 
         private void RenderBoardChanges(GameBoardState curGS, GameBoardState prevGS)
@@ -146,7 +210,7 @@ namespace CMDSweep
 
         private void RenderClock(Point p, GameBoardState currentGS)
         {
-            StyleData clockStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
+            StyleData clockStyle = settings.GetStyle("stat-mines");
             renderer.PrintAtTile(p, clockStyle, currentGS.Time.ToString(@"\ h\:mm\:ss\ "));
         }
 
@@ -166,21 +230,21 @@ namespace CMDSweep
                     face = settings.Texts["face-dead"]; break;
             }
 
-            StyleData faceStyle = new StyleData(settings.Colors["face-fg"], settings.Colors["face-bg"]);
+            StyleData faceStyle = settings.GetStyle("face");
             renderer.PrintAtTile(p, faceStyle, face);
         }
 
         private void RenderMineCounter(Point p, GameBoardState currentGS)
         {
-            StyleData minesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
+            StyleData minesLeftStyle = settings.GetStyle("stat-mines");
             renderer.PrintAtTile(p, minesLeftStyle, string.Format(" {0:D3} ", currentGS.MinesLeft));
         }
 
         private void RenderLifeCounter(Point p, GameBoardState currentGS)
         {
             char life = settings.Texts["stat-life"][0];
-            StyleData livesLeftStyle = new StyleData(settings.Colors["stat-mines-fg"], settings.Colors["stat-mines-bg"]);
-            StyleData livesGoneStyle = new StyleData(settings.Colors["stat-lives-lost"], settings.Colors["stat-mines-bg"]);
+            StyleData livesLeftStyle = settings.GetStyle("stat-mines");
+            StyleData livesGoneStyle = settings.GetStyle("stat-lives-lost","stat-mines-bg");
 
             string atext = " ";
             for (int i = 0; i < currentGS.Difficulty.Lives - currentGS.LivesLost; i++) atext += life + " ";
@@ -221,7 +285,7 @@ namespace CMDSweep
 
         private void RenderBorderCell(Point p, GameBoardState gs)
         {
-            StyleData data = new StyleData(settings.Colors["border-fg"], settings.Colors["cell-bg-out-of-bounds"], false);
+            StyleData data = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
             // Corners
             if (p.Equals(new Point(-1,-1))) 
@@ -302,7 +366,7 @@ namespace CMDSweep
 
         void RenderBorder(GameBoardState currentGS)
         {
-            StyleData data = new StyleData(settings.Colors["border-fg"], settings.Colors["cell-bg-out-of-bounds"], false);
+            StyleData data = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
             // Top
             MappedPrint(-1,-1, data, settings.Texts["border-corner-tl"]);

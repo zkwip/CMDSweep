@@ -8,7 +8,7 @@ namespace CMDSweep
         bool SetCursor(Point p);
         bool ClearScreen(StyleData data);
         bool ClearScreen(StyleData data, Rectangle r);
-        bool ClearScreen(StyleData data, int row) => ClearScreen(data, new Rectangle(0, row, Bounds.Width, 0));
+        bool ClearScreen(StyleData data, int row) => ClearScreen(data, new Rectangle(0, row, Bounds.Width, 1));
 
         void SetTitle(string s);
         Rectangle Bounds { get; }
@@ -36,5 +36,10 @@ namespace CMDSweep
         public readonly ConsoleColor Foreground;
         public readonly ConsoleColor Background;
         public readonly bool Highlight;
+
+        public override string ToString()
+        {
+            return String.Format("{0} on {1}", Foreground, Background);
+        }
     }
 }

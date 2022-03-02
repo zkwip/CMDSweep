@@ -116,5 +116,10 @@ namespace CMDSweep
         }
         public override string ToString() => String.Format("({0} to {1} w: {2})", Start, End, Length);
         public static LinearRange Zero => new LinearRange(0, 0);
+
+        internal void ForEach(Action<int> func)
+        {
+            for(int i = Start; i < End; i++) func(i);
+        }
     }
 }

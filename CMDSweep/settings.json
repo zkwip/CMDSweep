@@ -105,7 +105,10 @@
     "menu-bg-highlight-box": "GRAY",
     "menu-fg-highlight-box": "BLACK",
     "menu-bg-highlight-title": "DARKGRAY",
-    "menu-fg-highlight-title": "WHITE"
+    "menu-fg-highlight-title": "WHITE",
+
+    "popup-bg": "GRAY",
+    "popup-fg": "BLACK"
   },
   "Texts": {
     "border-vertical": "║ ",
@@ -114,6 +117,14 @@
     "border-corner-bl": "╚═",
     "border-corner-tr": "╗ ",
     "border-corner-br": "╝ ",
+    "popup-border-side-left": "║",
+    "popup-border-side-top": "═",
+    "popup-border-side-right": "║",
+    "popup-border-side-bottom": "═",
+    "popup-border-corner-tl": "╔",
+    "popup-border-corner-bl": "╚",
+    "popup-border-corner-tr": "╗",
+    "popup-border-corner-br": "╝",
     "cursor": "X",
     "cell-flag": "F",
     "cell-mine": "*",
@@ -150,7 +161,9 @@
     "menu-title-space": 3,
     "menu-rows": 8,
     "menu-indent": 2,
-    "menu-box-padding": 2
+    "menu-box-padding": 2,
+    "popup-padding-x": 3,
+    "popup-padding-y": 1
   },
   "Controls": {
     "Up": [ "UpArrow", "W" ],

@@ -21,7 +21,7 @@ You can move the cursor (shown in game by an X) using the arrow keys or W, A, S,
 In addition to the standard radius of 1, thus covering a 3x3 square, you can also increase the search radius of each square. For example, a radius of 2 will look at a larger radius and thus can find more mines and give you bigger numbers.
 
 ### Mine counting radius wrapping
-When you enable this feature, the squares on one side of the board will also count the mines on one side, as if the two sides of the board are next to each other.
+When you enable this feature, the numbered squares close to one side of the board will wrap around and count the mines on the other side, as if the two sides of the board are next to each other.
 
 ### Enabling / Disabling of flags and question marks
 To make it more difficult to track where you saw the mines, you can disable the use of flags. This way, you need to remember or rethink where the mines are every time you revisit a part of the board. 
@@ -47,3 +47,4 @@ To improve your chances on the more challenging configurations, you can have mul
 - Cooperative multiplayer
 - Campaign
 - Undo
+- Pre-made Color Profiles, also for use with color blindness

@@ -353,6 +353,9 @@ namespace CMDSweep
         public Dictionary<string, string> Texts;
         public Dictionary<string, int> Dimensions;
         public Dictionary<InputAction, List<ConsoleKey>> Controls;
+
+        public StyleData GetStyle(string handle) => new(Colors[handle + "-fg"], Colors[handle + "-bg"]);
+        public StyleData GetStyle(string fg, string bg) => new(Colors[fg], Colors[bg]);
     }
 
     #pragma warning restore CS0649 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

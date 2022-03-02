@@ -46,7 +46,8 @@ namespace CMDSweep
 
             rec = rec.Intersect(Bounds);
 
-            for (int row = rec.Top; row < rec.Bottom; row++) PrintAtTile(new Point(row, rec.Left), data, "".PadLeft(rec.Width));
+            for (int row = rec.Top; row < rec.Bottom; row++) 
+                PrintAtTile(new Point(rec.Left, row), data, "".PadLeft(rec.Width));
             
             HideCursor();
             return true;
