@@ -36,19 +36,17 @@ namespace CMDSweep
         // Curent States
         internal MenuList currentMenuList;
         internal GameBoardState CurrentState;
-        internal Difficulty CurrentDifficulty;
 
         // Sorta Globals
         internal MenuList MainMenu;
         internal MenuList SettingsMenu;
         internal MenuList AdvancedSettingsMenu;
-        private bool showhighscore = false;
 
         public GameApp(IRenderer r)
         {
             // Set up
             Settings = LoadSettings();
-            CurrentDifficulty = SaveData.Difficulties[0];
+            //CurrentDifficulty = SaveData.CurrentDifficulty;
             Renderer = r;
 
             MVis = new MenuVisualizer(this);
@@ -161,7 +159,7 @@ namespace CMDSweep
         private bool CheckHighscore(GameBoardState currentState)
         {
             TimeSpan time = currentState.Time;
-            List<HighscoreRecord> scores = CurrentDifficulty.Highscores;
+            List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
             if (scores.Count >= highscoreEntries)
             {
@@ -264,7 +262,8 @@ namespace CMDSweep
         {
             refreshTimer.Stop();
             appState = ApplicationState.Playing;
-            CurrentState = GameBoardState.NewGame(CurrentDifficulty);
+            CurrentState = GameBoardState.NewGame(SaveData.CurrentDifficulty);
+            WriteSave(SaveData);
 
             Refresh(RefreshMode.Full);
         }
@@ -293,7 +292,7 @@ namespace CMDSweep
             QuitButton.ValueChanged += (i, o) => QuitGame();
             MainMenu.Add(QuitButton);
 
-            CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", SaveData.Difficulties, x => x.Name), x => x, (d, val) => this.CurrentDifficulty = val);
+            CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", SaveData.Difficulties, x => x.Name), x => x, (d, val) => SaveData.CurrentDifficulty = val);
 
             CreateSettingsItem(SettingsMenu, new MenuNumberRange("Width", 5, 1000), x => x.Width, (d, val) => d.Width = val);
             CreateSettingsItem(SettingsMenu, new MenuNumberRange("Height", 5, 1000), x => x.Height, (d, val) => d.Height = val);
@@ -322,17 +321,21 @@ namespace CMDSweep
             Parent.Add(res);
         }
 
-        private void CreateSettingsItem<TOption>(MenuList Parent, MenuChoice<TOption> Item, Func<Difficulty, TOption> Read, Action<Difficulty, TOption> Write)
+        private void CreateSettingsItem<TOption>(MenuList Parent, MenuChoice<TOption> Item, Func<Difficulty, TOption> ReadProperty, Action<Difficulty, TOption> WriteProperty)
         {
             // Changing the difficulty itself works differently
             if (Item is MenuChoice<Difficulty> choice)
                 Item.ValueChanged += (i, o) => ChangePreset(choice);
             else
-                Item.ValueChanged += (i, o) => { ForkCurrentDifficulty(Write, Item.SelectedOption); };
+                Item.ValueChanged += (i, o) => ForkCurrentDifficulty(WriteProperty, Item.SelectedOption); 
 
             // Change the value when the difficulty is changed
-            DifficultyChanged += (i, o) => SelectValue(Item, Read(CurrentDifficulty));
-            SelectValue(Item, Read(CurrentDifficulty));
+            DifficultyChanged += (i, o) => SelectValue(Item, ReadProperty(SaveData.CurrentDifficulty));
+
+            if (SaveData.CurrentDifficulty == null) 
+                SelectValue(Item, ReadProperty(SaveData.Difficulties[0]));
+            else 
+                SelectValue(Item, ReadProperty(SaveData.CurrentDifficulty));
 
 
             Parent.Add(Item);
@@ -340,20 +343,21 @@ namespace CMDSweep
 
         private void SelectValue<TOption>(MenuChoice<TOption> Item, TOption value)
         {
+            if (value == null) throw new NullReferenceException("Item is null");
             if (!Item.Select(value, true)) throw new Exception("Selected item not in the list");
         }
 
         private void ForkCurrentDifficulty<TOption>(Action<Difficulty, TOption> Write, TOption Value)
         {
             // Create a new custom difficulty if you are changing from another preset
-            if (CurrentDifficulty.Name != "Custom")
+            if (SaveData.CurrentDifficulty.Name != "Custom")
             {
-                CurrentDifficulty = CurrentDifficulty.Clone("Custom");
+                SaveData.CurrentDifficulty = SaveData.CurrentDifficulty.Clone("Custom");
                 SaveData.Difficulties.RemoveAll(dif => dif.Name == "Custom");
-                SaveData.Difficulties.Add(CurrentDifficulty);
+                SaveData.Difficulties.Add(SaveData.CurrentDifficulty);
             }
 
-            Write(CurrentDifficulty, Value);
+            Write(SaveData.CurrentDifficulty, Value);
             DifficultyChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -363,7 +367,7 @@ namespace CMDSweep
             if (d == null) return;
             if (d.Name == "Custom") return;
 
-            CurrentDifficulty = d;
+            SaveData.CurrentDifficulty = d;
             DifficultyChanged?.Invoke(this, EventArgs.Empty);
         }
         
@@ -410,11 +414,13 @@ namespace CMDSweep
     internal class SaveData
     {
         public List<Difficulty> Difficulties;
+        public Difficulty CurrentDifficulty;
         public SaveData() { }
 
         public SaveData(List<Difficulty> difficulties) 
         { 
-            Difficulties = new List<Difficulty>(difficulties); 
+            Difficulties = new List<Difficulty>(difficulties);
+            CurrentDifficulty = Difficulties[0];
         }
     }
 

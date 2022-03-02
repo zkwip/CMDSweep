@@ -353,7 +353,7 @@ namespace CMDSweep
 
         void RenderFullBoard(GameBoardState currentGS)
         {
-            TryCenter(currentGS);
+            TryCenterViewPort(currentGS);
             // Border
             renderer.ClearScreen(hideStyle);
             RenderBorder(currentGS);
@@ -364,7 +364,7 @@ namespace CMDSweep
             ScrollValidMask = Viewport.Clone();
         }
 
-        private void TryCenter(GameBoardState currentGS)
+        private void TryCenterViewPort(GameBoardState currentGS)
         {
             if (currentGS.BoardWidth < ScrollSafeZone.Width && currentGS.BoardHeight < ScrollSafeZone.Height)
             {
