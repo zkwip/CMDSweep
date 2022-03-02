@@ -96,8 +96,8 @@ namespace CMDSweep
 
                     RenderStatBoard(curGS);
 
-                    if (curGS.PlayerState == PlayerState.Win) RenderPopup("You won! \n \n Test");
-                    if (curGS.PlayerState == PlayerState.Dead) RenderPopup("You died! \n \n Test");
+                    if (curGS.PlayerState == PlayerState.Win) RenderPopup("Congratulations, You won!\nYou can play again by pressing any key.");
+                    if (curGS.PlayerState == PlayerState.Dead) RenderPopup("You died!\nYou can play again by pressing any key.");
 
                     renderer.HideCursor(hideStyle);
                     lastRenderedGameState = curGS;
