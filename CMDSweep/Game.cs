@@ -19,25 +19,29 @@ namespace CMDSweep
             Quit,
         }
 
+        private const string SaveFilePath = "save.json";
+        private const string SettingsFilePath = "settings.json";
+        private const int highscoreEntries = 5;
         Timer refreshTimer;
 
         private ApplicationState appState;
 
         // Modules
         internal readonly GameSettings Settings;
+        internal SaveData SaveData;
         internal readonly IRenderer Renderer;
         internal readonly BoardVisualizer BVis;
         internal readonly MenuVisualizer MVis;
 
         // Curent States
-        public MenuList currentMenuList;
-        public GameBoardState CurrentState;
-        public Difficulty CurrentDifficulty;
+        internal MenuList currentMenuList;
+        internal GameBoardState CurrentState;
+        internal Difficulty CurrentDifficulty;
 
         // Sorta Globals
-        public MenuList MainMenu;
-        public MenuList SettingsMenu;
-        public MenuList AdvancedSettingsMenu;
+        internal MenuList MainMenu;
+        internal MenuList SettingsMenu;
+        internal MenuList AdvancedSettingsMenu;
 
         public GameApp(IRenderer r)
         {
@@ -141,6 +145,7 @@ namespace CMDSweep
             else if(CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
             {
                 refreshTimer.Stop();
+                if (CurrentState.PlayerState == PlayerState.Win) CheckHighscore(CurrentState);
                 Refresh(RefreshMode.Full);
                 appState = ApplicationState.Done;
             }
@@ -150,6 +155,24 @@ namespace CMDSweep
             }
 
             return true;
+        }
+
+        private void CheckHighscore(GameBoardState currentState)
+        {
+            TimeSpan time = currentState.Time;
+            List<HighscoreRecord> scores = CurrentDifficulty.Highscores;
+
+            if (scores.Count >= highscoreEntries)
+            {
+                if (time < scores[highscoreEntries - 1].Time) scores.RemoveAt(highscoreEntries - 1);
+            }
+
+            if (scores.Count < highscoreEntries)
+            {
+                scores.Add(new() { Time = time, Name = "Test", Date = DateTime.Now });
+                scores.Sort((x, y) => (x.Time - y.Time).Milliseconds);
+                WriteSave(SaveData);
+            }
         }
 
         private bool DoneStep(InputAction ia)
@@ -181,14 +204,31 @@ namespace CMDSweep
 
         private GameSettings LoadSettings()
         {
-            using (StreamReader r = new StreamReader("settings.json"))
-            {
-                string json = r.ReadToEnd();
+            string settingsText = File.ReadAllText(SettingsFilePath);
+            GameSettings? settings = JsonConvert.DeserializeObject<GameSettings>(settingsText);
+            if (settings == null) throw new Exception("Failed to load settings");
 
-                GameSettings? gs = JsonConvert.DeserializeObject<GameSettings>(json);
-                if (gs == null) throw new Exception("Failed to load settings");
-                return gs;
+            SaveData? sd = null;
+
+            if (File.Exists(SaveFilePath))
+            {
+                string saveText = File.ReadAllText(SaveFilePath);
+                sd = JsonConvert.DeserializeObject<SaveData>(saveText);
+                if (sd == null) throw new Exception("Failed to save file");
+                else SaveData = sd;
             }
+            else
+            {
+                SaveData = new(settings.Difficulties);
+                WriteSave(SaveData);
+            }
+            return settings;
+        }
+
+        private void WriteSave(SaveData sd)
+        {
+            string json = JsonConvert.SerializeObject(sd);
+            File.WriteAllText(SaveFilePath, json);
         }
 
 
@@ -358,9 +398,27 @@ namespace CMDSweep
         public StyleData GetStyle(string fg, string bg) => new(Colors[fg], Colors[bg]);
     }
 
+    internal class SaveData
+    {
+        public List<Difficulty> Difficulties;
+        public SaveData() { }
+
+        public SaveData(List<Difficulty> difficulties) 
+        { 
+            Difficulties = new List<Difficulty>(difficulties); 
+        }
+    }
+
+    internal class HighscoreRecord
+    {
+        public string Name;
+        public TimeSpan Time;
+        public DateTime Date;
+    }
+
     #pragma warning restore CS0649 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-    public class Difficulty
+    internal class Difficulty
     {
         public string Name;
 
@@ -377,6 +435,8 @@ namespace CMDSweep
         public bool SubtractFlags;
         public bool OnlyShowAtCursor;
         public bool AutomaticDiscovery;
+
+        public List<HighscoreRecord> Highscores;
 
         public override bool Equals(object? obj)
         {
@@ -432,7 +492,8 @@ namespace CMDSweep
                 WrapAround = this.WrapAround,
                 SubtractFlags = this.SubtractFlags,
                 OnlyShowAtCursor = this.OnlyShowAtCursor,
-                AutomaticDiscovery = this.AutomaticDiscovery
+                AutomaticDiscovery = this.AutomaticDiscovery,
+                Highscores = new List<HighscoreRecord>()
             };
         }
     }

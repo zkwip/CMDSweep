@@ -34,7 +34,7 @@ namespace CMDSweep
             };
         }
 
-        public static GameBoardState NewGame(Difficulty diff)
+        internal static GameBoardState NewGame(Difficulty diff)
         {
             int width = diff.Width;
             int height = diff.Height;
@@ -116,7 +116,7 @@ namespace CMDSweep
 
         // Oneliner Board Properties
         public PlayerState PlayerState => playerState; 
-        public Difficulty Difficulty => difficulty; 
+        internal Difficulty Difficulty => difficulty; 
         public Point Cursor => cursor.Clone(); 
         public TimeSpan Time => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime))); 
 

@@ -13,7 +13,8 @@
       "FlagsAllowed": true,
       "AutomaticDiscovery": true,
       "SubtractFlags": false,
-      "OnlyShowAtCursor": false
+      "OnlyShowAtCursor": false,
+      "Highscores": []
     },
     {
       "Name": "Intermediate",
@@ -28,7 +29,8 @@
       "FlagsAllowed": true,
       "AutomaticDiscovery": true,
       "SubtractFlags": false,
-      "OnlyShowAtCursor": false
+      "OnlyShowAtCursor": false,
+      "Highscores": []
     },
     {
       "Name": "Expert",
@@ -43,7 +45,8 @@
       "FlagsAllowed": true,
       "AutomaticDiscovery": true,
       "SubtractFlags": false,
-      "OnlyShowAtCursor": false
+      "OnlyShowAtCursor": false,
+      "Highscores": []
     },
     {
       "Name": "Custom",
@@ -58,7 +61,8 @@
       "FlagsAllowed": true,
       "AutomaticDiscovery": true,
       "SubtractFlags": false,
-      "OnlyShowAtCursor": false
+      "OnlyShowAtCursor": false,
+      "Highscores": []
     }
   ],
   "Colors": {
