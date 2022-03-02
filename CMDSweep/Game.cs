@@ -48,7 +48,7 @@ namespace CMDSweep
         {
             // Set up
             Settings = LoadSettings();
-            CurrentDifficulty = Settings.Difficulties[3];
+            CurrentDifficulty = SaveData.Difficulties[0];
             Renderer = r;
 
             MVis = new MenuVisualizer(this);
@@ -178,6 +178,7 @@ namespace CMDSweep
 
                 scores.Sort((x, y) => (x.Time - y.Time).Milliseconds);
                 WriteSave(SaveData);
+
                 return true;
             }
             return false;
@@ -227,7 +228,7 @@ namespace CMDSweep
             }
             else
             {
-                SaveData = new(settings.Difficulties);
+                SaveData = new(settings.DefaultDifficulties);
                 WriteSave(SaveData);
             }
             return settings;
@@ -292,7 +293,7 @@ namespace CMDSweep
             QuitButton.ValueChanged += (i, o) => QuitGame();
             MainMenu.Add(QuitButton);
 
-            CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", Settings.Difficulties, x => x.Name), x => x, (d, val) => this.CurrentDifficulty = val);
+            CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", SaveData.Difficulties, x => x.Name), x => x, (d, val) => this.CurrentDifficulty = val);
 
             CreateSettingsItem(SettingsMenu, new MenuNumberRange("Width", 5, 1000), x => x.Width, (d, val) => d.Width = val);
             CreateSettingsItem(SettingsMenu, new MenuNumberRange("Height", 5, 1000), x => x.Height, (d, val) => d.Height = val);
@@ -348,8 +349,8 @@ namespace CMDSweep
             if (CurrentDifficulty.Name != "Custom")
             {
                 CurrentDifficulty = CurrentDifficulty.Clone("Custom");
-                Settings.Difficulties.RemoveAll(dif => dif.Name == "Custom");
-                Settings.Difficulties.Add(CurrentDifficulty);
+                SaveData.Difficulties.RemoveAll(dif => dif.Name == "Custom");
+                SaveData.Difficulties.Add(CurrentDifficulty);
             }
 
             Write(CurrentDifficulty, Value);
@@ -396,7 +397,7 @@ namespace CMDSweep
     #pragma warning disable CS0649 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     internal class GameSettings
     {
-        public List<Difficulty> Difficulties;
+        public List<Difficulty> DefaultDifficulties;
         public Dictionary<string, ConsoleColor> Colors;
         public Dictionary<string, string> Texts;
         public Dictionary<string, int> Dimensions;
