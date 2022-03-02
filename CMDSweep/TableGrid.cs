@@ -33,7 +33,10 @@ namespace CMDSweep
         public Point GetPoint(string col, string row) => new Point(cp[col].Start, rp[row].Start);
         public Point GetPoint(string col, int co, string row, int ro) => new Point(cp[col, co].Start, rp[row, ro].Start);
 
-
+        public Point this[int col, int row] => new Point(cp[col].Start, rp[row].Start);
+        public Point this[string col, int row] => new Point(cp[col].Start, rp[row].Start);
+        public Point this[int col, string row] => new Point(cp[col].Start, rp[row].Start);
+        public Point this[string col, string row] => new Point(cp[col].Start, rp[row].Start);
         public Rectangle GetCell(int col, int row) => new Rectangle(cp[col].Range, rp[row].Range);
 
         public Rectangle Column(string name, int offset = 0) => Column(cp[name].Offset(offset));

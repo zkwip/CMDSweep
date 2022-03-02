@@ -112,7 +112,8 @@
     "menu-fg-highlight-title": "WHITE",
 
     "popup-bg": "GRAY",
-    "popup-fg": "BLACK"
+    "popup-fg": "BLACK",
+    "popup-fg-highlight": "RED"
   },
   "Texts": {
     "border-vertical": "║ ",
@@ -167,7 +168,13 @@
     "menu-indent": 2,
     "menu-box-padding": 2,
     "popup-padding-x": 3,
-    "popup-padding-y": 1
+    "popup-padding-y": 1,
+    "highscore-num-width": 3,
+    "highscore-name-width": 20,
+    "highscore-time-width": 14,
+    "highscore-date-width": 15,
+    "highscore-header-height": 2,
+    "highscore-row-height": 2
   },
   "Controls": {
     "Up": [ "UpArrow", "W" ],

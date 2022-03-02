@@ -21,7 +21,8 @@ namespace CMDSweep
 
         private const string SaveFilePath = "save.json";
         private const string SettingsFilePath = "settings.json";
-        private const int highscoreEntries = 5;
+        internal const int highscoreEntries = 5;
+
         Timer refreshTimer;
 
         private ApplicationState appState;

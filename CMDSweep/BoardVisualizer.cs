@@ -99,7 +99,7 @@ namespace CMDSweep
                     if (curGS.PlayerState == PlayerState.Win)
                     {
                         if (curGS.highscore)
-                            RenderPopup("Congratulations, You got a high score!\n\n(To be implemented)");
+                            RenderHighscorePopup(curGS);
                         else
                             RenderPopup("Congratulations, You won!\n\nYou can play again by pressing any key.");
                     }
@@ -114,7 +114,61 @@ namespace CMDSweep
             return true;
         }
 
-        private void RenderPopup(string text)
+        private void RenderHighscorePopup(GameBoardState curGS)
+        {
+            TableGrid tg = new TableGrid();
+            tg.AddColumn(settings.Dimensions["popup-padding-x"], 0, "");
+            tg.AddColumn(settings.Dimensions["highscore-num-width"], 0, "num");
+            tg.AddColumn(settings.Dimensions["highscore-name-width"], 0, "name");
+            tg.AddColumn(settings.Dimensions["highscore-time-width"], 0, "time");
+            tg.AddColumn(settings.Dimensions["highscore-date-width"], 0, "date");
+            tg.AddColumn(settings.Dimensions["popup-padding-x"], 0, "");
+
+            tg.AddRow(settings.Dimensions["highscore-header-height"], 0, "title");
+            tg.AddRow(settings.Dimensions["popup-padding-y"], 0, "");
+            tg.AddRow(settings.Dimensions["highscore-header-height"], 0, "head");
+            tg.AddRow(settings.Dimensions["highscore-row-height"], 0, "row", GameApp.highscoreEntries);
+            tg.FitAround(0);
+            tg.CenterOn(renderer.Bounds.Center);
+            RenderPopupBox(settings.GetStyle("popup"), tg.Bounds.Grow(2),"popup-border");
+
+            renderer.PrintAtTile(tg.GetPoint("num", "title"), settings.GetStyle("popup"), "Highscores for " + curGS.Difficulty.Name);
+            renderer.PrintAtTile(tg.GetPoint("num", "head"), settings.GetStyle("popup"), "#");
+            renderer.PrintAtTile(tg.GetPoint("name", "head"), settings.GetStyle("popup"), "Name");
+            renderer.PrintAtTile(tg.GetPoint("time", "head"), settings.GetStyle("popup"), "Time");
+            renderer.PrintAtTile(tg.GetPoint("date", "head"), settings.GetStyle("popup"), "When");
+
+            List<HighscoreRecord> highscores = curGS.Difficulty.Highscores;
+            for (int i = 0; i < highscores.Count; i++)
+            {
+                string time = String.Format(
+                    "{0:D3}:{1:D2}.{2:D3}", 
+                    (int)(highscores[i].Time.TotalMinutes), 
+                    highscores[i].Time.Seconds, 
+                    highscores[i].Time.Milliseconds
+                );
+
+                StyleData style = settings.GetStyle("popup");
+
+                string date = highscores[i].Date.ToString("g");
+                if (DateTime.Now - highscores[i].Date < TimeSpan.FromSeconds(5))
+                {
+                    date = "Now";
+                    style = settings.GetStyle("popup-fg-highlight", "popup-bg");
+                }
+                else if (highscores[i].Date.Date == DateTime.Today)
+                {
+                    date = "today " + highscores[i].Date.ToString("t");
+                }
+
+                renderer.PrintAtTile(tg.GetPoint("num", 0, "row", i), style, (i+1).ToString());
+                renderer.PrintAtTile(tg.GetPoint("name", 0, "row", i), style, highscores[i].Name);
+                renderer.PrintAtTile(tg.GetPoint("time", 0, "row", i), style, time);
+                renderer.PrintAtTile(tg.GetPoint("date", 0, "row", i), style, date);
+            }
+        }
+
+            private void RenderPopup(string text)
         {
             int xpad = settings.Dimensions["popup-padding-x"];
             int ypad = settings.Dimensions["popup-padding-y"];
