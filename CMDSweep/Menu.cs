@@ -12,10 +12,9 @@ public class MenuVisualizer
     internal IRenderer Renderer => Game.Renderer;
 
 
-    public StyleData MenuTextStyle  => new(Colors["menu-fg"], Colors["menu-bg"]);
-    public StyleData FocusBoxStyle => new(Colors["menu-fg-highlight-box"], Colors["menu-bg-highlight-box"]);
-    public StyleData FocusTitleStyle => new(Colors["menu-fg-highlight-title"], Colors["menu-bg-highlight-title"]);
-    //public MenuItem SelectedItem => CurrentList.Items[CurrentList.FocusIndex];
+    public StyleData MenuTextStyle => Game.Settings.GetStyle("menu");
+    public StyleData FocusBoxStyle => Game.Settings.GetStyle("menu-highlight-box");
+    public StyleData FocusTitleStyle => Game.Settings.GetStyle("menu-highlight-title");
     public MenuList CurrentList => Game.currentMenuList;
     internal Dictionary<string, ConsoleColor> Colors => Game.Settings.Colors;
 
@@ -26,7 +25,6 @@ public class MenuVisualizer
         Renderer.ClearScreen(MenuTextStyle);
         Renderer.HideCursor(MenuTextStyle);
         Renderer.SetTitle(Game.Settings.Texts["menu-title"]);
-
 
         if (CurrentList == null) return false;
         VisualizeList(CurrentList);
