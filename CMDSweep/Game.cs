@@ -16,9 +16,8 @@ public class GameApp
         Highscore,
         Quit,
     }
-    internal const int highscoreEntries = 5;
 
-    readonly Timer refreshTimer;
+    private readonly Timer refreshTimer;
 
     private ApplicationState appState;
 
@@ -57,10 +56,10 @@ public class GameApp
 
         OpenMenu(MainMenu);
 
-        while (Step()) ;
+        Renderer.BoundsChanged += Renderer_BoundsChanged;
+        while (Step());
         refreshTimer.Stop();
 
-        Renderer.BoundsChanged += Renderer_BoundsChanged;
     }
 
     private void Renderer_BoundsChanged(object? sender, EventArgs e)
@@ -158,12 +157,12 @@ public class GameApp
         TimeSpan time = currentState.Time;
         List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
-        if (scores.Count >= highscoreEntries)
+        if (scores.Count >= Highscores.highscoreEntries)
         {
-            if (time < scores[highscoreEntries - 1].Time) scores.RemoveAt(highscoreEntries - 1);
+            if (time < scores[Highscores.highscoreEntries - 1].Time) scores.RemoveAt(Highscores.highscoreEntries - 1);
         }
 
-        if (scores.Count < highscoreEntries)
+        if (scores.Count < Highscores.highscoreEntries)
         {
             scores.Add(new() { 
                 Time = time, 
@@ -206,7 +205,6 @@ public class GameApp
         return res;
     }
 
-
     private void Refresh(RefreshMode mode)
     {
         if (appState != ApplicationState.Playing) refreshTimer.Stop();
@@ -246,19 +244,11 @@ public class GameApp
         AdvancedSettingsMenu = new("Advanced", this);
         AdvancedSettingsMenu.ParentMenu = SettingsMenu;
 
-        MenuButton StartButton = new("Start New Game");
-        StartButton.ValueChanged += (i, o) => InitialiseGame();
-        MainMenu.Add(StartButton);
-
-        MenuButton HighButton = new("High scores");
-        HighButton.ValueChanged += (i, o) => ShowHighscores();
-        MainMenu.Add(HighButton);
-
-        CreateMenuButton(MainMenu, "Settings", SettingsMenu);
-
-        MenuButton QuitButton = new("Quit");
-        QuitButton.ValueChanged += (i, o) => QuitGame();
-        MainMenu.Add(QuitButton);
+        MainMenu.AddButton("New Game", () => InitialiseGame());
+        MainMenu.AddButton("High Scores", () => ShowHighscores());
+        MainMenu.AddButton("Help", () => ShowHelp());
+        MainMenu.AddButton("Settings", () => OpenMenu(SettingsMenu));
+        MainMenu.AddButton("Quit Game", () => QuitGame());
 
         CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", SaveData.Difficulties, x => x.Name), x => x, (d, val) => SaveData.CurrentDifficulty = val);
 
@@ -267,7 +257,7 @@ public class GameApp
         CreateSettingsItem(SettingsMenu, new MenuNumberRange("Mines", 1, 10000), x => x.Mines, (d, val) => d.Mines = val);
         CreateSettingsItem(SettingsMenu, new MenuNumberRange("Lives", 1, 100), x => x.Lives, (d, val) => d.Lives = val);
 
-        CreateMenuButton(SettingsMenu, "Advanced", AdvancedSettingsMenu);
+        SettingsMenu.AddButton("Advanced", () => OpenMenu(AdvancedSettingsMenu));
 
         CreateSettingsItem(AdvancedSettingsMenu, new MenuNumberRange("Safe Zone", 1, 100), x => x.Safezone, (d, val) => d.Safezone = val);
         CreateSettingsItem(AdvancedSettingsMenu, new MenuNumberRange("Counting Radius", 1, 100), x => x.DetectionRadius, (d, val) => d.DetectionRadius = val);
@@ -281,13 +271,6 @@ public class GameApp
     }
 
     private event EventHandler DifficultyChanged;
-
-    private void CreateMenuButton(MenuList Parent, string title, MenuList Linked)
-    {
-        MenuItem res = new MenuButton(title);
-        res.ValueChanged += (i, o) => OpenMenu(Linked);
-        Parent.Add(res);
-    }
 
     private void CreateSettingsItem<TOption>(MenuList Parent, MenuChoice<TOption> Item, Func<Difficulty, TOption> ReadProperty, Action<Difficulty, TOption> WriteProperty)
     {
@@ -332,7 +315,11 @@ public class GameApp
         SaveData.CurrentDifficulty = d;
         DifficultyChanged?.Invoke(this, EventArgs.Empty);
     }
-    
+    private void ShowHelp()
+    {
+        throw new NotImplementedException();
+    }
+
     private void ShowHighscores()
     {
         throw new NotImplementedException();

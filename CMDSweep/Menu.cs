@@ -146,6 +146,13 @@ public class MenuList
         while (depth < end && depth <= FocusIndex + space - maxRows) depth++;
         return depth;
     }
+
+    internal void AddButton(string text, Action action)
+    {
+        MenuButton mb = new(text);
+        mb.ValueChanged += (i, o) => action();
+        Add(mb);
+    }
 }
 
 public abstract class MenuItem
