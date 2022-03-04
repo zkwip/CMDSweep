@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace CMDSweep
 {
-    public class BoardVisualizer
+    internal class BoardVisualizer
     {
-        readonly IRenderer renderer;
+        IRenderer renderer => game.Renderer;
         readonly GameApp game;
         readonly GameSettings settings;
 
@@ -25,10 +25,8 @@ namespace CMDSweep
         private GameBoardState? lastRenderedGameState;
         private readonly StyleData hideStyle;
 
-
         public BoardVisualizer(GameApp g)
         {
-            renderer = g.Renderer;
             settings = g.Settings;
             game = g;
             hideStyle = settings.GetStyle("cell-bg-out-of-bounds", "cell-bg-out-of-bounds");
