@@ -18,7 +18,7 @@ public class GameApp
     }
     internal const int highscoreEntries = 5;
 
-    Timer refreshTimer;
+    readonly Timer refreshTimer;
 
     private ApplicationState appState;
 
@@ -65,7 +65,7 @@ public class GameApp
 
     private void Renderer_BoundsChanged(object? sender, EventArgs e)
     {
-        if (e is BoundsChangedEventArgs be) Refresh(RefreshMode.Full);
+        if (e is BoundsChangedEventArgs _) Refresh(RefreshMode.Full);
     }
 
     private void TimerElapsed(object? sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
@@ -238,25 +238,25 @@ public class GameApp
 
     public void BuildMenus()
     {
-        MainMenu = new MenuList("Main Menu", this);
+        MainMenu = new("Main Menu", this);
 
-        SettingsMenu = new MenuList("Settings", this);
+        SettingsMenu = new("Settings", this);
         SettingsMenu.ParentMenu = MainMenu;
 
-        AdvancedSettingsMenu = new MenuList("Advanced", this);
+        AdvancedSettingsMenu = new("Advanced", this);
         AdvancedSettingsMenu.ParentMenu = SettingsMenu;
 
-        MenuItem StartButton = new MenuButton("Start New Game");
+        MenuButton StartButton = new("Start New Game");
         StartButton.ValueChanged += (i, o) => InitialiseGame();
         MainMenu.Add(StartButton);
 
-        MenuItem HighButton = new MenuButton("High scores");
+        MenuButton HighButton = new("High scores");
         HighButton.ValueChanged += (i, o) => ShowHighscores();
         MainMenu.Add(HighButton);
 
         CreateMenuButton(MainMenu, "Settings", SettingsMenu);
 
-        MenuItem QuitButton = new MenuButton("Quit");
+        MenuButton QuitButton = new("Quit");
         QuitButton.ValueChanged += (i, o) => QuitGame();
         MainMenu.Add(QuitButton);
 
@@ -298,21 +298,15 @@ public class GameApp
             Item.ValueChanged += (i, o) => ForkCurrentDifficulty(WriteProperty, Item.SelectedOption); 
 
         // Change the value when the difficulty is changed
-        DifficultyChanged += (i, o) => SelectValue(Item, ReadProperty(SaveData.CurrentDifficulty));
+        DifficultyChanged += (i, o) => Item.SelectValue(ReadProperty(SaveData.CurrentDifficulty));
 
-        if (SaveData.CurrentDifficulty == null) 
-            SelectValue(Item, ReadProperty(SaveData.Difficulties[0]));
-        else 
-            SelectValue(Item, ReadProperty(SaveData.CurrentDifficulty));
+        if (SaveData.CurrentDifficulty == null)
+            Item.SelectValue(ReadProperty(SaveData.Difficulties[0]));
+        else
+            Item.SelectValue(ReadProperty(SaveData.CurrentDifficulty));
 
 
         Parent.Add(Item);
-    }
-
-    private void SelectValue<TOption>(MenuChoice<TOption> Item, TOption value)
-    {
-        if (value == null) throw new NullReferenceException("Item is null");
-        if (!Item.Select(value, true)) throw new Exception("Selected item not in the list");
     }
 
     private void ForkCurrentDifficulty<TOption>(Action<Difficulty, TOption> Write, TOption Value)

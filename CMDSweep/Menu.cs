@@ -12,9 +12,9 @@ public class MenuVisualizer
     internal IRenderer Renderer => Game.Renderer;
 
 
-    public StyleData MenuTextStyle  => new StyleData(Colors["menu-fg"], Colors["menu-bg"]);
-    public StyleData FocusBoxStyle => new StyleData(Colors["menu-fg-highlight-box"], Colors["menu-bg-highlight-box"]);
-    public StyleData FocusTitleStyle => new StyleData(Colors["menu-fg-highlight-title"], Colors["menu-bg-highlight-title"]);
+    public StyleData MenuTextStyle  => new(Colors["menu-fg"], Colors["menu-bg"]);
+    public StyleData FocusBoxStyle => new(Colors["menu-fg-highlight-box"], Colors["menu-bg-highlight-box"]);
+    public StyleData FocusTitleStyle => new(Colors["menu-fg-highlight-title"], Colors["menu-bg-highlight-title"]);
     //public MenuItem SelectedItem => CurrentList.Items[CurrentList.FocusIndex];
     public MenuList CurrentList => Game.currentMenuList;
     internal Dictionary<string, ConsoleColor> Colors => Game.Settings.Colors;
@@ -71,7 +71,7 @@ public class MenuVisualizer
         Renderer.PrintAtTile(p, MenuTextStyle, title);
     }
 
-    public string CenterAlign(string text, int length)
+    public static string CenterAlign(string text, int length)
     {
         int offset = (length - text.Length) / 2;
         text += "".PadRight(offset);
@@ -185,7 +185,6 @@ public abstract class MenuItem
 
     internal void RenderItem(int row, MenuVisualizer mv, bool focus)
     {
-        string pref = focus ? mv.Game.Settings.Texts["menu-item-prefix-selected"] : mv.Game.Settings.Texts["menu-item-prefix"];
         StyleData styl = focus ? mv.FocusTitleStyle : mv.MenuTextStyle;
 
         mv.Renderer.ClearScreen(mv.MenuTextStyle, mv.TableGrid.Row("items", row));
@@ -210,7 +209,7 @@ class MenuText : MenuItem
     internal override void RenderItemExtras(int row, MenuVisualizer mv, bool focus)
     {
         StyleData s = focus ? mv.FocusBoxStyle : mv.MenuTextStyle;
-        string text = mv.CenterAlign(Subtitle, mv.TableGrid.ColumnSeries("options").Width);
+        string text = MenuVisualizer.CenterAlign(Subtitle, mv.TableGrid.ColumnSeries("options").Width);
         mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("options", 0, "items", row), mv.MenuTextStyle,text);
     }
 }
@@ -229,23 +228,29 @@ class MenuButton : MenuItem
     internal override void RenderItemExtras(int row, MenuVisualizer mv, bool focus) { }
 }
 
-class MenuChoice<TOption> : MenuItem
+internal class MenuChoice<TOption> : MenuItem
 {
-    private List<TOption> Options;
+    private readonly List<TOption> Options;
     private int SelectedIndex = 0;
     private readonly Func<TOption, string> Display;
     public bool Enabled = true;
 
-    public MenuChoice(string title, List<TOption> options, Func<TOption, string> Display) : base(title)
+    internal void SelectValue(TOption value)
+    {
+        if (value == null) throw new NullReferenceException("Item is null");
+        if (!this.Select(value, true)) throw new Exception("Selected item not in the list");
+    }
+
+    internal MenuChoice(string title, List<TOption> options, Func<TOption, string> Display) : base(title)
     {
         Options = options;
         this.Display = Display;
         Title = title;
     }
 
-    public TOption SelectedOption => Options[SelectedIndex];
-    public string SelectedName => Display(SelectedOption);
-    public int Index { get => SelectedIndex; set => SetIndex(value); }
+    internal TOption SelectedOption => Options[SelectedIndex];
+    internal string SelectedName => Display(SelectedOption);
+    internal int Index { get => SelectedIndex; set => SetIndex(value); }
 
     internal override bool HandleItemActions(InputAction ia)
     {
@@ -286,7 +291,7 @@ class MenuChoice<TOption> : MenuItem
 
     override internal void RenderItemExtras(int row, MenuVisualizer mv, bool focus)
     {
-        string text = mv.CenterAlign(SelectedName, mv.TableGrid.ColumnSeries("options").Width);
+        string text = MenuVisualizer.CenterAlign(SelectedName, mv.TableGrid.ColumnSeries("options").Width);
         StyleData styl = focus ? mv.FocusBoxStyle : mv.MenuTextStyle;
 
         if (Enabled)
@@ -315,7 +320,7 @@ class MenuNumberRange : MenuChoice<int>
 
     static List<int> Range(int min, int max)
     {
-        List<int> res = new List<int>();
+        List<int> res = new();
         for (int i = min; i <= max; i++) res.Add(i);
         return res;
     }

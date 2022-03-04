@@ -4,8 +4,8 @@ namespace CMDSweep;
 
 public class TableGrid
 {
-    private LinearPartitioner cp;
-    private LinearPartitioner rp;
+    private readonly LinearPartitioner cp;
+    private readonly LinearPartitioner rp;
 
     private Rectangle bounds;
     public Rectangle Bounds { get => bounds; set { bounds = value; Sync(); } }
@@ -29,26 +29,26 @@ public class TableGrid
     public void AddColumn(int conspace, int varspace, string name = "", int repeat = 1) => cp.AddPart(name, conspace, varspace, repeat);
     public void AddRow(int conspace, int varspace, string name = "", int repeat = 1) => rp.AddPart(name, conspace, varspace, repeat);
 
-    public Point GetPoint(int col, int row) => new Point(ColStart(col), RowStart(row));
-    public Point GetPoint(string col, string row) => new Point(cp[col].Start, rp[row].Start);
-    public Point GetPoint(string col, int co, string row, int ro) => new Point(cp[col, co].Start, rp[row, ro].Start);
+    public Point GetPoint(int col, int row) => new (ColStart(col), RowStart(row));
+    public Point GetPoint(string col, string row) => new (cp[col].Start, rp[row].Start);
+    public Point GetPoint(string col, int co, string row, int ro) => new(cp[col, co].Start, rp[row, ro].Start);
 
-    public Point this[int col, int row] => new Point(cp[col].Start, rp[row].Start);
-    public Point this[string col, int row] => new Point(cp[col].Start, rp[row].Start);
-    public Point this[int col, string row] => new Point(cp[col].Start, rp[row].Start);
-    public Point this[string col, string row] => new Point(cp[col].Start, rp[row].Start);
-    public Rectangle GetCell(int col, int row) => new Rectangle(cp[col].Range, rp[row].Range);
+    public Point this[int col, int row] => new(cp[col].Start, rp[row].Start);
+    public Point this[string col, int row] => new(cp[col].Start, rp[row].Start);
+    public Point this[int col, string row] => new(cp[col].Start, rp[row].Start);
+    public Point this[string col, string row] => new(cp[col].Start, rp[row].Start);
+    public Rectangle GetCell(int col, int row) => new(cp[col].Range, rp[row].Range);
 
     public Rectangle Column(string name, int offset = 0) => Column(cp[name].Offset(offset));
     public Rectangle Column(int offset) => Column(cp[offset]);
     public Rectangle Row(string name, int offset = 0) => Row(rp[name].Offset(offset));
     public Rectangle Row(int offset) => Row(rp[offset]);
 
-    public Rectangle ColumnSeries(string name) => new Rectangle(cp.All(name), bounds.VerticalRange);
-    public Rectangle RowSeries(string name) => new Rectangle(bounds.HorizontalRange, rp.All(name));
+    public Rectangle ColumnSeries(string name) => new(cp.All(name), bounds.VerticalRange);
+    public Rectangle RowSeries(string name) => new(bounds.HorizontalRange, rp.All(name));
 
-    public Rectangle Column(Partition col) => new Rectangle(col.Range, bounds.VerticalRange);
-    public Rectangle Row(Partition row) => new Rectangle(bounds.HorizontalRange, row.Range);
+    public Rectangle Column(Partition col) => new(col.Range, bounds.VerticalRange);
+    public Rectangle Row(Partition row) => new(bounds.HorizontalRange, row.Range);
 
     public int RowStart(int row)
     {

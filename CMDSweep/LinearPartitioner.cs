@@ -101,7 +101,7 @@ public class LinearRange
 
     public LinearRange(int start, int length) { Start = start; Length = length; }
     public static LinearRange ToEnd(int start, int end) => new(start, end - start);
-    public LinearRange Clone() => new LinearRange(Start, Length);
+    public LinearRange Clone() => new(Start, Length);
 
     public override bool Equals(object? obj)
     {
@@ -115,7 +115,7 @@ public class LinearRange
         return HashCode.Combine(Start, Length);
     }
     public override string ToString() => String.Format("({0} to {1} w: {2})", Start, End, Length);
-    public static LinearRange Zero => new LinearRange(0, 0);
+    public static LinearRange Zero => new(0, 0);
 
     internal void ForEach(Action<int> func)
     {

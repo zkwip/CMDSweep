@@ -40,7 +40,8 @@ internal static class Storage
         File.WriteAllText(SaveFilePath, json);
     }
 }
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning disable CS8618 
+#pragma warning disable CS0649 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 internal class GameSettings
 {
     public List<Difficulty> DefaultDifficulties;
@@ -53,6 +54,7 @@ internal class GameSettings
     public StyleData GetStyle(string fg, string bg) => new(Colors[fg], Colors[bg]);
 }
 
+#pragma warning restore CS0649
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 internal class SaveData
@@ -115,7 +117,7 @@ internal class Difficulty
 
     public override int GetHashCode()
     {
-        HashCode hash = new HashCode();
+        HashCode hash = new();
         hash.Add(Name);
         hash.Add(Width);
         hash.Add(Height);

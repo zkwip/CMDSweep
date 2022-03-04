@@ -7,8 +7,8 @@ namespace CMDSweep
     class WinCMDRenderer : IRenderer
     {
         public WinCMDRenderer() {
-            Timer t = new Timer(50);
-            t.Elapsed += resizeTesterElapsed;
+            Timer t = new(50);
+            t.Elapsed += ResizeTesterElapsed;
             t.Start();
             lastBounds = Bounds;
         }
@@ -18,7 +18,7 @@ namespace CMDSweep
             BoundsChanged?.Invoke(this, args);
         }
 
-        private void resizeTesterElapsed(object? sender, ElapsedEventArgs e)
+        private void ResizeTesterElapsed(object? sender, ElapsedEventArgs e)
         {
             if (!lastBounds.Equals(Bounds))
             {

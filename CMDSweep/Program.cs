@@ -5,7 +5,7 @@
         static void Main(string[] args)
         {
             IRenderer cmdr = new WinCMDRenderer();
-            GameApp g = new GameApp(cmdr);
+            _ = new GameApp(cmdr);
         }
     }
 }
