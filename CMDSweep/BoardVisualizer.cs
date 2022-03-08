@@ -115,7 +115,7 @@ internal class BoardVisualizer
         tg.CenterOn(Renderer.Bounds.Center);
 
         RenderPopupBox(settings.GetStyle("popup"), tg.Bounds.Grow(2),"popup-border");
-        Highscores.RenderHSTable(game, tg, curGS.Difficulty);
+        Highscores.RenderHSTable(game, tg, curGS.Difficulty, settings.GetStyle("popup"));
     }
     private void RenderPopup(string text)
     {
@@ -189,24 +189,28 @@ internal class BoardVisualizer
         TableGrid bar = new();
         bar.Bounds = new(Renderer.Bounds.HorizontalRange, LinearRange.Zero);
 
-        int vpad = settings.Dimensions["stat-padding-x"];
-        int hpad = settings.Dimensions["stat-padding-y"];
+        int horpad = settings.Dimensions["stat-padding-x"];
+        int verpad = settings.Dimensions["stat-padding-y"];
+        int vmidpad = settings.Dimensions["stat-padding-x-in-between"];
 
         // Rows
-        bar.AddRow(hpad, 0);
+        bar.AddRow(verpad, 0);
         bar.AddRow(1, 0, "bar");
-        bar.AddRow(hpad, 0);
+        bar.AddRow(verpad, 0);
 
         // Columns
-        bar.AddColumn(vpad, 0);
+        bar.AddColumn(horpad, 0);
         bar.AddColumn(6, 0, "clock");
-        bar.AddColumn(vpad, 1);
+        bar.AddColumn(vmidpad + 5, 0);
+        bar.AddColumn(horpad, 1);
+
         bar.AddColumn(4, 0, "face");
-        bar.AddColumn(vpad, 1);
+
+        bar.AddColumn(horpad, 1);
         bar.AddColumn(5, 0, "lives");
-        bar.AddColumn(settings.Dimensions["stat-padding-x-in-between"], 0);
+        bar.AddColumn(vmidpad, 0);
         bar.AddColumn(6, 0, "mines");
-        bar.AddColumn(vpad, 0);
+        bar.AddColumn(horpad, 0);
 
         Renderer.ClearScreen(hideStyle, bar.Bounds);
 

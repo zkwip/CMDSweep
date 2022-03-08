@@ -27,17 +27,17 @@ internal static class Highscores
         return tg;
     }
 
-    internal static void RenderHSTable(GameApp game, TableGrid tg, Difficulty dif)
+    internal static void RenderHSTable(GameApp game, TableGrid tg, Difficulty dif, StyleData style)
     {
         IRenderer renderer = game.Renderer;
         List<HighscoreRecord> highscores = dif.Highscores;
         GameSettings settings = game.Settings;
 
-        renderer.PrintAtTile(tg.GetPoint("num", "title"), settings.GetStyle("popup"), "Highscores for " + dif.Name);
-        renderer.PrintAtTile(tg.GetPoint("num", "head"), settings.GetStyle("popup"), "#");
-        renderer.PrintAtTile(tg.GetPoint("name", "head"), settings.GetStyle("popup"), "Name");
-        renderer.PrintAtTile(tg.GetPoint("time", "head"), settings.GetStyle("popup"), "Time");
-        renderer.PrintAtTile(tg.GetPoint("date", "head"), settings.GetStyle("popup"), "When");
+        renderer.PrintAtTile(tg.GetPoint("num", "title"), style, "Highscores for " + dif.Name);
+        renderer.PrintAtTile(tg.GetPoint("num", "head"), style, "#");
+        renderer.PrintAtTile(tg.GetPoint("name", "head"), style, "Name");
+        renderer.PrintAtTile(tg.GetPoint("time", "head"), style, "Time");
+        renderer.PrintAtTile(tg.GetPoint("date", "head"), style, "When");
 
         for (int i = 0; i < highscores.Count; i++)
         {
@@ -48,23 +48,49 @@ internal static class Highscores
                 highscores[i].Time.Milliseconds
             );
 
-            StyleData style = settings.GetStyle("popup");
+            StyleData rowstyle = style;
 
             string date = highscores[i].Date.ToString("g");
             if (DateTime.Now - highscores[i].Date < TimeSpan.FromSeconds(5))
             {
                 date = "Now";
-                style = settings.GetStyle("popup-fg-highlight", "popup-bg");
+                rowstyle = new StyleData(settings.Colors["popup-fg-highlight"], style.Background);
             }
             else if (highscores[i].Date.Date == DateTime.Today)
             {
                 date = "today " + highscores[i].Date.ToString("t");
             }
 
-            renderer.PrintAtTile(tg.GetPoint("num", 0, "row", i), style, (i + 1).ToString());
-            renderer.PrintAtTile(tg.GetPoint("name", 0, "row", i), style, highscores[i].Name);
-            renderer.PrintAtTile(tg.GetPoint("time", 0, "row", i), style, time);
-            renderer.PrintAtTile(tg.GetPoint("date", 0, "row", i), style, date);
+            renderer.PrintAtTile(tg.GetPoint("num", 0, "row", i), rowstyle, (i + 1).ToString());
+            renderer.PrintAtTile(tg.GetPoint("name", 0, "row", i), rowstyle, highscores[i].Name);
+            renderer.PrintAtTile(tg.GetPoint("time", 0, "row", i), rowstyle, time);
+            renderer.PrintAtTile(tg.GetPoint("date", 0, "row", i), rowstyle, date);
         }
+    }
+}
+
+internal class HighscoreVisualizer
+{
+    private readonly GameApp game;
+    private readonly StyleData menuStyle;
+
+    private IRenderer renderer => game.Renderer;
+    
+    internal Difficulty? CurrentDiff;
+    public HighscoreVisualizer(GameApp gameApp)
+    {
+        this.game = gameApp;
+        menuStyle = gameApp.Settings.GetStyle("menu");
+        CurrentDiff = game.SaveData.CurrentDifficulty;
+    }
+
+    internal void Visualize(RefreshMode mode)
+    {
+        if (CurrentDiff == null) throw new ArgumentNullException("No difficulty set");
+
+        renderer.ClearScreen(menuStyle);
+        TableGrid tg = Highscores.GetHSTableGrid(game);
+        tg.CenterOn(renderer.Bounds.Center);
+        Highscores.RenderHSTable(game, tg, CurrentDiff, menuStyle);
     }
 }

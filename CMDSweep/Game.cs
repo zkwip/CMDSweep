@@ -15,6 +15,7 @@ public class GameApp
         Done,
         Highscore,
         Quit,
+        Help,
     }
 
     private readonly Timer refreshTimer;
@@ -25,8 +26,10 @@ public class GameApp
     internal readonly GameSettings Settings;
     internal SaveData SaveData;
     internal readonly IRenderer Renderer;
+
     internal readonly BoardVisualizer BVis;
     internal readonly MenuVisualizer MVis;
+    internal readonly HighscoreVisualizer HVis;
 
     // Curent States
     internal MenuList currentMenuList;
@@ -47,6 +50,7 @@ public class GameApp
 
         MVis = new MenuVisualizer(this);
         BVis = new BoardVisualizer(this);
+        HVis = new HighscoreVisualizer(this);
 
         BuildMenus();
 
@@ -195,12 +199,21 @@ public class GameApp
 
     private bool HighScoreStep(InputAction ia)
     {
-        return false; // TODO
+        switch (ia)
+        {
+            case InputAction.Quit:
+                OpenMenu(MainMenu);
+                break;
+            case InputAction.NewGame:
+                InitialiseGame();
+                break;
+        }
+        return true;
     }
 
     private bool MenuStep(InputAction ia)
     {
-        bool res = currentMenuList.HandleInput(ia); // TODO
+        bool res = currentMenuList.HandleInput(ia);
         Refresh(RefreshMode.ChangesOnly);
         return res;
     }
@@ -218,6 +231,9 @@ public class GameApp
                 break;
             case ApplicationState.Menu:
                 MVis.Visualize(mode);
+                break;
+            case ApplicationState.Highscore:
+                HVis.Visualize(mode);
                 break;
             default:
                 break;
@@ -315,20 +331,9 @@ public class GameApp
         SaveData.CurrentDifficulty = d;
         DifficultyChanged?.Invoke(this, EventArgs.Empty);
     }
-    private void ShowHelp()
-    {
-        throw new NotImplementedException();
-    }
-
-    private void ShowHighscores()
-    {
-        throw new NotImplementedException();
-    }
-
-    private void QuitGame()
-    {
-        appState = ApplicationState.Quit;
-    }
+    private void ShowHelp() => appState = ApplicationState.Help;
+    private void ShowHighscores() => appState = ApplicationState.Highscore;
+    private void QuitGame() => appState = ApplicationState.Quit;
 
     public void OpenMenu(MenuList? menu)
     {
