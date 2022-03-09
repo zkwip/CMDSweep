@@ -8,22 +8,18 @@ using Control = KeyValuePair<InputAction, List<ConsoleKey>>;
 
 public class GameApp
 {
-
     // Modules
     internal readonly GameSettings Settings;
     internal SaveData SaveData;
     internal readonly IRenderer Renderer;
-
-    // Curent States
-    internal ApplicationState appState;
-
-    // Sorta Globals
-
     internal BoardController BControl;
     internal HighscoreController HControl;
     internal MenuController MControl;
 
+    // Curent States
+    internal ApplicationState AppState;
     internal Controller CurrentController;
+
 
     public GameApp(IRenderer r)
     {
@@ -47,8 +43,8 @@ public class GameApp
     private void TimerElapsed(object? sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
     private bool Step()
     {
-        if (appState == ApplicationState.Quit) return false;
-        switch (appState)
+        if (AppState == ApplicationState.Quit) return false;
+        switch (AppState)
         {
             case ApplicationState.Playing: return BControl.Step();
             case ApplicationState.Done: return BControl.DoneStep();
@@ -57,18 +53,9 @@ public class GameApp
             default: return false;
         }
     }
-
-    internal InputAction ReadAction()
-    {
-        ConsoleKey key = Console.ReadKey(true).Key;
-        foreach (Control ctrl in Settings.Controls)
-            if (ctrl.Value.Contains(key))
-                return ctrl.Key;
-        return InputAction.Unknown;
-    }
     internal void Refresh(RefreshMode mode)
     {
-        switch (appState)
+        switch (AppState)
         {
             case ApplicationState.Playing:
             case ApplicationState.Done:
@@ -84,12 +71,19 @@ public class GameApp
                 break;
         }
     }
-    internal void ShowHelp() => appState = ApplicationState.Help;
-    internal void QuitGame() => appState = ApplicationState.Quit;
-
+    internal InputAction ReadAction()
+    {
+        ConsoleKey key = Console.ReadKey(true).Key;
+        foreach (Control ctrl in Settings.Controls)
+            if (ctrl.Value.Contains(key))
+                return ctrl.Key;
+        return InputAction.Unknown;
+    }
+    internal void ShowHelp() => AppState = ApplicationState.Help;
+    internal void QuitGame() => AppState = ApplicationState.Quit;
     public void ContinueGame()
     {
-        appState = ApplicationState.Playing;
+        AppState = ApplicationState.Playing;
         Refresh(RefreshMode.Full);
     }
 }

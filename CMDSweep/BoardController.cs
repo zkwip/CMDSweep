@@ -72,7 +72,7 @@ internal class BoardController : Controller
                 CurrentState.highscore = CheckHighscore(CurrentState);
 
             App.Refresh(RefreshMode.Full);
-            App.appState = ApplicationState.Done;
+            App.AppState = ApplicationState.Done;
         }
         else
         {
@@ -127,7 +127,7 @@ internal class BoardController : Controller
     internal void InitialiseGame()
     {
         refreshTimer.Stop();
-        App.appState = ApplicationState.Playing;
+        App.AppState = ApplicationState.Playing;
         App.CurrentController = this;
 
         CurrentState = BoardState.NewGame(App.SaveData.CurrentDifficulty);

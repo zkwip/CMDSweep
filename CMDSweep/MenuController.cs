@@ -111,7 +111,7 @@ namespace CMDSweep
         {
             if (menu == null) return;
             currentMenuList = menu;
-            App.appState = ApplicationState.Menu;
+            App.AppState = ApplicationState.Menu;
             App.Refresh(RefreshMode.Full);
         }
         internal override void Visualize(RefreshMode mode) => Visualizer.Visualize(mode);

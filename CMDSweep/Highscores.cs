@@ -29,7 +29,7 @@ internal class HighscoreController : Controller
 
     internal override void Visualize(RefreshMode mode) => Visualizer.Visualize(mode);
 
-    internal void ShowHighscores() => App.appState = ApplicationState.Highscore;
+    internal void ShowHighscores() => App.AppState = ApplicationState.Highscore;
 }
 internal static class Highscores
 {
