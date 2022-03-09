@@ -3,6 +3,34 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
+internal class HighscoreController : Controller
+{
+    public HighscoreController(GameApp app) : base(app) 
+    {
+        Visualizer = new HighscoreVisualizer(app);
+    }
+
+    private HighscoreVisualizer Visualizer;
+
+    internal override bool Step()
+    {
+        InputAction ia = App.ReadAction();
+        switch (ia)
+        {
+            case InputAction.Quit:
+                App.MControl.OpenMenu(App.MControl.MainMenu);
+                break;
+            case InputAction.NewGame:
+                App.BControl.InitialiseGame();
+                break;
+        }
+        return true;
+    }
+
+    internal override void Visualize(RefreshMode mode) => Visualizer.Visualize(mode);
+
+    internal void ShowHighscores() => App.appState = ApplicationState.Highscore;
+}
 internal static class Highscores
 {
 

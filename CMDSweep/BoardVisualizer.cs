@@ -5,8 +5,8 @@ namespace CMDSweep;
 
 internal class BoardVisualizer
 {
-    IRenderer Renderer => game.Renderer;
-    readonly GameApp game;
+    IRenderer Renderer => Controller.App.Renderer;
+    readonly BoardController Controller;
     readonly GameSettings settings;
 
     private int OffsetX => RenderMask.Left - Viewport.Left * ScaleX;
@@ -22,13 +22,13 @@ internal class BoardVisualizer
     Rectangle RenderMask; // the area the board can be drawn into (screen space)
     Rectangle Viewport; // rendermask mapped to (board space)
 
-    private GameBoardState? lastRenderedGameState;
+    private BoardState? lastRenderedGameState;
     private readonly StyleData hideStyle;
 
-    public BoardVisualizer(GameApp g)
+    public BoardVisualizer(BoardController c)
     {
-        settings = g.Settings;
-        game = g;
+        settings = c.App.Settings;
+        Controller = c;
         hideStyle = settings.GetStyle("cell-bg-out-of-bounds", "cell-bg-out-of-bounds");
         RenderMask = Rectangle.Zero;
         Viewport = Rectangle.Zero;
@@ -39,7 +39,6 @@ internal class BoardVisualizer
     {
         if (mode > ModeWaiting) ModeWaiting = mode;
     }
-
     public bool Visualize(RefreshMode mode)
     {
         // Indicate there is stuff to redraw
@@ -58,8 +57,8 @@ internal class BoardVisualizer
                 mode = ModeWaiting;
                 ModeWaiting = RefreshMode.None;
 
-                GameBoardState? prevGS = lastRenderedGameState;
-                GameBoardState? curGS = game.CurrentState;
+                BoardState? prevGS = lastRenderedGameState;
+                BoardState? curGS = Controller.CurrentState;
 
                 // Decide what to render
                 if (curGS == null)
@@ -109,13 +108,13 @@ internal class BoardVisualizer
         return true;
     }
 
-    private void RenderHighscorePopup(GameBoardState curGS)
+    private void RenderHighscorePopup(BoardState curGS)
     {
-        TableGrid tg = Highscores.GetHSTableGrid(game);
+        TableGrid tg = Highscores.GetHSTableGrid(Controller.App);
         tg.CenterOn(Renderer.Bounds.Center);
 
         RenderPopupBox(settings.GetStyle("popup"), tg.Bounds.Grow(2),"popup-border");
-        Highscores.RenderHSTable(game, tg, curGS.Difficulty, settings.GetStyle("popup"));
+        Highscores.RenderHSTable(Controller.App, tg, curGS.Difficulty, settings.GetStyle("popup"));
     }
     private void RenderPopup(string text)
     {
@@ -177,14 +176,14 @@ internal class BoardVisualizer
 
     }
 
-    private void RenderBoardChanges(GameBoardState curGS, GameBoardState prevGS)
+    private void RenderBoardChanges(BoardState curGS, BoardState prevGS)
     {
         List<Point> changes;
         changes = curGS.CompareForChanges(prevGS, Viewport);
         foreach (Point cl in changes) RenderCell(cl, curGS);
     }
 
-    private void RenderStatBoard(GameBoardState currentGS)
+    private void RenderStatBoard(BoardState currentGS)
     {
         TableGrid bar = new();
         bar.Bounds = new(Renderer.Bounds.HorizontalRange, LinearRange.Zero);
@@ -221,13 +220,13 @@ internal class BoardVisualizer
 
     }
 
-    private void RenderClock(Point p, GameBoardState currentGS)
+    private void RenderClock(Point p, BoardState currentGS)
     {
         StyleData clockStyle = settings.GetStyle("stat-mines");
         Renderer.PrintAtTile(p, clockStyle, currentGS.Time.ToString(@"\ h\:mm\:ss\ "));
     }
 
-    private void RenderFace(Point p, GameBoardState currentGS)
+    private void RenderFace(Point p, BoardState currentGS)
     {
         string face = currentGS.Face switch
         {
@@ -240,13 +239,13 @@ internal class BoardVisualizer
         Renderer.PrintAtTile(p, faceStyle, face);
     }
 
-    private void RenderMineCounter(Point p, GameBoardState currentGS)
+    private void RenderMineCounter(Point p, BoardState currentGS)
     {
         StyleData minesLeftStyle = settings.GetStyle("stat-mines");
         Renderer.PrintAtTile(p, minesLeftStyle, string.Format(" {0:D3} ", currentGS.MinesLeft));
     }
 
-    private void RenderLifeCounter(Point p, GameBoardState currentGS)
+    private void RenderLifeCounter(Point p, BoardState currentGS)
     {
         char life = settings.Texts["stat-life"][0];
         StyleData livesLeftStyle = settings.GetStyle("stat-mines");
@@ -262,8 +261,8 @@ internal class BoardVisualizer
         Renderer.PrintAtTile(p.Shifted(atext.Length, 0), livesGoneStyle, btext);
     }
     Rectangle ScrollSafeZone => Viewport.Shrink(settings.Dimensions["scroll-safezone"]);
-    bool CursorInScrollSafezone(GameBoardState gs) => ScrollSafeZone.Contains(gs.Cursor);
-    bool ScrollBoard(GameBoardState gs)
+    bool CursorInScrollSafezone(BoardState gs) => ScrollSafeZone.Contains(gs.Cursor);
+    bool ScrollBoard(BoardState gs)
     {
         // Change the offset
         Offset offset = ScrollSafeZone.OffsetOutOfBounds(gs.Cursor);
@@ -282,14 +281,14 @@ internal class BoardVisualizer
         return true;
     }
 
-    private void RenderViewPortCell(Point p, GameBoardState gs)
+    private void RenderViewPortCell(Point p, BoardState gs)
     {
         if (gs.Board.Contains(p)) RenderCell(p, gs);
         else if (gs.Board.Grow(1).Contains(p)) RenderBorderCell(p, gs);
         else ClearCell(p);
     }
 
-    private void RenderBorderCell(Point p, GameBoardState gs)
+    private void RenderBorderCell(Point p, BoardState gs)
     {
         StyleData data = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
@@ -315,7 +314,7 @@ internal class BoardVisualizer
     private Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
     private Point MapToRender(Point p) => new(OffsetX + p.X * ScaleX, OffsetY + p.Y * ScaleY);
 
-    bool UpdateOffsets(GameBoardState currentGS)
+    bool UpdateOffsets(BoardState currentGS)
     {
         if (currentGS == null) return true;
         if (Viewport == null) Viewport = currentGS.Board.Clone();
@@ -351,7 +350,7 @@ internal class BoardVisualizer
         return true;
     }
 
-    void RenderFullBoard(GameBoardState currentGS)
+    void RenderFullBoard(BoardState currentGS)
     {
         TryCenterViewPort(currentGS);
         // Border
@@ -364,7 +363,7 @@ internal class BoardVisualizer
         ScrollValidMask = Viewport.Clone();
     }
 
-    private void TryCenterViewPort(GameBoardState currentGS)
+    private void TryCenterViewPort(BoardState currentGS)
     {
         if (currentGS.BoardWidth < ScrollSafeZone.Width && currentGS.BoardHeight < ScrollSafeZone.Height)
         {
@@ -379,7 +378,7 @@ internal class BoardVisualizer
     }
     void MappedPrint(int x, int y, StyleData data, string s) => MappedPrint(new Point(x, y), data, s);
 
-    void RenderBorder(GameBoardState currentGS)
+    void RenderBorder(BoardState currentGS)
     {
         StyleData data = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
@@ -401,7 +400,7 @@ internal class BoardVisualizer
         MappedPrint(currentGS.BoardWidth, currentGS.BoardHeight, data, settings.Texts["border-corner-br"]);
     }
 
-    void RenderCell(Point cl, GameBoardState currentGS)
+    void RenderCell(Point cl, BoardState currentGS)
     {
         ConsoleColor fg = GetTileVisual(cl, currentGS) switch
         {
@@ -495,7 +494,7 @@ internal class BoardVisualizer
         MappedPrint(cl, data, text.PadRight(padRight));
     }
 
-    private TileVisual GetTileVisual(Point cl, GameBoardState currentGS)
+    private TileVisual GetTileVisual(Point cl, BoardState currentGS)
     {
         if (currentGS.PlayerState == PlayerState.Dead)
         {

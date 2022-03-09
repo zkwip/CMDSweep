@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep
 {
-    public class GameBoardState
+    public class BoardState
     {
         // Internals
         private CellData[,] Cells;
@@ -18,11 +18,11 @@ namespace CMDSweep
         internal bool highscore = false;
 
         // Constructors and cloners
-        private GameBoardState(CellData[,] datas) { Cells = datas; Face = Face.Normal; cursor = Board.Center; }
+        private BoardState(CellData[,] datas) { Cells = datas; Face = Face.Normal; cursor = Board.Center; }
 
-        public GameBoardState Clone()
+        public BoardState Clone()
         {
-            return new GameBoardState((CellData[,])Cells.Clone())
+            return new BoardState((CellData[,])Cells.Clone())
             {
                 playerState = this.playerState,
                 cursor = this.cursor.Clone(),
@@ -35,14 +35,14 @@ namespace CMDSweep
             };
         }
 
-        internal static GameBoardState NewGame(Difficulty diff)
+        internal static BoardState NewGame(Difficulty diff)
         {
             int width = diff.Width;
             int height = diff.Height;
 
             CellData[,] datas = new CellData[width, height];
 
-            return new GameBoardState(datas)
+            return new BoardState(datas)
             {
                 playerState = PlayerState.NewGame,
                 difficulty = diff,
@@ -343,7 +343,7 @@ namespace CMDSweep
             return cursor;
         }
 
-        public List<Point> CompareForChanges(GameBoardState other, Rectangle? area = null)
+        public List<Point> CompareForChanges(BoardState other, Rectangle? area = null)
         {
             // Build a list of changed cells
             List<Point> res = new List<Point>();

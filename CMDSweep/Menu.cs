@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
-public class MenuVisualizer
+internal class MenuVisualizer
 {
     internal TableGrid TableGrid;
     internal int scrollDepth = 0;
@@ -15,7 +15,7 @@ public class MenuVisualizer
     public StyleData MenuTextStyle => Game.Settings.GetStyle("menu");
     public StyleData FocusBoxStyle => Game.Settings.GetStyle("menu-highlight-box");
     public StyleData FocusTitleStyle => Game.Settings.GetStyle("menu-highlight-title");
-    public MenuList CurrentList => Game.currentMenuList;
+    internal MenuList CurrentList => Game.MControl.currentMenuList;
     internal Dictionary<string, ConsoleColor> Colors => Game.Settings.Colors;
 
     public MenuVisualizer(GameApp g) => Game = g;
@@ -77,10 +77,10 @@ public class MenuVisualizer
     }
 }
 
-public class MenuList
+internal class MenuList
 {
     public MenuList ParentMenu;
-    public GameApp Game;
+    public MenuController Controller;
 
     public List<MenuItem> Items { get; private set; }
     public string Title { get; private set; }
@@ -112,9 +112,9 @@ public class MenuList
         return FocusIndex;
     }
 
-    public MenuList(string title, GameApp game)
+    public MenuList(string title, MenuController mc)
     {
-        Game = game;
+        Controller = mc;
         Items = new List<MenuItem>();
         Title = title;
         FocusIndex = 0;
@@ -131,7 +131,7 @@ public class MenuList
         if (ia == InputAction.Quit)
         {
             if (ParentMenu == null) return false;
-            else Game.OpenMenu(ParentMenu);
+            else Controller.OpenMenu(ParentMenu);
         }
 
         if (FocusedItem != null) FocusedItem.HandleMenuAction(ia);
@@ -155,7 +155,7 @@ public class MenuList
     }
 }
 
-public abstract class MenuItem
+internal abstract class MenuItem
 {
     internal string Title;
     internal bool Focusable = true;
@@ -200,7 +200,7 @@ public abstract class MenuItem
 
 }
 
-class MenuText : MenuItem
+internal class MenuText : MenuItem
 {
     internal string Subtitle;
     internal MenuText(string title, string sub = "") : base(title)
@@ -219,7 +219,7 @@ class MenuText : MenuItem
     }
 }
 
-class MenuButton : MenuItem
+internal class MenuButton : MenuItem
 {
     internal string Subtitle;
     internal MenuButton(string title, string sub = "") : base("[ " + title + " ]") => Subtitle = sub;
