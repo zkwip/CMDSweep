@@ -40,7 +40,6 @@ public class GameApp
     }
 
     private void Renderer_BoundsChanged(object? sender, EventArgs _) => Refresh(RefreshMode.Full);
-    private void TimerElapsed(object? sender, ElapsedEventArgs e) => Refresh(RefreshMode.ChangesOnly);
     private bool Step()
     {
         if (AppState == ApplicationState.Quit) return false;

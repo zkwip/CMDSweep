@@ -5,9 +5,7 @@ namespace CMDSweep;
 
 internal class BoardController : Controller
 {
-
     internal BoardState CurrentState;
-    internal readonly BoardVisualizer Visualizer;
     private readonly Timer refreshTimer;
 
     internal BoardController(GameApp g) : base(g)
@@ -25,60 +23,58 @@ internal class BoardController : Controller
     {
         InputAction ia = App.ReadAction();
         CurrentState.Face = Face.Normal;
-        switch (ia)
-        {
-            case InputAction.Up:
-                CurrentState = CurrentState.Clone();
-                CurrentState.MoveCursor(Direction.Up);
-                break;
-            case InputAction.Down:
-                CurrentState = CurrentState.Clone();
-                CurrentState.MoveCursor(Direction.Down);
-                break;
-            case InputAction.Left:
-                CurrentState = CurrentState.Clone();
-                CurrentState.MoveCursor(Direction.Left);
-                break;
-            case InputAction.Right:
-                CurrentState = CurrentState.Clone();
-                CurrentState.MoveCursor(Direction.Right);
-                break;
-            case InputAction.Dig:
-                CurrentState = CurrentState.Clone();
-                CurrentState.Dig();
-                break;
-            case InputAction.Flag:
-                CurrentState = CurrentState.Clone();
-                CurrentState.ToggleFlag();
-                break;
-            case InputAction.Quit:
-                App.MControl.OpenMenu(App.MControl.MainMenu);
-                break;
-            case InputAction.NewGame:
-                InitialiseGame();
-                break;
-        }
 
-        if (CurrentState.PlayerState == PlayerState.Playing)
-        {
-            if (!refreshTimer.Enabled) refreshTimer.Start();
-            App.Refresh(RefreshMode.ChangesOnly);
-        }
-        else if (CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
+        if (ia == InputAction.NewGame) InitialiseGame();
+        else if (ia == InputAction.Quit)
         {
             refreshTimer.Stop();
-
-            if (CurrentState.PlayerState == PlayerState.Win)
-                CurrentState.highscore = CheckHighscore(CurrentState);
-
-            App.Refresh(RefreshMode.Full);
-            App.AppState = ApplicationState.Done;
+            App.MControl.OpenMenu(App.MControl.MainMenu);
         }
         else
         {
-            App.Refresh(RefreshMode.ChangesOnly);
-        }
+            CurrentState = CurrentState.Clone();
+            switch (ia)
+            {
+                case InputAction.Up:
+                    CurrentState.MoveCursor(Direction.Up);
+                    break;
+                case InputAction.Down:
+                    CurrentState.MoveCursor(Direction.Down);
+                    break;
+                case InputAction.Left:
+                    CurrentState.MoveCursor(Direction.Left);
+                    break;
+                case InputAction.Right:
+                    CurrentState.MoveCursor(Direction.Right);
+                    break;
+                case InputAction.Dig:
+                    CurrentState.Dig();
+                    break;
+                case InputAction.Flag:
+                    CurrentState.ToggleFlag();
+                    break;
+            }
 
+            if (CurrentState.PlayerState == PlayerState.Playing)
+            {
+                if (!refreshTimer.Enabled) refreshTimer.Start();
+                App.Refresh(RefreshMode.ChangesOnly);
+            }
+            else if (CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
+            {
+                refreshTimer.Stop();
+
+                if (CurrentState.PlayerState == PlayerState.Win)
+                    CurrentState.highscore = CheckHighscore(CurrentState);
+
+                App.Refresh(RefreshMode.Full);
+                App.AppState = ApplicationState.Done;
+            }
+            else
+            {
+                App.Refresh(RefreshMode.ChangesOnly);
+            }
+        }
         return true;
     }
 
