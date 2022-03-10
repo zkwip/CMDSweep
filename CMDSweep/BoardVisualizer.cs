@@ -15,9 +15,9 @@ internal class BoardVisualizer : Visualizer<BoardState>
     Rectangle RenderMask; // the area the board can be drawn into (screen space)
     Rectangle Viewport; // rendermask mapped to (board space)
 
-    public BoardVisualizer(BoardController c)
+    public BoardVisualizer(BoardController bctrl)
     {
-        Controller = c;
+        Controller = bctrl;
         hideStyle = Settings.GetStyle("cell-bg-out-of-bounds", "cell-bg-out-of-bounds");
 
         RenderMask = Rectangle.Zero;
@@ -29,11 +29,11 @@ internal class BoardVisualizer : Visualizer<BoardState>
 
     private void RenderHighscorePopup(BoardState curGS)
     {
-        TableGrid tg = Highscores.GetHSTableGrid(Controller.App);
+        TableGrid tg = Highscores.GetHSTableGrid(Settings);
         tg.CenterOn(Renderer.Bounds.Center);
 
         RenderPopupBox(Settings.GetStyle("popup"), tg.Bounds.Grow(2),"popup-border");
-        Highscores.RenderHSTable(Controller.App, tg, curGS.Difficulty, Settings.GetStyle("popup"));
+        Highscores.RenderHSTable(Renderer, Settings, tg, curGS.Difficulty, Settings.GetStyle("popup"));
     }
     private void RenderPopup(string text)
     {
@@ -182,7 +182,7 @@ internal class BoardVisualizer : Visualizer<BoardState>
     }
     Rectangle ScrollSafeZone => Viewport.Shrink(Settings.Dimensions["scroll-safezone"]);
     internal override bool CheckScroll() => !ScrollSafeZone.Contains(CurrentState!.Cursor);
-    internal override void ApplyScroll()
+    internal override void Scroll()
     {
         // Change the offset
         Offset offset = ScrollSafeZone.OffsetOutOfBounds(CurrentState!.Cursor);
@@ -232,6 +232,7 @@ internal class BoardVisualizer : Visualizer<BoardState>
     private Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
     private Point MapToRender(Point p) => new(OffsetX + p.X * ScaleX, OffsetY + p.Y * ScaleY);
 
+
     internal override bool CheckResize()
     {
         if (Viewport == null) Viewport = CurrentState!.Board.Clone();
@@ -245,7 +246,19 @@ internal class BoardVisualizer : Visualizer<BoardState>
         Rectangle newRenderMask = consoleBounds.Shrink(0, barheight, 0, 0); // Area that the board can be drawn into
 
         // Return if the measurements did not change
-        if (RenderMask is Rectangle r && r.Equals(newRenderMask)) return false;
+        return (!newRenderMask.Equals(newRenderMask));
+    }
+
+    internal override void Resize()
+    {
+        if (Viewport == null) Viewport = CurrentState!.Board.Clone();
+
+        ScaleX = Settings.Dimensions["cell-size-x"];
+        ScaleY = Settings.Dimensions["cell-size-y"];
+
+        int barheight = 1 + 2 * Settings.Dimensions["stat-padding-y"];
+
+        Rectangle newRenderMask = Renderer.Bounds.Shrink(0, barheight, 0, 0); // Area that the board can be drawn into
 
         // Reset render shortcuts
         RenderMask = newRenderMask;
@@ -263,8 +276,6 @@ internal class BoardVisualizer : Visualizer<BoardState>
             newVP.CenterOn(Viewport.Center);
 
         Viewport = newVP;
-
-        return true;
     }
 
     internal override void RenderFull()

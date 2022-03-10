@@ -17,8 +17,6 @@ internal class BoardController : Controller
         refreshTimer.AutoReset = true;
     }
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
-
-    internal override void Visualize(RefreshMode mode) => Visualizer.Visualize(mode);
     internal override bool Step()
     {
         InputAction ia = App.ReadAction();

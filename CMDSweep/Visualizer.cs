@@ -1,25 +1,27 @@
 ﻿namespace CMDSweep;
-abstract internal class Visualizer<T> : IVisualizer
+abstract internal class Visualizer<TState> : IVisualizer
 {
     private RefreshMode ModeWaiting = RefreshMode.None; 
     private bool IsRendering = false;
 
     internal StyleData hideStyle;
     internal Controller Controller;
-    internal T? LastState { get; private set; }
-    internal T? CurrentState { get; private set; }
+    internal TState? LastState { get; private set; }
+    internal TState? CurrentState { get; private set; }
 
     internal IRenderer Renderer => Controller.App.Renderer;
     internal GameSettings Settings => Controller.App.Settings;
     internal SaveData SaveData => Controller.App.SaveData;
+    internal GameApp App => Controller.App;
 
     abstract internal void RenderFull();
     abstract internal void RenderChanges();
     abstract internal bool CheckResize();
+    abstract internal void Resize();
     abstract internal bool CheckScroll();
-    abstract internal void ApplyScroll();
+    abstract internal void Scroll();
     abstract internal bool CheckFullRefresh();
-    abstract internal T RetrieveState();
+    abstract internal TState RetrieveState();
 
     bool IVisualizer.Visualize(RefreshMode mode)
     {
@@ -39,8 +41,8 @@ abstract internal class Visualizer<T> : IVisualizer
                 mode = ModeWaiting;
                 ModeWaiting = RefreshMode.None;
 
-                T? prevGS = LastState;
-                T? curGS = RetrieveState();
+                TState? prevGS = LastState;
+                TState? curGS = RetrieveState();
 
                 // Decide what to render
                 if (curGS == null)
@@ -63,11 +65,12 @@ abstract internal class Visualizer<T> : IVisualizer
                 //Render
                 if (mode == RefreshMode.Full)
                 {
+                    Resize();
                     RenderFull();
                 }
                 else
                 {
-                    if (mode == RefreshMode.Scroll) ApplyScroll();
+                    if (mode == RefreshMode.Scroll) Scroll();
 
                     RenderChanges();
                 }

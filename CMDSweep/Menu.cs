@@ -3,80 +3,6 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
-internal class MenuVisualizer
-{
-    internal TableGrid TableGrid;
-    internal int scrollDepth = 0;
-    internal int maxRows = 4;
-    internal GameApp Game;
-    internal IRenderer Renderer => Game.Renderer;
-
-
-    public StyleData MenuTextStyle => Game.Settings.GetStyle("menu");
-    public StyleData FocusBoxStyle => Game.Settings.GetStyle("menu-highlight-box");
-    public StyleData FocusTitleStyle => Game.Settings.GetStyle("menu-highlight-title");
-    internal MenuList CurrentList => Game.MControl.currentMenuList;
-    internal Dictionary<string, ConsoleColor> Colors => Game.Settings.Colors;
-
-    public MenuVisualizer(GameApp g) => Game = g;
-
-    public bool Visualize(RefreshMode mode)
-    {
-        Renderer.ClearScreen(MenuTextStyle);
-        Renderer.HideCursor(MenuTextStyle);
-        Renderer.SetTitle(Game.Settings.Texts["menu-title"]);
-
-        if (CurrentList == null) return false;
-        VisualizeList(CurrentList);
-
-        return true;
-    }
-
-    private void UpdateMeasurements()
-    {
-        Dictionary<string, int> dims = Game.Settings.Dimensions;
-        TableGrid tg = this.TableGrid = new();
-        maxRows = dims["menu-rows"];
-
-        // Columns
-        tg.AddColumn(dims["menu-indent"], 0, "prefix");
-        tg.AddColumn(dims["menu-col1-width"], 0, "labels");
-        tg.AddColumn(dims["menu-box-padding"], 0);
-        tg.AddColumn(dims["menu-box-padding"], 0, "pre-options");
-        tg.AddColumn(dims["menu-col2-width"], 0, "options");
-        tg.AddColumn(dims["menu-box-padding"], 0, "post-options");
-
-        // Rows
-        tg.AddRow(dims["menu-title-space"], 0, "title");
-        tg.AddRow(dims["menu-row-scale"], 0, "items", maxRows);
-
-        tg.FitAround();
-        tg.CenterOn(Renderer.Bounds.Center);
-    }
-
-    private void VisualizeList(MenuList list)
-    {
-        UpdateMeasurements();
-        scrollDepth = list.FixScroll(scrollDepth, maxRows);
-        RenderTitle(list.Title);
-        for (int i = 0; i + scrollDepth < list.Items.Count && i < maxRows; i++)
-            list.Items[i + scrollDepth].RenderItem(i, this, list.FocusIndex == i + scrollDepth);
-        Renderer.HideCursor(MenuTextStyle);
-    }
-    private void RenderTitle(string title)
-    {
-        Point p = TableGrid.GetPoint("labels", "title");
-        Renderer.PrintAtTile(p, MenuTextStyle, title);
-    }
-
-    public static string CenterAlign(string text, int length)
-    {
-        int offset = (length - text.Length) / 2;
-        text += "".PadRight(offset);
-        return text.PadLeft(length);
-    }
-}
-
 internal class MenuList
 {
     public MenuList ParentMenu;
@@ -301,9 +227,9 @@ internal class MenuChoice<TOption> : MenuItem
 
         if (Enabled)
         {
-            mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("pre-options", 0, "items", row), mv.MenuTextStyle, mv.Game.Settings.Texts["menu-choice-left"]);
+            mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("pre-options", 0, "items", row), mv.MenuTextStyle, mv.Settings.Texts["menu-choice-left"]);
             mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("options", 0, "items", row), styl, text);
-            mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("post-options", 0, "items", row), mv.MenuTextStyle, mv.Game.Settings.Texts["menu-choice-right"]);
+            mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("post-options", 0, "items", row), mv.MenuTextStyle, mv.Settings.Texts["menu-choice-right"]);
         }
         else
         {

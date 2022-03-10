@@ -4,8 +4,6 @@ namespace CMDSweep
 {
     internal class MenuController : Controller
     {
-        private MenuVisualizer Visualizer;
-
         internal MenuList currentMenuList;
 
         internal MenuList MainMenu;
@@ -13,7 +11,7 @@ namespace CMDSweep
         internal MenuList AdvancedSettingsMenu;
         public MenuController(GameApp app) : base(app)
         {
-            Visualizer = new MenuVisualizer(app);
+            Visualizer = new MenuVisualizer(this);
             BuildMenus();
         }
 
@@ -24,7 +22,6 @@ namespace CMDSweep
             App.Refresh(RefreshMode.ChangesOnly);
             return res;
         }
-
 
         internal void BuildMenus()
         {
@@ -114,6 +111,5 @@ namespace CMDSweep
             App.AppState = ApplicationState.Menu;
             App.Refresh(RefreshMode.Full);
         }
-        internal override void Visualize(RefreshMode mode) => Visualizer.Visualize(mode);
     }
 }

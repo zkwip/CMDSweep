@@ -5,12 +5,12 @@ namespace CMDSweep;
 
 internal class HighscoreController : Controller
 {
+    internal Difficulty SelectedDifficulty;
     public HighscoreController(GameApp app) : base(app) 
     {
-        Visualizer = new HighscoreVisualizer(app);
+        Visualizer = new HighscoreVisualizer(this);
+        SelectedDifficulty = app.SaveData.CurrentDifficulty;
     }
-
-    private HighscoreVisualizer Visualizer;
 
     internal override bool Step()
     {
@@ -26,18 +26,15 @@ internal class HighscoreController : Controller
         }
         return true;
     }
-
-    internal override void Visualize(RefreshMode mode) => Visualizer.Visualize(mode);
-
     internal void ShowHighscores() => App.AppState = ApplicationState.Highscore;
 }
 internal static class Highscores
 {
 
     internal const int highscoreEntries = 5;
-    internal static TableGrid GetHSTableGrid(GameApp game)
+    internal static TableGrid GetHSTableGrid(GameSettings settings)
     {
-        var dims = game.Settings.Dimensions;
+        var dims = settings.Dimensions;
         TableGrid tg = new();
         tg.AddColumn(dims["popup-padding-x"], 0, "");
         tg.AddColumn(dims["highscore-num-width"], 0, "num");
@@ -55,11 +52,9 @@ internal static class Highscores
         return tg;
     }
 
-    internal static void RenderHSTable(GameApp game, TableGrid tg, Difficulty dif, StyleData style)
+    internal static void RenderHSTable(IRenderer renderer, GameSettings settings, TableGrid tg, Difficulty dif, StyleData style)
     {
-        IRenderer renderer = game.Renderer;
         List<HighscoreRecord> highscores = dif.Highscores;
-        GameSettings settings = game.Settings;
 
         renderer.PrintAtTile(tg.GetPoint("num", "title"), style, "Highscores for " + dif.Name);
         renderer.PrintAtTile(tg.GetPoint("num", "head"), style, "#");
@@ -97,28 +92,36 @@ internal static class Highscores
     }
 }
 
-internal class HighscoreVisualizer
+internal class HighscoreVisualizer : Visualizer<Difficulty>
 {
-    private readonly GameApp game;
-    private readonly StyleData menuStyle;
-
-    private IRenderer renderer => game.Renderer;
-    
-    internal Difficulty? CurrentDiff;
-    public HighscoreVisualizer(GameApp gameApp)
+    TableGrid ScoreTable;
+    public HighscoreVisualizer(HighscoreController hctrl)
     {
-        this.game = gameApp;
-        menuStyle = gameApp.Settings.GetStyle("menu");
-        CurrentDiff = game.SaveData.CurrentDifficulty;
+        Controller = hctrl;
+        hideStyle = Settings.GetStyle("menu");
     }
 
-    internal void Visualize(RefreshMode mode)
-    {
-        if (CurrentDiff == null) throw new ArgumentNullException("No difficulty set");
+    internal override bool CheckFullRefresh() => true;
 
-        renderer.ClearScreen(menuStyle);
-        TableGrid tg = Highscores.GetHSTableGrid(game);
-        tg.CenterOn(renderer.Bounds.Center);
-        Highscores.RenderHSTable(game, tg, CurrentDiff, menuStyle);
+    internal override bool CheckResize() => true;
+
+    internal override bool CheckScroll() => false;
+
+    internal override void RenderChanges() => RenderFull();
+
+    internal override void RenderFull()
+    {
+        Renderer.ClearScreen(hideStyle);
+        Highscores.RenderHSTable(Renderer, Settings, ScoreTable, CurrentState!, hideStyle);
     }
+
+    internal override void Resize()
+    {
+        ScoreTable = Highscores.GetHSTableGrid(Settings);
+        ScoreTable.CenterOn(Renderer.Bounds.Center);
+    }
+
+    internal override Difficulty RetrieveState() => ((HighscoreController)Controller).SelectedDifficulty;
+
+    internal override void Scroll() { }
 }
