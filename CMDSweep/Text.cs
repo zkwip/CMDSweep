@@ -37,20 +37,51 @@ internal class TextBox
     internal Rectangle Bounds;
     internal int LineSpacing = 1;
 
+    internal int VerticalScroll = 0;
+    internal int HorizontalScroll = 0;
+
     internal Overflow HorizontalFlow = Overflow.Wrap;
     internal Overflow VerticalFlow = Overflow.Overflow;
     internal VerticalAlignment VerticalAlign = VerticalAlignment.Top;
     internal HorzontalAlignment HorizontalAlign = HorzontalAlignment.Left;
 
-    internal Rectangle TextArea => new(Bounds.Left, Bounds.Top, MaxLineWidth, Lines);
+    internal Rectangle TextArea => new(Bounds.Left, Bounds.Top, LongestLineWidth, RenderLineCount);
     public TextBox(string text, Rectangle bounds)
     {
         Text = text;
         Bounds = bounds;
     }
 
+    public TextBox Clone() => new TextBox(Text, Bounds.Clone())
+    {
+        LineSpacing = LineSpacing,
+        VerticalScroll = VerticalScroll,
+        HorizontalScroll = HorizontalScroll,
+        HorizontalAlign = HorizontalAlign,
+        VerticalAlign = VerticalAlign,
+        HorizontalFlow = HorizontalFlow,
+        VerticalFlow = VerticalFlow
+    };
+
+    internal int ScrollUp()
+    {
+        if (VerticalScroll == 0) VerticalScroll = LowestScroll;
+        else VerticalScroll--;
+        return VerticalScroll;
+    }
+
+    internal int ScrollDown()
+    {
+        if (VerticalScroll >= LowestScroll) VerticalScroll = 0;
+        else VerticalScroll++;
+        return VerticalScroll;
+    }
+
     internal int Lines => GetLines().Count;
-    internal int MaxLineWidth => Functions.Apply(0, GetLines(), Math.Max, x => x.Length);
+    internal int LongestLineWidth => Functions.Apply(0, GetLines(), Math.Max, x => x.Length);
+    internal int MaxLineCount => Bounds.Height / LineSpacing;
+    internal int RenderLineCount => Math.Min(MaxLineCount, Lines);
+    internal int LowestScroll => Lines - MaxLineCount;
 
     internal List<string> GetLines()
     {
@@ -60,7 +91,7 @@ internal class TextBox
         // Wrapping
         foreach (string line in lines)
         {
-            if (res.Count >= Bounds.Height && VerticalFlow == Overflow.Hidden) break;
+            if (res.Count >= MaxLineCount && VerticalFlow == Overflow.Hidden) break;
             else if (line.Length <= Bounds.Width || HorizontalFlow == Overflow.Overflow || HorizontalFlow == Overflow.Scroll) 
                 res.Add(line);
             else if (HorizontalFlow == Overflow.Hidden) 
@@ -83,7 +114,7 @@ internal class TextBox
                         linepart = linepart[(splitpoint+1)..];
                     }
 
-                    if (res.Count >= Bounds.Height && VerticalFlow == Overflow.Hidden) break;
+                    if (res.Count >= MaxLineCount && VerticalFlow == Overflow.Hidden) break;
                 }
                 if (linepart.Trim().Length > 0) res.Add(linepart);
             }
@@ -91,17 +122,22 @@ internal class TextBox
         return res;
     }
 
+
+
     internal void Render(IRenderer renderer, StyleData style, bool clear)
     {
         if (clear) renderer.ClearScreen(style, Bounds);
 
         List<string> lines = GetLines();
-        for (int i = 0; i < lines.Count; i++)
+        for (int i = 0; i < MaxLineCount; i++)
         {
-            int row = Bounds.Top + i * LineSpacing;
-            int offset = (Bounds.Width - lines[i].Length) * (int)HorizontalAlign / 2;
+            int line = i + VerticalScroll;
+            if (line > lines.Count) break;
 
-            renderer.PrintAtTile(new(Bounds.Left + offset ,row), style, lines[i]);
+            int row = Bounds.Top + i * LineSpacing;
+            int offset = (Bounds.Width - lines[line].Length) * (int)HorizontalAlign / 2;
+
+            renderer.PrintAtTile(new(Bounds.Left + offset ,row), style, lines[line]);
         }
     }
 

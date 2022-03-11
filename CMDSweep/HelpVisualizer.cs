@@ -8,8 +8,12 @@ internal class HelpVisualizer : Visualizer<TextBox>
     internal override bool CheckFullRefresh() => LastState!.Text != CurrentState!.Text;
     internal override bool CheckResize() => !CurrentState!.Bounds.Equals(Renderer.Bounds.Shrink(2));
     internal override bool CheckScroll() => true;
-    internal override void RenderChanges() { }
-    internal override void RenderFull() {
+    internal override void RenderChanges()
+    {
+        CurrentState!.Render(Renderer, HideStyle, true);
+    }
+    internal override void RenderFull() 
+    {
         Renderer.ClearScreen(HideStyle);
         CurrentState!.Render(Renderer, HideStyle, true);
     }
@@ -30,7 +34,7 @@ internal class HelpController : Controller
         Visualizer = new HelpVisualizer(this);
         Box = new TextBox(Storage.LoadHelpFile(), Rectangle.Zero)
         {
-            HorizontalFlow = Overflow.Scroll,
+            HorizontalFlow = Overflow.Wrap,
             VerticalFlow = Overflow.Scroll,
             HorizontalAlign = HorzontalAlignment.Left,
             VerticalAlign = VerticalAlignment.Top,
@@ -53,11 +57,13 @@ internal class HelpController : Controller
 
     private void TryScrollDown()
     {
-        throw new NotImplementedException();
+        Box = Box.Clone();
+        Box.ScrollDown();
     }
 
     private void TryScrollUp()
     {
-        throw new NotImplementedException();
+        Box = Box.Clone();
+        Box.ScrollUp();
     }
 }
