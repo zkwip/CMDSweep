@@ -3,7 +3,10 @@
 internal abstract class Controller
 {
     internal GameApp App;
-    internal Controller(GameApp app) => App = app;
+    internal Controller(GameApp app)
+    {
+        App = app;
+    }
     internal void Visualize(RefreshMode mode) => Visualizer.Visualize(mode);
 
     internal IVisualizer Visualizer;

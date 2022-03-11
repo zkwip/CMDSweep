@@ -9,6 +9,7 @@ internal static class Storage
 {
     private const string SaveFilePath = "save.json";
     private const string SettingsFilePath = "settings.json";
+    private const string HelpFilePath = "help.txt";
     internal static GameSettings LoadSettings()
     {
         string settingsText = File.ReadAllText(SettingsFilePath);
@@ -18,7 +19,7 @@ internal static class Storage
     }
     internal static SaveData LoadSaveFile(GameSettings settings)
     {
-        SaveData? sd = null;
+        SaveData? sd;
         if (File.Exists(SaveFilePath))
         {
             string saveText = File.ReadAllText(SaveFilePath);
@@ -33,6 +34,8 @@ internal static class Storage
             throw new Exception("Failed to open or storage file");
         return sd;
     }
+
+    internal static string LoadHelpFile() => File.ReadAllText(HelpFilePath);
 
     internal static void WriteSave(SaveData sd)
     {

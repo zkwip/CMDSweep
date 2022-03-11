@@ -95,10 +95,10 @@ internal static class Highscores
 internal class HighscoreVisualizer : Visualizer<Difficulty>
 {
     TableGrid ScoreTable;
-    public HighscoreVisualizer(HighscoreController hctrl)
+    public HighscoreVisualizer(HighscoreController hctrl) : base(hctrl)
     {
-        Controller = hctrl;
-        hideStyle = Settings.GetStyle("menu");
+        HideStyle = Settings.GetStyle("menu");
+        Resize();
     }
 
     internal override bool CheckFullRefresh() => true;
@@ -111,8 +111,8 @@ internal class HighscoreVisualizer : Visualizer<Difficulty>
 
     internal override void RenderFull()
     {
-        Renderer.ClearScreen(hideStyle);
-        Highscores.RenderHSTable(Renderer, Settings, ScoreTable, CurrentState!, hideStyle);
+        Renderer.ClearScreen(HideStyle);
+        Highscores.RenderHSTable(Renderer, Settings, ScoreTable, CurrentState!, HideStyle);
     }
 
     internal override void Resize()

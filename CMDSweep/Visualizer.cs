@@ -4,7 +4,7 @@ abstract internal class Visualizer<TState> : IVisualizer
     private RefreshMode ModeWaiting = RefreshMode.None; 
     private bool IsRendering = false;
 
-    internal StyleData hideStyle;
+    internal StyleData HideStyle;
     internal Controller Controller;
     internal TState? LastState { get; private set; }
     internal TState? CurrentState { get; private set; }
@@ -22,6 +22,12 @@ abstract internal class Visualizer<TState> : IVisualizer
     abstract internal void Scroll();
     abstract internal bool CheckFullRefresh();
     abstract internal TState RetrieveState();
+
+    public Visualizer(Controller ctrl)
+    {
+        Controller = ctrl;
+        HideStyle = Settings.GetStyle("menu");
+    } 
 
     bool IVisualizer.Visualize(RefreshMode mode)
     {

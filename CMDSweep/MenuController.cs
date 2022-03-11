@@ -34,7 +34,7 @@ namespace CMDSweep
             AdvancedSettingsMenu.ParentMenu = SettingsMenu;
 
             MainMenu.AddButton("New Game", () => App.BControl.InitialiseGame());
-            MainMenu.AddButton("High Scores", () => App.HControl.ShowHighscores());
+            MainMenu.AddButton("High Scores", () => App.HSControl.ShowHighscores());
             MainMenu.AddButton("Help", () => App.ShowHelp());
             MainMenu.AddButton("Settings", () => OpenMenu(SettingsMenu));
             MainMenu.AddButton("Quit Game", () => App.QuitGame());

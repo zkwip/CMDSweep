@@ -90,7 +90,12 @@ namespace CMDSweep
         public bool PrintAtTile(Point p, StyleData data, string s)
         {
             if (!Bounds.Contains(p)) return false;
-            if (Bounds.Right - p.X < s.Length) s = s.Substring(0, Bounds.Right - p.X);
+            if (Bounds.Right - p.X < s.Length) s = s[..(Bounds.Right - p.X)];
+            if (p.X < Bounds.Left)
+            {
+                s = s[(Bounds.Left - p.X)..];
+                p = new Point(Bounds.Left, p.Y);
+            }
 
             SetCursor(p);
             SetConsoleStyle(data);

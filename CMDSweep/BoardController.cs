@@ -19,6 +19,7 @@ internal class BoardController : Controller
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
     internal override bool Step()
     {
+        if (App.AppState == ApplicationState.Done) return DoneStep();
         InputAction ia = App.ReadAction();
         CurrentState.Face = Face.Normal;
 
@@ -30,6 +31,8 @@ internal class BoardController : Controller
         }
         else
         {
+            // Process actions
+
             CurrentState = CurrentState.Clone();
             switch (ia)
             {
@@ -122,7 +125,6 @@ internal class BoardController : Controller
     {
         refreshTimer.Stop();
         App.AppState = ApplicationState.Playing;
-        App.CurrentController = this;
 
         CurrentState = BoardState.NewGame(App.SaveData.CurrentDifficulty);
         Storage.WriteSave(App.SaveData);

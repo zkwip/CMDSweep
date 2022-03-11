@@ -13,9 +13,9 @@ internal class MenuVisualizer : Visualizer<MenuList>
     public StyleData FocusTitleStyle => Settings.GetStyle("menu-highlight-title");
     internal Dictionary<string, ConsoleColor> Colors => Settings.Colors;
 
-    public MenuVisualizer(MenuController mctrl) {
-        Controller = mctrl;
-        hideStyle = Settings.GetStyle("menu");
+    public MenuVisualizer(MenuController mctrl) : base(mctrl) 
+    {
+        HideStyle = Settings.GetStyle("menu");
         Resize();
     }
 
@@ -23,7 +23,8 @@ internal class MenuVisualizer : Visualizer<MenuList>
     internal override void Resize()
     {
         Dictionary<string, int> dims = Settings.Dimensions;
-        TableGrid tg = this.TableGrid = new();
+        TableGrid tg = new();
+
         maxRows = dims["menu-rows"];
 
         // Columns
@@ -40,11 +41,13 @@ internal class MenuVisualizer : Visualizer<MenuList>
 
         tg.FitAround();
         tg.CenterOn(Renderer.Bounds.Center);
+        
+        TableGrid = tg;
     }
 
     internal override void RenderFull()
     {
-        Renderer.ClearScreen(hideStyle);
+        Renderer.ClearScreen(HideStyle);
         scrollDepth = CurrentState!.FixScroll(scrollDepth, maxRows);
         RenderTitle(CurrentState!.Title);
         for (int i = 0; i + scrollDepth < CurrentState!.Items.Count && i < maxRows; i++)

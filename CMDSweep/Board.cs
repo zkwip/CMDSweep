@@ -6,7 +6,7 @@ namespace CMDSweep
     public class BoardState
     {
         // Internals
-        private CellData[,] Cells;
+        private readonly CellData[,] Cells;
         private Point cursor;
         private PlayerState playerState;
         private Difficulty difficulty;
@@ -82,7 +82,7 @@ namespace CMDSweep
             {
                 for (int ay = p.Y - difficulty.DetectionRadius; ay <= p.Y + difficulty.DetectionRadius; ay++)
                 {
-                    Point loc = new Point(ax, ay);
+                    Point loc = new(ax, ay);
                     if (wrap || !CellOutsideBounds(loc)) act(Wrap(loc));
                 }
             }
@@ -94,7 +94,7 @@ namespace CMDSweep
             {
                 for (int y = 0; y < BoardHeight; y++)
                 {
-                    act(new Point(x, y));
+                    act(new(x, y));
                 }
             }
         }
@@ -179,7 +179,7 @@ namespace CMDSweep
         {
             timePaused = true;
 
-            preTime = preTime + (DateTime.Now - startTime);
+            preTime += (DateTime.Now - startTime);
         }
 
         public int FailAction()
@@ -212,7 +212,7 @@ namespace CMDSweep
 
         public int Discover(Point cl)
         {
-            List<Point> points = new List<Point>();
+            List<Point> points = new();
             points.Add(cl);
 
             int sum = 0;
@@ -323,18 +323,14 @@ namespace CMDSweep
         }
         public Point MoveCursor(Direction d)
         {
-            switch (d)
+            return d switch
             {
-                case Direction.Down:
-                    return SetCursor(new Point(cursor.X, cursor.Y + 1));
-                case Direction.Up:
-                    return SetCursor(new Point(cursor.X, cursor.Y - 1));
-                case Direction.Left:
-                    return SetCursor(new Point(cursor.X - 1, cursor.Y));
-                case Direction.Right:
-                    return SetCursor(new Point(cursor.X + 1, cursor.Y));
-            }
-            return cursor;
+                Direction.Down => SetCursor(new Point(cursor.X, cursor.Y + 1)),
+                Direction.Up => SetCursor(new Point(cursor.X, cursor.Y - 1)),
+                Direction.Left => SetCursor(new Point(cursor.X - 1, cursor.Y)),
+                Direction.Right => SetCursor(new Point(cursor.X + 1, cursor.Y)),
+                _ => cursor,
+            };
         }
 
         public Point SetCursor(Point cl)
@@ -346,7 +342,7 @@ namespace CMDSweep
         public List<Point> CompareForChanges(BoardState other, Rectangle? area = null)
         {
             // Build a list of changed cells
-            List<Point> res = new List<Point>();
+            List<Point> res = new();
 
             if (area == null)
                 Board.ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
@@ -358,7 +354,7 @@ namespace CMDSweep
 
             if (difficulty.SubtractFlags)
             {
-                List<Point> li = new List<Point>();
+                List<Point> li = new();
                 foreach (Point cl in res)
                 {
                     li = ApplySurroundingCells(cl, li, (loc, list) => { if (!list.Contains(loc)) list.Add(loc); return list; }, difficulty.WrapAround);
@@ -378,9 +374,9 @@ namespace CMDSweep
             int placementFailures = 0;
             int detectZoneSize = (2 * difficulty.DetectionRadius + 1) * (2 * difficulty.DetectionRadius + 1);
             int maxMines = (int)Math.Floor(0.8 * detectZoneSize);
-            int mc = 0;
+            int mc;
 
-            Random rng = new Random();
+            Random rng = new();
 
             // Try to randomly place mines and check if the are valid;
             while (minesLeftToPlace > 0 && placementFailures < 1000)
@@ -389,7 +385,7 @@ namespace CMDSweep
                 int px = rng.Next() % BoardWidth;
                 int py = rng.Next() % BoardHeight;
 
-                Point pos = new Point(px, py);
+                Point pos = new(px, py);
 
                 if (Distance(cl, pos) <= difficulty.Safezone)
                     continue; // No mines at start

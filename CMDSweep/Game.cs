@@ -12,14 +12,25 @@ public class GameApp
     internal readonly GameSettings Settings;
     internal SaveData SaveData;
     internal readonly IRenderer Renderer;
+
     internal BoardController BControl;
-    internal HighscoreController HControl;
+    internal HighscoreController HSControl;
+    internal HelpController HLControl;
     internal MenuController MControl;
 
     // Curent States
     internal ApplicationState AppState;
-    internal Controller CurrentController;
+    internal Controller? CurrentController => AppState switch
+    {
+        ApplicationState.Playing => BControl,
+        ApplicationState.Done => BControl,
+        ApplicationState.Highscore => HSControl,
+        ApplicationState.Menu => MControl,
+        ApplicationState.Help => HLControl,
+        _ => null,
+    };
 
+    internal void OpenMainMenu() => MControl.OpenMenu(MControl.MainMenu);
 
     public GameApp(IRenderer r)
     {
@@ -28,48 +39,32 @@ public class GameApp
         SaveData = Storage.LoadSaveFile(Settings);
         Renderer = r;
 
-        BControl = new BoardController(this);
-        HControl = new HighscoreController(this);
-        MControl = new MenuController(this);
+        BControl = new(this);
+        HSControl = new(this);
+        HLControl = new(this);
+        MControl = new(this);
         Renderer.BoundsChanged += Renderer_BoundsChanged;
 
         MControl.OpenMenu(MControl.MainMenu);
-        CurrentController = MControl;
 
         while (Step());
     }
 
     private void Renderer_BoundsChanged(object? sender, EventArgs _) => Refresh(RefreshMode.Full);
+
     private bool Step()
     {
         if (AppState == ApplicationState.Quit) return false;
-        switch (AppState)
-        {
-            case ApplicationState.Playing: return BControl.Step();
-            case ApplicationState.Done: return BControl.DoneStep();
-            case ApplicationState.Highscore: return HControl.Step();
-            case ApplicationState.Menu: return MControl.Step();
-            default: return false;
-        }
+        if (CurrentController == null) return false;
+        return CurrentController.Step();
     }
     internal void Refresh(RefreshMode mode)
     {
-        switch (AppState)
-        {
-            case ApplicationState.Playing:
-            case ApplicationState.Done:
-                BControl.Visualize(mode);
-                break;
-            case ApplicationState.Menu:
-                MControl.Visualize(mode);
-                break;
-            case ApplicationState.Highscore:
-                HControl.Visualize(mode);
-                break;
-            default:
-                break;
-        }
+        if (AppState == ApplicationState.Quit) return;
+        if (CurrentController == null) return;
+        CurrentController.Visualize(mode);
     }
+
     internal InputAction ReadAction()
     {
         ConsoleKey key = Console.ReadKey(true).Key;

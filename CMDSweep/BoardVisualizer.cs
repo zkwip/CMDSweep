@@ -15,10 +15,9 @@ internal class BoardVisualizer : Visualizer<BoardState>
     Rectangle RenderMask; // the area the board can be drawn into (screen space)
     Rectangle Viewport; // rendermask mapped to (board space)
 
-    public BoardVisualizer(BoardController bctrl)
+    public BoardVisualizer(BoardController bctrl) : base(bctrl)
     {
-        Controller = bctrl;
-        hideStyle = Settings.GetStyle("cell-bg-out-of-bounds", "cell-bg-out-of-bounds");
+        HideStyle = Settings.GetStyle("cell-bg-out-of-bounds", "cell-bg-out-of-bounds");
 
         RenderMask = Rectangle.Zero;
         Viewport = Rectangle.Zero;
@@ -41,39 +40,13 @@ internal class BoardVisualizer : Visualizer<BoardState>
         int ypad = Settings.Dimensions["popup-padding-y"];
         StyleData style = Settings.GetStyle("popup");
 
-        int horRoom = Renderer.Bounds.Width - (4 * xpad);
-        int verRoom = Renderer.Bounds.Height - (4 * ypad);
+        TextBox textbox = new(text, Renderer.Bounds.Shrink(xpad, ypad, xpad, ypad));
+        textbox.HorizontalAlign = HorzontalAlignment.Center;
+        textbox.Bounds = textbox.TextArea;
+        textbox.Bounds.CenterOn(Renderer.Bounds.Center);
 
-        List<String> lines = new(text.Split('\n'));
-        int broadest = 0;
-
-        for (int i = 0; i < lines.Count; i++)
-        {
-            // Wrapping
-            if (lines[i].Length > horRoom)
-            {
-                string line = lines[i];
-
-                int breakpoint = horRoom;
-                for (int j = 0; j < horRoom; j++) if (line[j] == ' ') breakpoint = j;
-
-                lines.RemoveAt(i);
-                lines.Insert(i, line[..breakpoint]);
-                lines.Insert(i + 1, line[..(breakpoint + 1)]);
-            }
-
-            broadest = Math.Max(broadest, lines[i].Length);
-        }
-
-        Rectangle textbox = new(0, 0, broadest, lines.Count);
-        textbox.CenterOn(Renderer.Bounds.Center);
-
-        RenderPopupBox(style, textbox.Grow(xpad, ypad, xpad, ypad), "popup-border");
-
-        for (int i = 0; i < lines.Count; i++)
-        {
-            Renderer.PrintAtTile(textbox.TopLeft.Shifted(0, i), style, lines[i]);
-        }
+        RenderPopupBox(style, textbox.Bounds.Grow(xpad, ypad, xpad, ypad), "popup-border");
+        textbox.Render(Renderer, style, false);
 
     }
 
@@ -131,7 +104,7 @@ internal class BoardVisualizer : Visualizer<BoardState>
         bar.AddColumn(6, 0, "mines");
         bar.AddColumn(horpad, 0);
 
-        Renderer.ClearScreen(hideStyle, bar.Bounds);
+        Renderer.ClearScreen(HideStyle, bar.Bounds);
 
         RenderClock(bar.GetPoint("clock","bar"));
         RenderFace(bar.GetPoint("face", "bar"));
@@ -227,7 +200,7 @@ internal class BoardVisualizer : Visualizer<BoardState>
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-vertical"]);
     }
 
-    private void ClearCell(Point p) => MappedPrint(p, hideStyle, "  ");
+    private void ClearCell(Point p) => MappedPrint(p, HideStyle, "  ");
 
     private Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
     private Point MapToRender(Point p) => new(OffsetX + p.X * ScaleX, OffsetY + p.Y * ScaleY);
@@ -282,7 +255,7 @@ internal class BoardVisualizer : Visualizer<BoardState>
     {
         TryCenterViewPort();
         // Border
-        Renderer.ClearScreen(hideStyle);
+        Renderer.ClearScreen(HideStyle);
         RenderBorder();
 
         // Tiles
@@ -292,7 +265,7 @@ internal class BoardVisualizer : Visualizer<BoardState>
         RenderStatBoard();
         RenderMessages();
 
-        Renderer.HideCursor(hideStyle);
+        Renderer.HideCursor(HideStyle);
         ScrollValidMask = Viewport.Clone();
     }
 
