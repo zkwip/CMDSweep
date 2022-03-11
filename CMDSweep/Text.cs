@@ -132,7 +132,7 @@ internal class TextBox
         for (int i = 0; i < MaxLineCount; i++)
         {
             int line = i + VerticalScroll;
-            if (line > lines.Count) break;
+            if (line >= lines.Count) break;
 
             int row = Bounds.Top + i * LineSpacing;
             int offset = (Bounds.Width - lines[line].Length) * (int)HorizontalAlign / 2;
