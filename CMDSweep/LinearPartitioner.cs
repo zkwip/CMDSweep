@@ -99,6 +99,16 @@ class LinearRange
     public int Length;
     public int End => Start + Length;
 
+    public int OffsetOutOfBounds(int target)
+    {
+        int offset = 0;
+
+        if (target < Start) offset = target - Start;
+        if (target >= End) offset = target - End + 1;
+
+        return offset;
+    }
+
     public LinearRange(int start, int length) { Start = start; Length = length; }
     public static LinearRange ToEnd(int start, int end) => new(start, end - start);
     public LinearRange Clone() => new(Start, Length);

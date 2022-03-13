@@ -66,10 +66,11 @@ namespace CMDSweep;
         if (CurrentController == null) return;
         CurrentController.Visualize(mode);
     }
-
-    internal InputAction ReadAction()
+    internal InputAction ReadAction() => ParseAction(Console.ReadKey());
+    internal InputAction ParseAction(ConsoleKeyInfo info)
     {
-        ConsoleKey key = Console.ReadKey(true).Key;
+
+        ConsoleKey key = info.Key;
         foreach (KeyValuePair<InputAction, List<ConsoleKey>> ctrl in Settings.Controls)
             if (ctrl.Value.Contains(key))
                 return ctrl.Key;

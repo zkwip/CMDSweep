@@ -177,18 +177,7 @@ class Rectangle
         return r;
     }
 
-    public Offset OffsetOutOfBounds(Point p)
-    {
-        int x = 0;
-        int y = 0;
-
-        if (p.X < Left) x = p.X - Left;
-        if (p.Y < Top) y = p.Y - Top;
-        if (p.X >= Right) x = p.X - Right + 1;
-        if (p.Y >= Bottom) y = p.Y - Bottom + 1;
-
-        return new Offset(x, y);
-    }
+    public Offset OffsetOutOfBounds(Point p) => new Offset(HorizontalRange.OffsetOutOfBounds(p.X), VerticalRange.OffsetOutOfBounds(p.Y));
 }
 
 class Offset : Point

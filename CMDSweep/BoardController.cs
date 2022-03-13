@@ -34,7 +34,7 @@ class BoardController : Controller
             refreshTimer.Stop();
             App.ShowMainMenu();
         }
-        else if (App.AppState == ApplicationState.Done && ia == InputAction.NewGame) 
+        else if (App.AppState == ApplicationState.Done) 
         {
             NewGame();
         }

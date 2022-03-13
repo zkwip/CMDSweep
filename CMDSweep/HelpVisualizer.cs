@@ -1,6 +1,6 @@
 ﻿namespace CMDSweep;
 
-class HelpVisualizer : Visualizer<TextBox>
+class HelpVisualizer : Visualizer<TextRenderBox>
 {
     public HelpVisualizer(HelpController hctrl) : base(hctrl) { }
     internal override bool CheckFullRefresh() => LastState!.Text != CurrentState!.Text;
@@ -21,20 +21,21 @@ class HelpVisualizer : Visualizer<TextBox>
         CurrentState!.Bounds = Renderer.Bounds.Shrink(2);
     }
 
-    internal override TextBox RetrieveState() => ((HelpController)Controller).Box;
+    internal override TextRenderBox RetrieveState() => ((HelpController)Controller).Box;
     internal override void Scroll() { }
 }
 class HelpController : Controller
 {
-    internal TextBox Box;
+    internal TextRenderBox Box;
 
     internal HelpController(GameApp app) : base(app)
     {
         Visualizer = new HelpVisualizer(this);
-        Box = new TextBox(Storage.LoadHelpFile(), Rectangle.Zero)
+        Box = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero)
         {
-            HorizontalFlow = Overflow.Wrap,
-            VerticalFlow = Overflow.Scroll,
+            Wrap = true,
+            VerticalOverflow = false,
+            HorizontalOverflow = false,
             HorizontalAlign = HorzontalAlignment.Left,
             VerticalAlign = VerticalAlignment.Top,
         };

@@ -40,9 +40,9 @@ class BoardVisualizer : Visualizer<BoardState>
         int ypad = Settings.Dimensions["popup-padding-y"];
         StyleData style = Settings.GetStyle("popup");
 
-        TextBox textbox = new(text, Renderer.Bounds.Shrink(xpad, ypad, xpad, ypad));
+        TextRenderBox textbox = new(text, Renderer.Bounds.Shrink(xpad, ypad, xpad, ypad));
         textbox.HorizontalAlign = HorzontalAlignment.Center;
-        textbox.Bounds = textbox.TextArea;
+        textbox.Bounds = textbox.Used;
         textbox.Bounds.CenterOn(Renderer.Bounds.Center);
 
         RenderPopupBox(style, textbox.Bounds.Grow(xpad, ypad, xpad, ypad), "popup-border");
