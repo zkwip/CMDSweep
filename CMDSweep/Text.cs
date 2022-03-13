@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
-internal static class Text
+static class Text
 {
     internal static List<string> WrapText(string text, int horRoom)
     {
@@ -31,7 +31,7 @@ internal static class Text
     }
 }
 
-internal class TextBox
+class TextBox
 {
     internal string Text;
     internal Rectangle Bounds;
