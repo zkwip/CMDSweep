@@ -7,6 +7,7 @@ class BoardController : Controller
 {
     internal BoardState CurrentState;
     private readonly Timer refreshTimer;
+    TextEnterField HighscoreTextField;
 
     internal BoardController(GameApp g) : base(g)
     {
@@ -15,6 +16,7 @@ class BoardController : Controller
         refreshTimer = new Timer(100);
         refreshTimer.Elapsed += RefreshTimerElapsed;
         refreshTimer.AutoReset = true;
+        HighscoreTextField = new TextEnterField(this, new(0, 1, 0, 1), App.Renderer, Settings.GetStyle("popup")) { Text = SaveData.PlayerName };
     }
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
     internal override bool Step()
@@ -91,7 +93,7 @@ class BoardController : Controller
     private bool CheckHighscore(BoardState currentState)
     {
         TimeSpan time = currentState.Time;
-        List<HighscoreRecord> scores = App.SaveData.CurrentDifficulty.Highscores;
+        List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
         if (scores.Count >= Highscores.highscoreEntries)
         {
@@ -100,13 +102,14 @@ class BoardController : Controller
 
         if (scores.Count < Highscores.highscoreEntries)
         {
+            ShowHighscoreNamePopup();
             scores.Add(new()
             {
                 Time = time,
-                Name = "Test",
+                Name = HighscoreTextField.Text,
                 Date = DateTime.Now
             });
-
+            SaveData.PlayerName = HighscoreTextField.Text;
             scores.Sort((x, y) => (x.Time - y.Time).Milliseconds);
             Storage.WriteSave(App.SaveData);
 
@@ -114,6 +117,12 @@ class BoardController : Controller
         }
         return false;
     }
+
+    private void ShowHighscoreNamePopup()
+    {
+
+    }
+
     internal void NewGame()
     {
         refreshTimer.Stop();

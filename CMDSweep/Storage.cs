@@ -52,6 +52,7 @@ class GameSettings
     public Dictionary<string, string> Texts;
     public Dictionary<string, int> Dimensions;
     public Dictionary<InputAction, List<ConsoleKey>> Controls;
+    public string PlayerName;
 
     public StyleData GetStyle(string handle) => new(Colors[handle + "-fg"], Colors[handle + "-bg"]);
     public StyleData GetStyle(string fg, string bg) => new(Colors[fg], Colors[bg]);
@@ -64,12 +65,15 @@ class SaveData
 {
     public List<Difficulty> Difficulties;
     public Difficulty CurrentDifficulty;
+    public string PlayerName;
+
     public SaveData() { }
 
     public SaveData(List<Difficulty> difficulties)
     {
         Difficulties = new List<Difficulty>(difficulties);
         CurrentDifficulty = Difficulties[0];
+        PlayerName = "You";
     }
 }
 

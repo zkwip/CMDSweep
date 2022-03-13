@@ -43,7 +43,7 @@ class MenuController : Controller
         MainMenu.AddButton("Settings", () => OpenMenu(SettingsMenu));
         MainMenu.AddButton("Quit Game", () => App.QuitGame());
 
-        CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", App.SaveData.Difficulties, x => x.Name), x => x, (d, val) => App.SaveData.CurrentDifficulty = val);
+        CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", App.SaveData.Difficulties, x => x.Name), x => x, (d, val) => SaveData.CurrentDifficulty = val);
 
         CreateSettingsItem(SettingsMenu, new MenuNumberRange("Width", 5, 1000), x => x.Width, (d, val) => d.Width = val);
         CreateSettingsItem(SettingsMenu, new MenuNumberRange("Height", 5, 1000), x => x.Height, (d, val) => d.Height = val);
