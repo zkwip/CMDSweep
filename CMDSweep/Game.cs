@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Timers;
 
 namespace CMDSweep;
 
 using Control = KeyValuePair<InputAction, List<ConsoleKey>>;
-
 public class GameApp
 {
     // Modules
@@ -29,8 +27,6 @@ public class GameApp
         ApplicationState.Help => HLControl,
         _ => null,
     };
-
-    internal void OpenMainMenu() => MControl.OpenMenu(MControl.MainMenu);
 
     public GameApp(IRenderer r)
     {
@@ -73,11 +69,15 @@ public class GameApp
                 return ctrl.Key;
         return InputAction.Unknown;
     }
-    internal void ShowHelp() => AppState = ApplicationState.Help;
-    internal void QuitGame() => AppState = ApplicationState.Quit;
-    public void ContinueGame()
+
+    internal void ShowMainMenu() => MControl.OpenMain();
+    internal void ShowHelp() => ChangeMode(ApplicationState.Help);
+    internal void QuitGame() => ChangeMode(ApplicationState.Quit);
+    internal void ContinueGame() => ChangeMode(ApplicationState.Playing);
+
+    internal void ChangeMode(ApplicationState state)
     {
-        AppState = ApplicationState.Playing;
+        AppState = state;
         Refresh(RefreshMode.Full);
     }
 }

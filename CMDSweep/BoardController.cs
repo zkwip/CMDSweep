@@ -23,11 +23,16 @@ internal class BoardController : Controller
         InputAction ia = App.ReadAction();
         CurrentState.Face = Face.Normal;
 
-        if (ia == InputAction.NewGame) InitialiseGame();
+        if (ia == InputAction.NewGame) NewGame();
+        else if (ia == InputAction.Help)
+        {
+            refreshTimer.Stop();
+            App.ShowHelp();
+        }
         else if (ia == InputAction.Quit)
         {
             refreshTimer.Stop();
-            App.MControl.OpenMenu(App.MControl.MainMenu);
+            App.ShowMainMenu();
         }
         else
         {
@@ -89,7 +94,7 @@ internal class BoardController : Controller
                 break;
             case InputAction.Dig:
             case InputAction.NewGame:
-                InitialiseGame();
+                NewGame();
                 break;
         }
         return true;
@@ -121,14 +126,11 @@ internal class BoardController : Controller
         }
         return false;
     }
-    internal void InitialiseGame()
+    internal void NewGame()
     {
         refreshTimer.Stop();
-        App.AppState = ApplicationState.Playing;
-
         CurrentState = BoardState.NewGame(App.SaveData.CurrentDifficulty);
         Storage.WriteSave(App.SaveData);
-
-        App.Refresh(RefreshMode.Full);
+        App.ChangeMode(ApplicationState.Playing);
     }
 }

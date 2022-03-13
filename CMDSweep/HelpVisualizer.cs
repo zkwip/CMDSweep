@@ -46,9 +46,10 @@ internal class HelpController : Controller
         InputAction ia = App.ReadAction();
         switch (ia)
         {
-            case InputAction.Quit: App.OpenMainMenu(); break;
-            case InputAction.Up: TryScrollUp(); break;
-            case InputAction.Down: TryScrollDown(); break;
+            case InputAction.Quit: App.ShowMainMenu(); return true;
+            case InputAction.Up: TryScrollUp(); return true;
+            case InputAction.Down: TryScrollDown(); return true;
+            case InputAction.NewGame: App.BControl.NewGame(); return true;
             default: break;
         }
         App.Refresh(RefreshMode.ChangesOnly);

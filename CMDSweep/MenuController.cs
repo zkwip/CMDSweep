@@ -18,6 +18,11 @@ namespace CMDSweep
         internal override bool Step()
         {
             InputAction ia = App.ReadAction();
+            if (ia == InputAction.NewGame)
+            {
+                App.BControl.NewGame();
+                return true;
+            }
             bool res = currentMenuList.HandleInput(ia);
             App.Refresh(RefreshMode.ChangesOnly);
             return res;
@@ -33,7 +38,7 @@ namespace CMDSweep
             AdvancedSettingsMenu = new("Advanced", this);
             AdvancedSettingsMenu.ParentMenu = SettingsMenu;
 
-            MainMenu.AddButton("New Game", () => App.BControl.InitialiseGame());
+            MainMenu.AddButton("New Game", () => App.BControl.NewGame());
             MainMenu.AddButton("High Scores", () => App.HSControl.ShowHighscores());
             MainMenu.AddButton("Help", () => App.ShowHelp());
             MainMenu.AddButton("Settings", () => OpenMenu(SettingsMenu));
@@ -104,12 +109,13 @@ namespace CMDSweep
             App.SaveData.CurrentDifficulty = d;
             DifficultyChanged?.Invoke(this, EventArgs.Empty);
         }
+
+        public void OpenMain() => OpenMenu(MainMenu);
         public void OpenMenu(MenuList? menu)
         {
             if (menu == null) return;
             currentMenuList = menu;
-            App.AppState = ApplicationState.Menu;
-            App.Refresh(RefreshMode.Full);
+            App.ChangeMode(ApplicationState.Menu);
         }
     }
 }

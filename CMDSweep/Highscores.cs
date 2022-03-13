@@ -21,7 +21,7 @@ internal class HighscoreController : Controller
                 App.MControl.OpenMenu(App.MControl.MainMenu);
                 break;
             case InputAction.NewGame:
-                App.BControl.InitialiseGame();
+                App.BControl.NewGame();
                 break;
         }
         return true;
