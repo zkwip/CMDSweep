@@ -1,5 +1,5 @@
 ﻿namespace CMDSweep;
-abstract internal class Visualizer<TState> : IVisualizer
+abstract class Visualizer<TState> : IVisualizer
 {
     private RefreshMode ModeWaiting = RefreshMode.None; 
     private bool IsRendering = false;
@@ -89,7 +89,7 @@ abstract internal class Visualizer<TState> : IVisualizer
     }
 }
 
-internal interface IVisualizer
+interface IVisualizer
 {
     internal bool Visualize(RefreshMode mode);
 }
