@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Timers;
 namespace CMDSweep;
 
-internal class BoardController : Controller
+class BoardController : Controller
 {
     internal BoardState CurrentState;
     private readonly Timer refreshTimer;

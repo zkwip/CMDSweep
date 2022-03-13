@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("SweepTests")]
 namespace CMDSweep;
 
 using Control = KeyValuePair<InputAction, List<ConsoleKey>>;
-public class GameApp
+internal class GameApp
 {
     // Modules
     internal readonly GameSettings Settings;
@@ -82,7 +84,7 @@ public class GameApp
     }
 }
 
-public enum RefreshMode
+enum RefreshMode
 {
     None = 0,
     ChangesOnly = 1,
@@ -128,7 +130,7 @@ enum InputAction
     Clear,
 }
 
-public enum Face
+enum Face
 {
     Normal,
     Surprise,

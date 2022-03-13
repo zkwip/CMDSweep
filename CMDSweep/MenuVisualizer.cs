@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
-internal class MenuVisualizer : Visualizer<MenuList>
+class MenuVisualizer : Visualizer<MenuList>
 {
     internal TableGrid TableGrid;
     internal int scrollDepth = 0;

@@ -1,6 +1,6 @@
 ﻿namespace CMDSweep;
 
-internal abstract class Controller
+abstract class Controller
 {
     internal GameApp App;
     internal Controller(GameApp app)

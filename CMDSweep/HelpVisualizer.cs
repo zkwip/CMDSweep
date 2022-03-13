@@ -2,7 +2,7 @@
 
 namespace CMDSweep;
 
-internal class HelpVisualizer : Visualizer<TextBox>
+class HelpVisualizer : Visualizer<TextBox>
 {
     public HelpVisualizer(HelpController hctrl) : base(hctrl) { }
     internal override bool CheckFullRefresh() => LastState!.Text != CurrentState!.Text;
@@ -25,7 +25,7 @@ internal class HelpVisualizer : Visualizer<TextBox>
     internal override TextBox RetrieveState() => ((HelpController)Controller).Box;
     internal override void Scroll() { }
 }
-internal class HelpController : Controller
+class HelpController : Controller
 {
     internal TextBox Box;
 

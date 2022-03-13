@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace CMDSweep;
-public class Point
+class Point
 {
     public int X;
     public int Y;
@@ -30,7 +30,7 @@ public class Point
 
     public Point Shifted(int x, int y) { Point p = this.Clone(); p.Shift(x, y); return p; }
 }
-public class Rectangle
+class Rectangle
 {
     public int Left;
     public int Top;
@@ -191,7 +191,7 @@ public class Rectangle
     }
 }
 
-public class Offset : Point {
+class Offset : Point {
     public Offset(int x, int y) : base(x, y) { }
 
     public static Offset ToPoint(Point newOrigin) => new(newOrigin.X, newOrigin.Y);
@@ -201,7 +201,7 @@ public class Offset : Point {
     public new Offset Clone() => new(X, Y);
 }
 
-public class Functions
+class Functions
 {
     internal static TOut Apply<TIn, TOut>(TOut zero, IEnumerable<TIn> set, Func<TOut, TOut, TOut> func, Func<TIn, TOut> map)
     {
@@ -209,4 +209,3 @@ public class Functions
         return zero;
     }
 }
-

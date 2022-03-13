@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
-internal class BoardVisualizer : Visualizer<BoardState>
+class BoardVisualizer : Visualizer<BoardState>
 {
     private int OffsetX => RenderMask.Left - Viewport.Left * ScaleX;
     private int OffsetY => RenderMask.Top - Viewport.Top * ScaleY;

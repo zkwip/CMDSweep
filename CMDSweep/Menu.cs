@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
-internal class MenuList
+class MenuList
 {
     public MenuList ParentMenu;
     public MenuController Controller;
@@ -81,7 +81,7 @@ internal class MenuList
     }
 }
 
-internal abstract class MenuItem
+abstract class MenuItem
 {
     internal string Title;
     internal bool Focusable = true;
@@ -126,7 +126,7 @@ internal abstract class MenuItem
 
 }
 
-internal class MenuText : MenuItem
+class MenuText : MenuItem
 {
     internal string Subtitle;
     internal MenuText(string title, string sub = "") : base(title)
@@ -145,7 +145,7 @@ internal class MenuText : MenuItem
     }
 }
 
-internal class MenuButton : MenuItem
+class MenuButton : MenuItem
 {
     internal string Subtitle;
     internal MenuButton(string title, string sub = "") : base("[ " + title + " ]") => Subtitle = sub;
@@ -159,7 +159,7 @@ internal class MenuButton : MenuItem
     internal override void RenderItemExtras(int row, MenuVisualizer mv, bool focus) { }
 }
 
-internal class MenuChoice<TOption> : MenuItem
+class MenuChoice<TOption> : MenuItem
 {
     private readonly List<TOption> Options;
     private int SelectedIndex = 0;

@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace CMDSweep;
 
-internal static class Storage
+static class Storage
 {
     private const string SaveFilePath = "save.json";
     private const string SettingsFilePath = "settings.json";
@@ -45,7 +45,7 @@ internal static class Storage
 }
 #pragma warning disable CS8618 
 #pragma warning disable CS0649 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-internal class GameSettings
+class GameSettings
 {
     public List<Difficulty> DefaultDifficulties;
     public Dictionary<string, ConsoleColor> Colors;
@@ -60,7 +60,7 @@ internal class GameSettings
 #pragma warning restore CS0649
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-internal class SaveData
+class SaveData
 {
     public List<Difficulty> Difficulties;
     public Difficulty CurrentDifficulty;
@@ -73,14 +73,14 @@ internal class SaveData
     }
 }
 
-internal class HighscoreRecord
+class HighscoreRecord
 {
     public string Name;
     public TimeSpan Time;
     public DateTime Date;
 }
 
-internal class Difficulty
+class Difficulty
 {
     public string Name;
 

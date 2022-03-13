@@ -53,7 +53,7 @@ namespace SweepTests
         [TestMethod]
         public void RectangleDerivationTest()
         {
-            Rectangle r = new Rectangle(5, 6, 7, 8);
+            Rectangle r = new(5, 6, 7, 8);
 
             Assert.AreEqual(r.Center.X, r.CenterLine);
             Assert.AreEqual(r.Center.Y, r.MidLine);
@@ -66,7 +66,7 @@ namespace SweepTests
         [TestMethod]
         public void RectangleCloneTest()
         {
-            Rectangle r = new Rectangle(5, 6, 7, 8);
+            Rectangle r = new(5, 6, 7, 8);
             // Cloning
             Rectangle r2 = r.Clone();
             Assert.AreEqual(r, r2);
@@ -82,21 +82,21 @@ namespace SweepTests
         [TestMethod]
         public void RectangleGrowTest()
         {
-            Rectangle r = new Rectangle(5, 6, 7, 8);
+            Rectangle r = new(5, 6, 7, 8);
 
             // Growing
             Rectangle r3 = r.Grow(2);
             Assert.AreEqual(r.Center, r3.Center);
-            Assert.AreEqual(new Point(3, 4), r3.TopLeft);
-            Assert.AreEqual(new Point(14, 16), r3.BottomRight);
+            Assert.AreEqual(new(3, 4), r3.TopLeft);
+            Assert.AreEqual(new(14, 16), r3.BottomRight);
 
             r3 = r.Grow(1, 2, 3, 4);
-            Assert.AreEqual(new Point(4, 4), r3.TopLeft);
-            Assert.AreEqual(new Point(15, 18), r3.BottomRight);
+            Assert.AreEqual(new(4, 4), r3.TopLeft);
+            Assert.AreEqual(new(15, 18), r3.BottomRight);
 
             Rectangle r4 = r.Shrink(1, 2, 3, 4);
-            Assert.AreEqual(new Point(6, 8), r4.TopLeft);
-            Assert.AreEqual(new Point(9, 10), r4.BottomRight);
+            Assert.AreEqual(new(6, 8), r4.TopLeft);
+            Assert.AreEqual(new(9, 10), r4.BottomRight);
 
             Assert.IsTrue(r.Contains(r4.TopLeft));
             Assert.IsTrue(r.Contains(r4.BottomRight));
@@ -107,7 +107,7 @@ namespace SweepTests
         [TestMethod]
         public void RectangleShiftTest()
         {
-            Rectangle r = new Rectangle(5, 6, 7, 8);
+            Rectangle r = new(5, 6, 7, 8);
 
             // Shifting
             Rectangle r5 = r.Shifted(10, 10);
@@ -123,7 +123,7 @@ namespace SweepTests
             Assert.AreEqual(r, r5);
             Assert.AreEqual(r6, r5);
 
-            r5.CenterOn(new Point(0, 0));
+            r5.CenterOn(new(0, 0));
             Assert.AreEqual(Point.Origin, r5.Center);
 
         }
@@ -131,8 +131,8 @@ namespace SweepTests
         [TestMethod]
         public void RectangleIntersectTest()
         {
-            Rectangle r = new Rectangle(0, 5, 10, 10);
-            Rectangle r2 = new Rectangle(5, 0, 10, 10);
+            Rectangle r = new(0, 5, 10, 10);
+            Rectangle r2 = new(5, 0, 10, 10);
             Rectangle r3 = r.Intersect(r2);
 
             Assert.AreEqual(new Point(5, 5), r3.TopLeft);
@@ -141,8 +141,8 @@ namespace SweepTests
             Assert.IsTrue(r.Contains(r3));
             Assert.IsTrue(r2.Contains(r3));
 
-            Assert.AreEqual(r.OffsetOutOfBounds(new(5, 0)), new Offset(0, -5));
-            Assert.AreEqual(r2.OffsetOutOfBounds(new(0, 5)), new Offset(-5, 0));
+            Assert.AreEqual(r.OffsetOutOfBounds(new(5, 0)), new(0, -5));
+            Assert.AreEqual(r2.OffsetOutOfBounds(new(0, 5)), new(-5, 0));
         }
     }
 }

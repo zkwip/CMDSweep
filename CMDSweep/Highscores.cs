@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
-internal class HighscoreController : Controller
+class HighscoreController : Controller
 {
     internal Difficulty SelectedDifficulty;
     public HighscoreController(GameApp app) : base(app) 
@@ -28,7 +28,7 @@ internal class HighscoreController : Controller
     }
     internal void ShowHighscores() => App.AppState = ApplicationState.Highscore;
 }
-internal static class Highscores
+static class Highscores
 {
 
     internal const int highscoreEntries = 5;
@@ -92,7 +92,7 @@ internal static class Highscores
     }
 }
 
-internal class HighscoreVisualizer : Visualizer<Difficulty>
+class HighscoreVisualizer : Visualizer<Difficulty>
 {
     TableGrid ScoreTable;
     public HighscoreVisualizer(HighscoreController hctrl) : base(hctrl)

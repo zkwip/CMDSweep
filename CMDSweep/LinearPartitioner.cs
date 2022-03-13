@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep;
 
-public class LinearPartitioner
+class LinearPartitioner
 {
     public LinearRange Range;
 
@@ -75,7 +75,7 @@ public class LinearPartitioner
     public LinearRange All(string name) => LinearRange.ToEnd(FindFirst(x => x.Name == name).Start, FindLast(x=>x.Name == name).End);
 }
 
-public class Partition
+class Partition
 {
     public int Constant;
     public int Variable;
@@ -93,7 +93,7 @@ public class Partition
     public Partition Offset(int offset) => ap[Index + offset];
 }
 
-public class LinearRange
+class LinearRange
 {
     public int Start;
     public int Length;

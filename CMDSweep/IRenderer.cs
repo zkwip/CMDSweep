@@ -2,7 +2,7 @@
 
 namespace CMDSweep;
 
-public interface IRenderer
+interface IRenderer
 {
     bool PrintAtTile(Point p, StyleData data, string s);
     bool SetCursor(Point p);
@@ -20,7 +20,7 @@ public interface IRenderer
     void CopyArea(Rectangle oldArea, Rectangle newArea);
 }
 
-public class BoundsChangedEventArgs : EventArgs
+class BoundsChangedEventArgs : EventArgs
 {
     public Rectangle NewBounds { get; }
     public Rectangle OldBounds { get; }
@@ -28,7 +28,7 @@ public class BoundsChangedEventArgs : EventArgs
     public BoundsChangedEventArgs(Rectangle o, Rectangle n) { NewBounds = n; OldBounds = o;}
 }
 
-public struct StyleData
+struct StyleData
 {
     public StyleData(ConsoleColor fg, ConsoleColor bg) { Foreground = fg; Background = bg; Highlight = false; }
     public StyleData(ConsoleColor fg, ConsoleColor bg, bool h) { Foreground = fg; Background = bg; Highlight = h; }

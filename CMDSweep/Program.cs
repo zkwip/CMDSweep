@@ -1,11 +1,9 @@
-﻿namespace CMDSweep
+﻿namespace CMDSweep;
+class Program
 {
-    class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            IRenderer cmdr = new WinCMDRenderer();
-            _ = new GameApp(cmdr);
-        }
+        IRenderer cmdr = new WinCMDRenderer();
+        _ = new GameApp(cmdr);
     }
 }

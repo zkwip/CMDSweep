@@ -1,8 +1,7 @@
 ﻿using System;
 
 namespace CMDSweep;
-
-public class TableGrid
+class TableGrid
 {
     private readonly LinearPartitioner cp;
     private readonly LinearPartitioner rp;
