@@ -5,8 +5,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("SweepTests")]
 namespace CMDSweep;
 
-using Control = KeyValuePair<InputAction, List<ConsoleKey>>;
-internal class GameApp
+ class GameApp
 {
     // Modules
     internal readonly GameSettings Settings;
@@ -29,6 +28,11 @@ internal class GameApp
         ApplicationState.Help => HLControl,
         _ => null,
     };
+    static void Main(string[] _)
+    {
+        IRenderer cmdr = new WinCMDRenderer();
+        new GameApp(cmdr);
+    }
 
     public GameApp(IRenderer r)
     {
@@ -45,7 +49,7 @@ internal class GameApp
 
         MControl.OpenMenu(MControl.MainMenu);
 
-        while (Step());
+        while (Step()) ;
     }
 
     private void Renderer_BoundsChanged(object? sender, EventArgs _) => Refresh(RefreshMode.Full);
@@ -66,7 +70,7 @@ internal class GameApp
     internal InputAction ReadAction()
     {
         ConsoleKey key = Console.ReadKey(true).Key;
-        foreach (Control ctrl in Settings.Controls)
+        foreach (KeyValuePair<InputAction, List<ConsoleKey>> ctrl in Settings.Controls)
             if (ctrl.Value.Contains(key))
                 return ctrl.Key;
         return InputAction.Unknown;

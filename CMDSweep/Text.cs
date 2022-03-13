@@ -52,7 +52,7 @@ class TextBox
         Bounds = bounds;
     }
 
-    public TextBox Clone() => new TextBox(Text, Bounds.Clone())
+    public TextBox Clone() => new(Text, Bounds.Clone())
     {
         LineSpacing = LineSpacing,
         VerticalScroll = VerticalScroll,
@@ -92,9 +92,9 @@ class TextBox
         foreach (string line in lines)
         {
             if (res.Count >= MaxLineCount && VerticalFlow == Overflow.Hidden) break;
-            else if (line.Length <= Bounds.Width || HorizontalFlow == Overflow.Overflow || HorizontalFlow == Overflow.Scroll) 
+            else if (line.Length <= Bounds.Width || HorizontalFlow == Overflow.Overflow || HorizontalFlow == Overflow.Scroll)
                 res.Add(line);
-            else if (HorizontalFlow == Overflow.Hidden) 
+            else if (HorizontalFlow == Overflow.Hidden)
                 res.Add(line[..Bounds.Width]);
             else if (HorizontalFlow == Overflow.Wrap)
             {
@@ -111,7 +111,7 @@ class TextBox
                     else
                     {
                         res.Add(linepart[..splitpoint]);
-                        linepart = linepart[(splitpoint+1)..];
+                        linepart = linepart[(splitpoint + 1)..];
                     }
 
                     if (res.Count >= MaxLineCount && VerticalFlow == Overflow.Hidden) break;
@@ -137,7 +137,7 @@ class TextBox
             int row = Bounds.Top + i * LineSpacing;
             int offset = (Bounds.Width - lines[line].Length) * (int)HorizontalAlign / 2;
 
-            renderer.PrintAtTile(new(Bounds.Left + offset ,row), style, lines[line]);
+            renderer.PrintAtTile(new(Bounds.Left + offset, row), style, lines[line]);
         }
     }
 

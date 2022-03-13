@@ -31,7 +31,7 @@ class BoardVisualizer : Visualizer<BoardState>
         TableGrid tg = Highscores.GetHSTableGrid(Settings);
         tg.CenterOn(Renderer.Bounds.Center);
 
-        RenderPopupBox(Settings.GetStyle("popup"), tg.Bounds.Grow(2),"popup-border");
+        RenderPopupBox(Settings.GetStyle("popup"), tg.Bounds.Grow(2), "popup-border");
         Highscores.RenderHSTable(Renderer, Settings, tg, curGS.Difficulty, Settings.GetStyle("popup"));
     }
     private void RenderPopup(string text)
@@ -54,8 +54,8 @@ class BoardVisualizer : Visualizer<BoardState>
     {
         Renderer.ClearScreen(style, r);
 
-        r = r.Shrink(0,0,1,1); // since it is exclusive
-        r.HorizontalRange.ForEach((i) => Renderer.PrintAtTile(new(i,r.Top), style, Settings.Texts[border + "-side-top"]));
+        r = r.Shrink(0, 0, 1, 1); // since it is exclusive
+        r.HorizontalRange.ForEach((i) => Renderer.PrintAtTile(new(i, r.Top), style, Settings.Texts[border + "-side-top"]));
         r.HorizontalRange.ForEach((i) => Renderer.PrintAtTile(new(i, r.Bottom), style, Settings.Texts[border + "-side-bottom"]));
 
         r.VerticalRange.ForEach((i) => Renderer.PrintAtTile(new(r.Left, i), style, Settings.Texts[border + "-side-left"]));
@@ -106,7 +106,7 @@ class BoardVisualizer : Visualizer<BoardState>
 
         Renderer.ClearScreen(HideStyle, bar.Bounds);
 
-        RenderClock(bar.GetPoint("clock","bar"));
+        RenderClock(bar.GetPoint("clock", "bar"));
         RenderFace(bar.GetPoint("face", "bar"));
         RenderLifeCounter(bar.GetPoint("lives", "bar"));
         RenderMineCounter(bar.GetPoint("mines", "bar"));
@@ -142,7 +142,7 @@ class BoardVisualizer : Visualizer<BoardState>
     {
         char life = Settings.Texts["stat-life"][0];
         StyleData livesLeftStyle = Settings.GetStyle("stat-mines");
-        StyleData livesGoneStyle = Settings.GetStyle("stat-lives-lost","stat-mines-bg");
+        StyleData livesGoneStyle = Settings.GetStyle("stat-lives-lost", "stat-mines-bg");
 
         string atext = " ";
         for (int i = 0; i < CurrentState!.Difficulty.Lives - CurrentState!.LivesLost; i++) atext += life + " ";
@@ -184,9 +184,9 @@ class BoardVisualizer : Visualizer<BoardState>
         StyleData data = Settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
         // Corners
-        if (p.Equals(new Point(-1,-1))) 
+        if (p.Equals(new Point(-1, -1)))
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-tl"]);
-        else if (p.Equals(new Point(CurrentState!.BoardWidth, -1))) 
+        else if (p.Equals(new Point(CurrentState!.BoardWidth, -1)))
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-tr"]);
         else if (p.Equals(new Point(-1, CurrentState!.BoardHeight)))
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-bl"]);
@@ -294,9 +294,9 @@ class BoardVisualizer : Visualizer<BoardState>
     }
 
     void MappedPrint(Point p, StyleData data, string s)
-    { 
+    {
         if (Viewport.Contains(p))
-            Renderer.PrintAtTile(MapToRender(p), data, s); 
+            Renderer.PrintAtTile(MapToRender(p), data, s);
     }
     void MappedPrint(int x, int y, StyleData data, string s) => MappedPrint(new Point(x, y), data, s);
 
@@ -305,7 +305,7 @@ class BoardVisualizer : Visualizer<BoardState>
         StyleData data = Settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
         // Top
-        MappedPrint(-1,-1, data, Settings.Texts["border-corner-tl"]);
+        MappedPrint(-1, -1, data, Settings.Texts["border-corner-tl"]);
         for (int x = 0; x < CurrentState!.BoardWidth; x++) MappedPrint(x, -1, data, Settings.Texts["border-horizontal"]);
         MappedPrint(CurrentState!.BoardWidth, -1, data, Settings.Texts["border-corner-tr"]);
 

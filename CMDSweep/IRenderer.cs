@@ -25,7 +25,7 @@ class BoundsChangedEventArgs : EventArgs
     public Rectangle NewBounds { get; }
     public Rectangle OldBounds { get; }
 
-    public BoundsChangedEventArgs(Rectangle o, Rectangle n) { NewBounds = n; OldBounds = o;}
+    public BoundsChangedEventArgs(Rectangle o, Rectangle n) { NewBounds = n; OldBounds = o; }
 }
 
 struct StyleData

@@ -1,7 +1,7 @@
 ﻿namespace CMDSweep;
 abstract class Visualizer<TState> : IVisualizer
 {
-    private RefreshMode ModeWaiting = RefreshMode.None; 
+    private RefreshMode ModeWaiting = RefreshMode.None;
     private bool IsRendering = false;
 
     internal StyleData HideStyle;
@@ -27,7 +27,7 @@ abstract class Visualizer<TState> : IVisualizer
     {
         Controller = ctrl;
         HideStyle = Settings.GetStyle("menu");
-    } 
+    }
 
     bool IVisualizer.Visualize(RefreshMode mode)
     {

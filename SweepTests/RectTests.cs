@@ -111,7 +111,7 @@ public class RectTests
         Rectangle r5 = r.Shifted(10, 10);
         Rectangle r6 = r.Shifted(10, 10);
 
-        Assert.AreEqual(r5,r6);
+        Assert.AreEqual(r5, r6);
         Assert.IsFalse(r.Contains(r5));
         Assert.IsFalse(r5.Contains(r));
 

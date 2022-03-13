@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
 
 namespace CMDSweep;
 
@@ -30,7 +30,7 @@ static class Storage
             sd = new(settings.DefaultDifficulties);
             WriteSave(sd);
         }
-        if (sd == null) 
+        if (sd == null)
             throw new Exception("Failed to open or storage file");
         return sd;
     }

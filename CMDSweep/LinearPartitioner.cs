@@ -37,7 +37,7 @@ class LinearPartitioner
 
     public int PartStart(int index)
     {
-        if (index > parts.Count) throw new IndexOutOfRangeException(String.Format("index out of range: {0} ",index));
+        if (index > parts.Count) throw new IndexOutOfRangeException(String.Format("index out of range: {0} ", index));
         if (index < 0) throw new IndexOutOfRangeException(String.Format("index out of range: {0} ", index));
 
         int res = Range.Start + ConstTill(index);
@@ -58,21 +58,21 @@ class LinearPartitioner
 
     public int Count => parts.Count;
 
-    private TOut Apply<TOut>(Func<TOut, Partition, TOut> f, TOut init, int end) 
-    { 
+    private TOut Apply<TOut>(Func<TOut, Partition, TOut> f, TOut init, int end)
+    {
         if (end > parts.Count) throw new IndexOutOfRangeException(String.Format("index out of range: {0} ", end));
         if (end == -1) end = parts.Count;
-        for(int i = 0; i < end; i++) init = f(init, parts[i]); 
+        for (int i = 0; i < end; i++) init = f(init, parts[i]);
         return init;
     }
 
     public void AddPart(string name, int con, int var = 0, int count = 1)
     {
-        for(int i = 0; i < count; i++) 
+        for (int i = 0; i < count; i++)
             parts.Add(new(con, var, name, this));
     }
 
-    public LinearRange All(string name) => LinearRange.ToEnd(FindFirst(x => x.Name == name).Start, FindLast(x=>x.Name == name).End);
+    public LinearRange All(string name) => LinearRange.ToEnd(FindFirst(x => x.Name == name).Start, FindLast(x => x.Name == name).End);
 }
 
 class Partition
@@ -119,6 +119,6 @@ class LinearRange
 
     internal void ForEach(Action<int> func)
     {
-        for(int i = Start; i < End; i++) func(i);
+        for (int i = Start; i < End; i++) func(i);
     }
 }

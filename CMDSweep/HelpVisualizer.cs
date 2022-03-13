@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CMDSweep;
+﻿namespace CMDSweep;
 
 class HelpVisualizer : Visualizer<TextBox>
 {
@@ -12,13 +10,14 @@ class HelpVisualizer : Visualizer<TextBox>
     {
         CurrentState!.Render(Renderer, HideStyle, true);
     }
-    internal override void RenderFull() 
+    internal override void RenderFull()
     {
         Renderer.ClearScreen(HideStyle);
         CurrentState!.Render(Renderer, HideStyle, true);
     }
 
-    internal override void Resize() {
+    internal override void Resize()
+    {
         CurrentState!.Bounds = Renderer.Bounds.Shrink(2);
     }
 

@@ -19,7 +19,7 @@ class BoardController : Controller
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
     internal override bool Step()
     {
-        if (App.AppState == ApplicationState.Done) return DoneStep();
+        
         InputAction ia = App.ReadAction();
         CurrentState.Face = Face.Normal;
 
@@ -33,6 +33,10 @@ class BoardController : Controller
         {
             refreshTimer.Stop();
             App.ShowMainMenu();
+        }
+        else if (App.AppState == ApplicationState.Done && ia == InputAction.NewGame) 
+        {
+            NewGame();
         }
         else
         {
@@ -80,22 +84,6 @@ class BoardController : Controller
             {
                 App.Refresh(RefreshMode.ChangesOnly);
             }
-        }
-        return true;
-    }
-
-    internal bool DoneStep()
-    {
-        InputAction ia = App.ReadAction();
-        switch (ia)
-        {
-            case InputAction.Quit:
-                App.MControl.OpenMenu(App.MControl.MainMenu);
-                break;
-            case InputAction.Dig:
-            case InputAction.NewGame:
-                NewGame();
-                break;
         }
         return true;
     }

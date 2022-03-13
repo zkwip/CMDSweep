@@ -117,9 +117,9 @@ class Rectangle
 
     public Rectangle Clone() => new(Left, Top, Width, Height);
     public Rectangle Grow(int left, int top, int right, int bottom) => new(
-            Left - left, 
-            Top - top, 
-            Width + left + right, 
+            Left - left,
+            Top - top,
+            Width + left + right,
             Height + top + bottom
         );
     public Rectangle Grow(int size) => Grow(size, size, size, size);
@@ -129,7 +129,7 @@ class Rectangle
     public bool Contains(Point p) => Contains(p.X, p.Y);
     public bool Contains(int x, int y) => x >= Left && y >= Top && x < Right && y < Bottom;
 
-    public bool Contains(Rectangle r) => Contains(r.TopLeft) && Contains(r.BottomRight.Shifted(-1,-1));
+    public bool Contains(Rectangle r) => Contains(r.TopLeft) && Contains(r.BottomRight.Shifted(-1, -1));
     public Rectangle Intersect(Rectangle other)
     {
         int l = Left > other.Left ? Left : other.Left;
@@ -191,7 +191,8 @@ class Rectangle
     }
 }
 
-class Offset : Point {
+class Offset : Point
+{
     public Offset(int x, int y) : base(x, y) { }
 
     public static Offset ToPoint(Point newOrigin) => new(newOrigin.X, newOrigin.Y);

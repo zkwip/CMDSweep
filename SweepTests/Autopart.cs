@@ -11,48 +11,48 @@ public class LinearPartitionerTests
     [TestMethod]
     public void TestCreation()
     {
-        LinearPartitioner ap = new LinearPartitioner();
-        Assert.AreEqual(ap.Range, LinearRange.Zero);
+        LinearPartitioner lp = new();
+        Assert.AreEqual(lp.Range, LinearRange.Zero);
 
-        ap.Range = new(0, 100);
+        lp.Range = new(0, 100);
 
-        Assert.AreEqual(ap.Range.End, 100);
+        Assert.AreEqual(lp.Range.End, 100);
     }
 
     [TestMethod]
     public void TestAddition()
     {
         // New Additions
-        LinearPartitioner ap = new LinearPartitioner();
-        ap.Range = new(0, 100);
-        ap.AddPart("item 1", 0, 1);
+        LinearPartitioner lp = new();
+        lp.Range = new(0, 100);
+        lp.AddPart("item 1", 0, 1);
 
-        Assert.AreEqual(ap.Count, 1);
-        Assert.AreEqual(ap["item 1"], ap[0]);
-        Assert.AreEqual(ap[0].Range, new(0, 100));
+        Assert.AreEqual(lp.Count, 1);
+        Assert.AreEqual(lp["item 1"], lp[0]);
+        Assert.AreEqual(lp[0].Range, new(0, 100));
 
-        Assert.ThrowsException<KeyNotFoundException>(() => ap["item 2"]);
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => ap[1]);
+        Assert.ThrowsException<KeyNotFoundException>(() => lp["item 2"]);
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => lp[1]);
 
         // Devide the room
-        ap.AddPart("item 2", 0, 1);
+        lp.AddPart("item 2", 0, 1);
 
-        Assert.AreEqual(new(0, 50), ap[0].Range);
-        Assert.AreEqual(new(50, 50), ap[1].Range);
+        Assert.AreEqual(new(0, 50), lp[0].Range);
+        Assert.AreEqual(new(50, 50), lp[1].Range);
 
         // Devide with another
-        ap.AddPart("item 3", 50, 0);
+        lp.AddPart("item 3", 50, 0);
 
-        Assert.AreEqual(new(0, 25), ap[0].Range);
-        Assert.AreEqual(new(25, 25), ap[1].Range);
-        Assert.AreEqual(new(50, 50), ap[2].Range);
+        Assert.AreEqual(new(0, 25), lp[0].Range);
+        Assert.AreEqual(new(25, 25), lp[1].Range);
+        Assert.AreEqual(new(50, 50), lp[2].Range);
 
         // Reset the scale
-        ap.Range.Length = 150;
+        lp.Range.Length = 150;
 
-        Assert.AreEqual(new(0, 50), ap[0].Range);
-        Assert.AreEqual(new(50, 50), ap[1].Range);
-        Assert.AreEqual(new(100, 50), ap[2].Range);
+        Assert.AreEqual(new(0, 50), lp[0].Range);
+        Assert.AreEqual(new(50, 50), lp[1].Range);
+        Assert.AreEqual(new(100, 50), lp[2].Range);
 
 
     }

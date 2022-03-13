@@ -14,7 +14,7 @@ public class TableGridTest
         Assert.AreEqual(tg.Columns, 0);
         Assert.AreEqual(tg.Rows, 0);
         Assert.AreEqual(tg.Bounds, Rectangle.Zero);
-        Assert.AreEqual(tg.GetPoint(0,0), new(0,0));
+        Assert.AreEqual(tg.GetPoint(0, 0), new(0, 0));
 
         // Add one row
         tg.AddRow(10, 0, "r1");
@@ -86,7 +86,7 @@ public class TableGridTest
         tg.CenterOn(Point.Origin);
         Assert.AreEqual(tg.Bounds.Center, Point.Origin);
 
-        
+
         Assert.AreEqual(tg.GetCell(0, 0).TopLeft, tg.Bounds.TopLeft);
         Assert.AreEqual(tg.GetCell(0, 0).BottomRight, tg.GetCell(1, 1).TopLeft);
 

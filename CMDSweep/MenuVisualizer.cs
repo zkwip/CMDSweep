@@ -13,7 +13,7 @@ class MenuVisualizer : Visualizer<MenuList>
     public StyleData FocusTitleStyle => Settings.GetStyle("menu-highlight-title");
     internal Dictionary<string, ConsoleColor> Colors => Settings.Colors;
 
-    public MenuVisualizer(MenuController mctrl) : base(mctrl) 
+    public MenuVisualizer(MenuController mctrl) : base(mctrl)
     {
         HideStyle = Settings.GetStyle("menu");
         Resize();
@@ -41,7 +41,7 @@ class MenuVisualizer : Visualizer<MenuList>
 
         tg.FitAround();
         tg.CenterOn(Renderer.Bounds.Center);
-        
+
         TableGrid = tg;
     }
 

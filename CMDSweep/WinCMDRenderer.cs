@@ -6,7 +6,8 @@ namespace CMDSweep;
 
 class WinCMDRenderer : IRenderer
 {
-    public WinCMDRenderer() {
+    public WinCMDRenderer()
+    {
         Timer t = new(50);
         t.Elapsed += ResizeTesterElapsed;
         t.Start();
@@ -22,7 +23,7 @@ class WinCMDRenderer : IRenderer
     {
         if (!lastBounds.Equals(Bounds))
         {
-            OnBoundsChanged(new(lastBounds,Bounds));
+            OnBoundsChanged(new(lastBounds, Bounds));
             lastBounds = Bounds;
         }
     }
@@ -39,16 +40,16 @@ class WinCMDRenderer : IRenderer
         Console.Clear();
         return true;
     }
-    
+
     public bool ClearScreen(StyleData data, Rectangle rec)
     {
         SetConsoleStyle(data);
 
         rec = rec.Intersect(Bounds);
 
-        for (int row = rec.Top; row < rec.Bottom; row++) 
+        for (int row = rec.Top; row < rec.Bottom; row++)
             PrintAtTile(new Point(rec.Left, row), data, "".PadLeft(rec.Width));
-        
+
         HideCursor();
         return true;
     }
@@ -61,7 +62,7 @@ class WinCMDRenderer : IRenderer
             throw new NotImplementedException();
     }
 
-    private void SetConsoleStyle(StyleData data)
+    private static void SetConsoleStyle(StyleData data)
     {
         Console.ForegroundColor = data.Foreground;
         Console.BackgroundColor = data.Background;
@@ -101,7 +102,7 @@ class WinCMDRenderer : IRenderer
         SetConsoleStyle(data);
         Console.Write(s);
 
-        return true; 
+        return true;
     }
 
     public void SetTitle(string s)

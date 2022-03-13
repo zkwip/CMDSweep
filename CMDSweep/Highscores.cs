@@ -6,7 +6,7 @@ namespace CMDSweep;
 class HighscoreController : Controller
 {
     internal Difficulty SelectedDifficulty;
-    public HighscoreController(GameApp app) : base(app) 
+    public HighscoreController(GameApp app) : base(app)
     {
         Visualizer = new HighscoreVisualizer(this);
         SelectedDifficulty = app.SaveData.CurrentDifficulty;

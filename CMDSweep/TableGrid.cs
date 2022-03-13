@@ -28,8 +28,8 @@ class TableGrid
     public void AddColumn(int conspace, int varspace, string name = "", int repeat = 1) => cp.AddPart(name, conspace, varspace, repeat);
     public void AddRow(int conspace, int varspace, string name = "", int repeat = 1) => rp.AddPart(name, conspace, varspace, repeat);
 
-    public Point GetPoint(int col, int row) => new (ColStart(col), RowStart(row));
-    public Point GetPoint(string col, string row) => new (cp[col].Start, rp[row].Start);
+    public Point GetPoint(int col, int row) => new(ColStart(col), RowStart(row));
+    public Point GetPoint(string col, string row) => new(cp[col].Start, rp[row].Start);
     public Point GetPoint(string col, int co, string row, int ro) => new(cp[col, co].Start, rp[row, ro].Start);
 
     public Point this[int col, int row] => new(cp[col].Start, rp[row].Start);

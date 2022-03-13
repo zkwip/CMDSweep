@@ -116,27 +116,27 @@ class BoardState
     private int CountSurroundingCells(Point cl, Func<Point, bool> callback, bool outsideAllowed) => ApplySurroundingCells(cl, 0, (loc, sum) => sum + (callback(loc) ? 1 : 0), outsideAllowed);
 
     // Oneliner Board Properties
-    public PlayerState PlayerState => playerState; 
-    internal Difficulty Difficulty => difficulty; 
-    public Point Cursor => cursor.Clone(); 
-    public TimeSpan Time => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime))); 
+    public PlayerState PlayerState => playerState;
+    internal Difficulty Difficulty => difficulty;
+    public Point Cursor => cursor.Clone();
+    public TimeSpan Time => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime)));
 
-    public bool Paused => timePaused; 
+    public bool Paused => timePaused;
 
     public Face Face { get; set; }
 
-    public int BoardWidth => Cells.GetLength(0); 
-    public int BoardHeight => Cells.GetLength(1); 
-    public int Mines => CountCells(x => x.Mine); 
-    public int GameMines => difficulty.Mines; 
-    public int Flags => CountCells(x => x.Flagged == FlagMarking.Flagged); 
-    public int Discovered => CountCells(x => x.Discovered); 
-    public int MinesLeft => GameMines - Flags - LivesLost; 
-    public int LivesLost => difficulty.Lives - lives; 
-    public int Tiles => BoardHeight * BoardWidth; 
+    public int BoardWidth => Cells.GetLength(0);
+    public int BoardHeight => Cells.GetLength(1);
+    public int Mines => CountCells(x => x.Mine);
+    public int GameMines => difficulty.Mines;
+    public int Flags => CountCells(x => x.Flagged == FlagMarking.Flagged);
+    public int Discovered => CountCells(x => x.Discovered);
+    public int MinesLeft => GameMines - Flags - LivesLost;
+    public int LivesLost => difficulty.Lives - lives;
+    public int Tiles => BoardHeight * BoardWidth;
 
-    public double DiscoveryRate => (double)Discovered / Tiles; 
-    public double MineRate => (double)(LivesLost + Flags) / Mines; 
+    public double DiscoveryRate => (double)Discovered / Tiles;
+    public double MineRate => (double)(LivesLost + Flags) / Mines;
     internal Rectangle Board => new(0, 0, BoardWidth, BoardHeight);
 
     // Oneliner Board Queries
@@ -182,7 +182,7 @@ class BoardState
         preTime += (DateTime.Now - startTime);
     }
 
-    public int FailAction()
+    public static int FailAction()
     {
         Console.Beep();
         return 0;
@@ -348,7 +348,7 @@ class BoardState
             Board.ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
         else if (difficulty.SubtractFlags) // overfit because a flag change outside can technically change the view inside the viewport :)
             Board.Intersect(area.Grow(difficulty.DetectionRadius)).ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
-        else 
+        else
             Board.Intersect(area).ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
 
 

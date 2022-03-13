@@ -139,9 +139,8 @@ class MenuText : MenuItem
 
     internal override void RenderItemExtras(int row, MenuVisualizer mv, bool focus)
     {
-        StyleData s = focus ? mv.FocusBoxStyle : mv.MenuTextStyle;
         string text = MenuVisualizer.CenterAlign(Subtitle, mv.TableGrid.ColumnSeries("options").Width);
-        mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("options", 0, "items", row), mv.MenuTextStyle,text);
+        mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("options", 0, "items", row), mv.MenuTextStyle, text);
     }
 }
 
@@ -300,7 +299,7 @@ class MenuNumberRange : MenuChoice<int>
         if (!Select(newnum))
         {
             //Should remove the first digit?
-            newnum = newnum % (int)Math.Pow(10, Math.Floor(Math.Log10(newnum)));
+            newnum %= (int)Math.Pow(10, Math.Floor(Math.Log10(newnum)));
             if (!Select(newnum)) return Select(Max);
         }
         return true;
