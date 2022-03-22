@@ -18,7 +18,7 @@ class BoardController : Controller
         refreshTimer.AutoReset = true;
 
         if (SaveData.PlayerName == null) SaveData.PlayerName = "You";
-        HighscoreTextField = new TextEnterField(this, new(0, 0, 15, 1), App.Renderer, Settings.GetStyle("popup")) { Text = SaveData.PlayerName };
+        HighscoreTextField = new TextEnterField(this, new(0, 0, 15, 1), App.Renderer, Settings.GetStyle("popup-textbox")) { Text = SaveData.PlayerName };
     }
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
     internal override bool Step()

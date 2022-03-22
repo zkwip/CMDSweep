@@ -113,7 +113,9 @@
 
     "popup-bg": "GRAY",
     "popup-fg": "BLACK",
-    "popup-fg-highlight": "RED"
+    "popup-fg-highlight": "RED",
+    "popup-textbox-bg": "DARKGRAY",
+    "popup-textbox-fg": "BLACK"
   },
   "Texts": {
     "border-vertical": "║ ",
