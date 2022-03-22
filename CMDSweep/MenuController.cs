@@ -43,7 +43,7 @@ class MenuController : Controller
         MainMenu.AddButton("Settings", () => OpenMenu(SettingsMenu));
         MainMenu.AddButton("Quit Game", () => App.QuitGame());
 
-        CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", App.SaveData.Difficulties, x => x.Name), x => x, (d, val) => SaveData.CurrentDifficulty = val);
+        CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", SaveData.Difficulties, x => x.Name), x => x, (d, val) => SaveData.CurrentDifficulty = val);
 
         CreateSettingsItem(SettingsMenu, new MenuNumberRange("Width", 5, 1000), x => x.Width, (d, val) => d.Width = val);
         CreateSettingsItem(SettingsMenu, new MenuNumberRange("Height", 5, 1000), x => x.Height, (d, val) => d.Height = val);
@@ -74,12 +74,12 @@ class MenuController : Controller
             Item.ValueChanged += (i, o) => ForkCurrentDifficulty(WriteProperty, Item.SelectedOption);
 
         // Change the value when the difficulty is changed
-        DifficultyChanged += (i, o) => Item.SelectValue(ReadProperty(App.SaveData.CurrentDifficulty));
+        DifficultyChanged += (i, o) => Item.SelectValue(ReadProperty(SaveData.CurrentDifficulty));
 
-        if (App.SaveData.CurrentDifficulty == null)
-            Item.SelectValue(ReadProperty(App.SaveData.Difficulties[0]));
+        if (SaveData.CurrentDifficulty == null)
+            Item.SelectValue(ReadProperty(SaveData.Difficulties[0]));
         else
-            Item.SelectValue(ReadProperty(App.SaveData.CurrentDifficulty));
+            Item.SelectValue(ReadProperty(SaveData.CurrentDifficulty));
 
 
         Parent.Add(Item);
@@ -90,12 +90,12 @@ class MenuController : Controller
         // Create a new custom difficulty if you are changing from another preset
         if (App.SaveData.CurrentDifficulty.Name != "Custom")
         {
-            App.SaveData.CurrentDifficulty = App.SaveData.CurrentDifficulty.Clone("Custom");
-            App.SaveData.Difficulties.RemoveAll(dif => dif.Name == "Custom");
-            App.SaveData.Difficulties.Add(App.SaveData.CurrentDifficulty);
+            SaveData.CurrentDifficulty = SaveData.CurrentDifficulty.Clone("Custom");
+            SaveData.Difficulties.RemoveAll(dif => dif.Name == "Custom");
+            SaveData.Difficulties.Add(SaveData.CurrentDifficulty);
         }
 
-        Write(App.SaveData.CurrentDifficulty, Value);
+        Write(SaveData.CurrentDifficulty, Value);
         DifficultyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -105,7 +105,7 @@ class MenuController : Controller
         if (d == null) return;
         if (d.Name == "Custom") return;
 
-        App.SaveData.CurrentDifficulty = d;
+        SaveData.CurrentDifficulty = d;
         DifficultyChanged?.Invoke(this, EventArgs.Empty);
     }
 

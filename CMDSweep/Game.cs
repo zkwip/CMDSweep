@@ -66,7 +66,7 @@ namespace CMDSweep;
         if (CurrentController == null) return;
         CurrentController.Visualize(mode);
     }
-    internal InputAction ReadAction() => ParseAction(Console.ReadKey());
+    internal InputAction ReadAction() => ParseAction(Console.ReadKey(true));
     internal InputAction ParseAction(ConsoleKeyInfo info)
     {
 

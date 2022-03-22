@@ -16,6 +16,8 @@ class BoardController : Controller
         refreshTimer = new Timer(100);
         refreshTimer.Elapsed += RefreshTimerElapsed;
         refreshTimer.AutoReset = true;
+
+        if (SaveData.PlayerName == null) SaveData.PlayerName = "You";
         HighscoreTextField = new TextEnterField(this, new(0, 1, 0, 1), App.Renderer, Settings.GetStyle("popup")) { Text = SaveData.PlayerName };
     }
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
@@ -111,7 +113,7 @@ class BoardController : Controller
             });
             SaveData.PlayerName = HighscoreTextField.Text;
             scores.Sort((x, y) => (x.Time - y.Time).Milliseconds);
-            Storage.WriteSave(App.SaveData);
+            Storage.WriteSave(SaveData);
 
             return true;
         }
@@ -120,14 +122,15 @@ class BoardController : Controller
 
     private void ShowHighscoreNamePopup()
     {
-
+        //todo
+        App.Refresh(RefreshMode.ChangesOnly);
     }
 
     internal void NewGame()
     {
         refreshTimer.Stop();
-        CurrentState = BoardState.NewGame(App.SaveData.CurrentDifficulty);
-        Storage.WriteSave(App.SaveData);
+        CurrentState = BoardState.NewGame(SaveData.CurrentDifficulty);
+        Storage.WriteSave(SaveData);
         App.ChangeMode(ApplicationState.Playing);
     }
 }

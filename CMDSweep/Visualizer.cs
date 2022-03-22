@@ -47,19 +47,16 @@ abstract class Visualizer<TState> : IVisualizer
                 mode = ModeWaiting;
                 ModeWaiting = RefreshMode.None;
 
-                TState? prevGS = LastState;
-                TState? curGS = RetrieveState();
+                CurrentState = RetrieveState();
 
                 // Decide what to render
-                if (curGS == null)
+                if (CurrentState == null)
                     continue; // Skip; Nothing to render
-
-                CurrentState = curGS;
 
                 if (CheckResize())
                     mode = RefreshMode.Full; // Console changed size
 
-                if (prevGS == null)
+                if (LastState == null)
                     mode = RefreshMode.Full; // No history: Full render
 
                 else if (mode == RefreshMode.ChangesOnly) // else to implicitly exclude the case where prevGS is null
@@ -77,10 +74,9 @@ abstract class Visualizer<TState> : IVisualizer
                 else
                 {
                     if (mode == RefreshMode.Scroll) Scroll();
-
                     RenderChanges();
                 }
-                LastState = curGS;
+                LastState = CurrentState;
             }
         }
 
