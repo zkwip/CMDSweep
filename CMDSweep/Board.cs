@@ -8,7 +8,7 @@ class BoardState
     // Internals
     private readonly CellData[,] Cells;
     private Point cursor;
-    private PlayerState playerState;
+    internal PlayerState PlayerState;
     private Difficulty difficulty;
 
     private DateTime startTime;
@@ -24,7 +24,7 @@ class BoardState
     {
         return new BoardState((CellData[,])Cells.Clone())
         {
-            playerState = this.playerState,
+            PlayerState = this.PlayerState,
             cursor = this.cursor.Clone(),
             difficulty = this.difficulty,
             lives = this.lives,
@@ -44,7 +44,7 @@ class BoardState
 
         return new BoardState(datas)
         {
-            playerState = PlayerState.NewGame,
+            PlayerState = PlayerState.NewGame,
             difficulty = diff,
 
             startTime = DateTime.Now,
@@ -116,7 +116,6 @@ class BoardState
     private int CountSurroundingCells(Point cl, Func<Point, bool> callback, bool outsideAllowed) => ApplySurroundingCells(cl, 0, (loc, sum) => sum + (callback(loc) ? 1 : 0), outsideAllowed);
 
     // Oneliner Board Properties
-    public PlayerState PlayerState => playerState;
     internal Difficulty Difficulty => difficulty;
     public Point Cursor => cursor.Clone();
     public TimeSpan Time => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime)));
@@ -152,7 +151,7 @@ class BoardState
     public void Win()
     {
         Console.Title = "You win!";
-        playerState = PlayerState.Win;
+        PlayerState = PlayerState.Win;
         Face = Face.Win;
         FreezeGame();
     }
@@ -164,7 +163,7 @@ class BoardState
         if (--lives > 0) return;
 
         Console.Title = "You died!";
-        playerState = PlayerState.Dead;
+        PlayerState = PlayerState.Dead;
         Face = Face.Dead;
         FreezeGame();
     }
@@ -197,7 +196,7 @@ class BoardState
         Face = Face.Surprise;
 
         // If needed, start the game
-        if (playerState == PlayerState.NewGame) PlaceMines(cursor);
+        if (PlayerState == PlayerState.NewGame) PlaceMines(cursor);
 
         //Do the digging
         int res = Discover(cursor);
@@ -406,7 +405,7 @@ class BoardState
 
         if (minesLeftToPlace > 0) throw new Exception("Can't place mine after 1000 random tries");
 
-        playerState = PlayerState.Playing;
+        PlayerState = PlayerState.Playing;
         ResumeGame();
     }
 }
@@ -463,6 +462,8 @@ enum PlayerState
     Playing,
     Dead,
     Win,
+    EnteringHighscore,
+    ShowingHighscores,
 }
 
 enum FlagMarking

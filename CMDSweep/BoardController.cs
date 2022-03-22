@@ -7,7 +7,7 @@ class BoardController : Controller
 {
     internal BoardState CurrentState;
     private readonly Timer refreshTimer;
-    TextEnterField HighscoreTextField;
+    internal TextEnterField HighscoreTextField;
 
     internal BoardController(GameApp g) : base(g)
     {
@@ -18,12 +18,11 @@ class BoardController : Controller
         refreshTimer.AutoReset = true;
 
         if (SaveData.PlayerName == null) SaveData.PlayerName = "You";
-        HighscoreTextField = new TextEnterField(this, new(0, 1, 0, 1), App.Renderer, Settings.GetStyle("popup")) { Text = SaveData.PlayerName };
+        HighscoreTextField = new TextEnterField(this, new(0, 0, 15, 1), App.Renderer, Settings.GetStyle("popup")) { Text = SaveData.PlayerName };
     }
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
     internal override bool Step()
     {
-        
         InputAction ia = App.ReadAction();
         CurrentState.Face = Face.Normal;
 
@@ -40,13 +39,14 @@ class BoardController : Controller
         }
         else if (App.AppState == ApplicationState.Done) 
         {
-            NewGame();
+            NewGame(); // Todo: check if this flow still makes sense
         }
         else
         {
-            // Process actions
-
+            // Process actions on this controller
             CurrentState = CurrentState.Clone();
+
+            // Handle the keypresses as board actions
             switch (ia)
             {
                 case InputAction.Up:
@@ -69,61 +69,84 @@ class BoardController : Controller
                     break;
             }
 
-            if (CurrentState.PlayerState == PlayerState.Playing)
-            {
-                if (!refreshTimer.Enabled) refreshTimer.Start();
-                App.Refresh(RefreshMode.ChangesOnly);
-            }
-            else if (CurrentState.PlayerState == PlayerState.Dead || CurrentState.PlayerState == PlayerState.Win)
-            {
-                refreshTimer.Stop();
-
-                if (CurrentState.PlayerState == PlayerState.Win)
-                    CurrentState.highscore = CheckHighscore(CurrentState);
-
-                App.Refresh(RefreshMode.Full);
-                App.AppState = ApplicationState.Done;
-            }
-            else
-            {
-                App.Refresh(RefreshMode.ChangesOnly);
-            }
+            // Determine what the consequences are for the game state and rendering
+            AfterStepStateChanges();
         }
         return true;
     }
 
-    private bool CheckHighscore(BoardState currentState)
+    private void AfterStepStateChanges()
+    {
+        switch (CurrentState.PlayerState)
+        {
+            case PlayerState.Playing:
+                if (!refreshTimer.Enabled) refreshTimer.Start();
+                App.Refresh(RefreshMode.ChangesOnly);
+                break;
+
+            case PlayerState.Dead:
+            case PlayerState.Win:
+                refreshTimer.Stop();
+                if (CurrentState.PlayerState == PlayerState.Win) 
+                    CheckHighscoreFlow(CurrentState);
+
+                App.AppState = ApplicationState.Done;
+                App.Refresh(RefreshMode.Full);
+                break;
+
+            default:
+                App.Refresh(RefreshMode.ChangesOnly);
+                break;
+        }
+    }
+
+    private void CheckHighscoreFlow(BoardState currentState)
+    {
+        TimeSpan time = currentState.Time;
+        if (CheckForHighscore(currentState))
+        {
+            currentState.PlayerState = PlayerState.EnteringHighscore;
+            App.Refresh(RefreshMode.Full);
+            HighscoreTextField.Activate();
+
+            currentState.PlayerState = PlayerState.ShowingHighscores;
+            AddHighscore(time);
+            App.Refresh(RefreshMode.Full);
+        }
+    }
+
+    private bool CheckForHighscore(BoardState currentState)
     {
         TimeSpan time = currentState.Time;
         List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
         if (scores.Count >= Highscores.highscoreEntries)
         {
-            if (time < scores[Highscores.highscoreEntries - 1].Time) scores.RemoveAt(Highscores.highscoreEntries - 1);
+            if (time < scores[Highscores.highscoreEntries - 1].Time)
+                return true;
+            else 
+                return false;
         }
-
-        if (scores.Count < Highscores.highscoreEntries)
-        {
-            ShowHighscoreNamePopup();
-            scores.Add(new()
-            {
-                Time = time,
-                Name = HighscoreTextField.Text,
-                Date = DateTime.Now
-            });
-            SaveData.PlayerName = HighscoreTextField.Text;
-            scores.Sort((x, y) => (x.Time - y.Time).Milliseconds);
-            Storage.WriteSave(SaveData);
-
-            return true;
-        }
-        return false;
+        return true;
     }
 
-    private void ShowHighscoreNamePopup()
+    private void AddHighscore(TimeSpan time)
     {
-        //todo
-        App.Refresh(RefreshMode.ChangesOnly);
+        SaveData.PlayerName = HighscoreTextField.Text;
+        List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
+
+        while (scores.Count >= Highscores.highscoreEntries) 
+            scores.RemoveAt(Highscores.highscoreEntries - 1);
+
+        scores.Add(new()
+        {
+            Time = time,
+            Name = HighscoreTextField.Text,
+            Date = DateTime.Now
+        });
+
+        scores.Sort((x, y) => (x.Time - y.Time).Milliseconds);
+        Storage.WriteSave(SaveData);
     }
 
     internal void NewGame()

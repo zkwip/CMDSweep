@@ -43,11 +43,18 @@ class BoardVisualizer : Visualizer<BoardState>
         TextRenderBox textbox = new(text, Renderer.Bounds.Shrink(xpad, ypad, xpad, ypad));
         textbox.HorizontalAlign = HorzontalAlignment.Center;
         textbox.Bounds = textbox.Used;
-        textbox.Bounds.CenterOn(Renderer.Bounds.Center);
-
-        RenderPopupBox(style, textbox.Bounds.Grow(xpad, ypad, xpad, ypad), "popup-border");
+        RenderPopupAroundShape(textbox.Bounds);
         textbox.Render(Renderer, style, false);
 
+    }
+
+    private void RenderPopupAroundShape(Rectangle rect)
+    {
+        int xpad = Settings.Dimensions["popup-padding-x"];
+        int ypad = Settings.Dimensions["popup-padding-y"];
+        StyleData style = Settings.GetStyle("popup");
+        rect.CenterOn(Renderer.Bounds.Center);
+        RenderPopupBox(style, rect.Grow(xpad, ypad, xpad, ypad), "popup-border");
     }
 
     private void RenderPopupBox(StyleData style, Rectangle r, string border)
@@ -273,16 +280,28 @@ class BoardVisualizer : Visualizer<BoardState>
     {
         if (CurrentState!.PlayerState == PlayerState.Win)
         {
-            if (CurrentState!.highscore)
-                RenderHighscorePopup(CurrentState!);
-            else
-                RenderPopup("Congratulations, You won!\n\nYou can play again by pressing any key.");
+            RenderPopup("Congratulations, You won!\n\nYou can play again by pressing any key.");
         }
         if (CurrentState!.PlayerState == PlayerState.Dead)
         {
             RenderPopup("You died!\n\nYou can play again by pressing any key.");
         }
+        if (CurrentState!.PlayerState == PlayerState.ShowingHighscores)
+        {
+            RenderHighscorePopup(CurrentState);
+        }
+        if (CurrentState.PlayerState == PlayerState.EnteringHighscore)
+        {
+            RenderNewHighscorePopup();
+        }
 
+    }
+
+    private void RenderNewHighscorePopup()
+    {
+        BoardController bc = (BoardController)Controller;
+        TextEnterField tef = bc.HighscoreTextField;
+        RenderPopupAroundShape(tef.Bounds); // Todo: instruction text is needed
     }
 
     private void TryCenterViewPort()
