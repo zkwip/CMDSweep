@@ -301,7 +301,20 @@ class BoardVisualizer : Visualizer<BoardState>
     {
         BoardController bc = (BoardController)Controller;
         TextEnterField tef = bc.HighscoreTextField;
-        RenderPopupAroundShape(tef.Bounds); // Todo: instruction text is needed
+        TableGrid tg = new();
+        tg.AddColumn(Settings.Dimensions["popup-enter-hs-width"], 0);
+        tg.AddRow(2, 0);
+        tg.AddRow(1, 0);
+        tg.FitAround(0);
+
+        Rectangle shape = tg.Bounds.Clone();
+        RenderPopupAroundShape(shape);
+        tg.Bounds = shape;
+
+        tef.Bounds = tg.GetCell(0, 1);
+        TextRenderBox trb = new TextRenderBox(Settings.Texts["popup-enter-hs-message"],tg.GetCell(0, 0));
+        trb.Render(Renderer, Settings.GetStyle("popup"), false);
+
     }
 
     private void TryCenterViewPort()

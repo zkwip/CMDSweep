@@ -150,7 +150,8 @@
     "menu-choice-left": "< ",
     "menu-choice-right": " >",
     "menu-item-prefix": "  ",
-    "menu-item-prefix-selected": "> "
+    "menu-item-prefix-selected": "> ",
+    "popup-enter-hs-message": "Congratulations, you got a new highscore! Please enter your name to be saved it."
   },
   "Dimensions": {
     "scroll-safezone": 2,
@@ -169,6 +170,7 @@
     "menu-box-padding": 2,
     "popup-padding-x": 3,
     "popup-padding-y": 1,
+    "popup-enter-hs-width": 50,
     "highscore-num-width": 3,
     "highscore-name-width": 20,
     "highscore-time-width": 14,

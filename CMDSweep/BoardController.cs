@@ -107,7 +107,20 @@ class BoardController : Controller
         {
             currentState.PlayerState = PlayerState.EnteringHighscore;
             App.Refresh(RefreshMode.Full);
-            HighscoreTextField.Activate();
+
+            bool textActive = true;
+            while (textActive) { 
+                InputAction ia  = App.ParseAction(HighscoreTextField.Activate());
+                switch (ia)
+                {
+                    case InputAction.Dig:
+                    case InputAction.Quit:
+                        textActive = false;
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             currentState.PlayerState = PlayerState.ShowingHighscores;
             AddHighscore(time);
