@@ -2,19 +2,44 @@
 
 namespace CMDSweep.Geometry;
 
-class Rectangle
+record struct Rectangle
 {
-    public int Left;
-    public int Top;
-    public int Width;
-    public int Height;
+    public readonly LinearRange HorizontalRange;
+    public readonly LinearRange VerticalRange;
+
+    public Rectangle(int x, int y, int width, int height)
+    {
+        HorizontalRange = new LinearRange(x, width);
+        VerticalRange = new LinearRange(y, height);
+    }
+    public Rectangle(LinearRange hor, LinearRange ver)
+    {
+        HorizontalRange = hor;
+        VerticalRange = ver;
+    }
+
+    public Rectangle(Point point1, Point point2)
+    {
+        HorizontalRange = new LinearRange(point1.X, point2.X - point1.X);
+        VerticalRange = new LinearRange(point1.Y, point2.Y - point1.Y);
+    }
 
     public override string ToString() => String.Format("({0} to {1}, w: {2}, h: {3})", TopLeft, BottomRight, Width, Height);
 
+    public int Left => HorizontalRange.Start;
+
+    public int Top => VerticalRange.Start;
+
+    public int Width => HorizontalRange.Length;
+
+    public int Height => VerticalRange.Length;
+
     public int Right => Left + Width;
+
     public int Bottom => Top + Height;
 
     public int CenterLine => Left + Width / 2;
+
     public int MidLine => Top + Height / 2;
 
     public Point TopLeft => new(Left, Top);
@@ -25,69 +50,8 @@ class Rectangle
 
     public static Rectangle Zero => new(0, 0, 0, 0);
 
-    public LinearRange HorizontalRange => new(Left, Width);
-    public LinearRange VerticalRange => new(Top, Height);
-
     public int Area => Width * Height;
 
-    public Rectangle(int x, int y, int width, int height)
-    {
-        Left = x;
-        Top = y;
-        Width = width;
-        Height = height;
-
-        Fix();
-    }
-    public Rectangle(LinearRange hor, LinearRange ver)
-    {
-        Left = hor.Start;
-        Top = ver.Start;
-        Width = hor.Length;
-        Height = ver.Length;
-
-        Fix();
-    }
-
-    public Rectangle(Point topleft, Point bottomright)
-    {
-        Left = topleft.X;
-        Top = topleft.Y;
-        Width = bottomright.X - topleft.X;
-        Height = bottomright.Y - topleft.Y;
-
-        Fix();
-    }
-
-    public bool Fix()
-    {
-        if (Width >= 0 || Height >= 0) return false;
-        if (Width < 0)
-        {
-            Left += Width;
-            Width = -Width;
-        }
-        if (Height < 0)
-        {
-            Top += Height;
-            Height = -Height;
-        }
-
-        return true;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is Rectangle viewport &&
-            Left == viewport.Left &&
-            Top == viewport.Top &&
-            Width == viewport.Width &&
-            Height == viewport.Height;
-    }
-
-    public override int GetHashCode() => HashCode.Combine(Left, Top, Width, Height);
-
-    public Rectangle Clone() => new(Left, Top, Width, Height);
     public Rectangle Grow(int left, int top, int right, int bottom) => new(
             Left - left,
             Top - top,
@@ -129,24 +93,13 @@ class Rectangle
         }
     }
 
-    public Offset CenterOn(Point p) => Shift(Offset.FromChange(Center, p));
-    public Offset ShiftTo(Point p) => Shift(Offset.FromChange(TopLeft, p));
+    public Rectangle CenterOn(Point p) => Shift(Offset.FromChange(Center, p));
+    public Rectangle ShiftTo(Point p) => Shift(Offset.FromChange(TopLeft, p));
 
-    public Offset Shift(Offset o) => Shift(o.X, o.Y);
-    public Offset Shift(int x, int y)
+    public Rectangle Shift(Offset o) => Shift(o.X, o.Y);
+    public Rectangle Shift(int x, int y)
     {
-        Left += x;
-        Top += y;
-        return new Offset(x, y);
-
-    }
-
-    public Rectangle Shifted(Offset o) => Shifted(o.X, o.Y);
-    public Rectangle Shifted(int x, int y)
-    {
-        Rectangle r = this.Clone();
-        r.Shift(x, y);
-        return r;
+        return new Rectangle(HorizontalRange.Shift(x), VerticalRange.Shift(y));
     }
 
     public Offset OffsetOutOfBounds(Point p) => new Offset(HorizontalRange.OffsetOutOfBounds(p.X), VerticalRange.OffsetOutOfBounds(p.Y));

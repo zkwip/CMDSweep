@@ -5,215 +5,80 @@ using System.Collections.Generic;
 
 namespace CMDSweep.Views.Board;
 
-class BoardState
+internal record class BoardState
 {
-    // Internals
-    private readonly CellData[,] Cells;
-    private Point cursor;
-    internal PlayerState PlayerState;
-    private Difficulty difficulty;
+    // Properties
+    internal readonly BoardData BoardData;
+    public readonly RoundData RoundData;
+    public readonly Timing Timing;
 
-    private DateTime startTime;
-    private TimeSpan preTime;
-    private bool timePaused = true;
-    private int lives;
-    internal bool highscore = false;
-
-    // Constructors and cloners
-    private BoardState(CellData[,] datas) { Cells = datas; Face = Face.Normal; cursor = Board.Center; }
-
-    public BoardState Clone()
+    public BoardState(BoardData boardData, RoundData roundData, Timing timing)
     {
-        return new BoardState((CellData[,])Cells.Clone())
-        {
-            PlayerState = PlayerState,
-            cursor = cursor.Clone(),
-            difficulty = difficulty,
-            lives = lives,
-
-            startTime = startTime,
-            preTime = preTime,
-            timePaused = timePaused
-        };
+        BoardData = boardData;
+        RoundData = roundData;
+        Timing = timing;
     }
 
     internal static BoardState NewGame(Difficulty diff)
     {
-        int width = diff.Width;
-        int height = diff.Height;
+        BoardData boardData = BoardData.NewGame(diff);
+        RoundData roundData = RoundData.NewGame(diff);
+        Timing timing = Timing.NewGame(diff);
 
-        CellData[,] datas = new CellData[width, height];
-
-        return new BoardState(datas)
-        {
-            PlayerState = PlayerState.NewGame,
-            difficulty = diff,
-
-            startTime = DateTime.Now,
-            preTime = TimeSpan.Zero,
-            timePaused = true,
-            lives = diff.Lives,
-        };
+        return new BoardState(boardData, roundData, timing);
     }
 
-    // Intermediates and higher level functions
-    private int CountCells(Predicate<CellData> p)
+    public Difficulty Difficulty => RoundData.Difficulty;
+
+    public int MinesLeft => RoundData.Mines - BoardData.Flags - RoundData.LivesLost;
+
+    public double MineRate => (double)(RoundData.LivesLost + BoardData.Flags) / RoundData.Mines;
+
+    public BoardState Win() => new(BoardData, RoundData.Win(), Timing.Stop());
+
+    public BoardState LoseLife()
     {
-        int sum = 0;
-        foreach (CellData cell in Cells) if (p(cell)) sum++;
-        return sum;
+        NotifyFailedAction();
+        if (RoundData.CanLoseLife)
+            return new BoardState(BoardData, RoundData.LoseLife(), Timing);
+        return new BoardState(BoardData, RoundData.Die(), Timing.Stop());
     }
 
-    internal TOut ApplyAllCells<TOut>(TOut zero, Func<Point, TOut, TOut> fold)
-    {
-        TOut res = zero;
-        ForAllCells((p2) => { res = fold(p2, res); });
-        return res;
-    }
+    public BoardState ResumeGame() => new(BoardData, RoundData, Timing.Resume());
 
-    internal TOut ApplySurroundingCells<TOut>(Point p, TOut zero, Func<Point, TOut, TOut> fold, bool wrap)
-    {
-        TOut res = zero;
-        ForAllSurroundingCells(p, (p2) => { res = fold(p2, res); }, wrap);
-        return res;
-    }
+    public BoardState FreezeGame() => new(BoardData, RoundData, Timing.Pause());
 
-    internal void ForAllSurroundingCells(Point p, Action<Point> act, bool wrap)
-    {
-        for (int ax = p.X - difficulty.DetectionRadius; ax <= p.X + difficulty.DetectionRadius; ax++)
-        {
-            for (int ay = p.Y - difficulty.DetectionRadius; ay <= p.Y + difficulty.DetectionRadius; ay++)
-            {
-                Point loc = new(ax, ay);
-                if (wrap || !CellOutsideBounds(loc)) act(Wrap(loc));
-            }
-        }
-    }
-
-    internal void ForAllCells(Action<Point> act)
-    {
-        for (int x = 0; x < BoardWidth; x++)
-        {
-            for (int y = 0; y < BoardHeight; y++)
-            {
-                act(new(x, y));
-            }
-        }
-    }
-
-    private T CheckCell<T>(Point cl, Func<CellData, T> check, T dflt)
-    {
-        if (CellOutsideBounds(cl))
-        {
-            if (difficulty.WrapAround)
-                check(Cell(Wrap(cl)));
-            return dflt;
-        }
-        return check(Cell(cl));
-    }
-
-    private CellData Cell(Point cl) => Cells[cl.X, cl.Y];
-
-    private int CountSurroundingCells(Point cl, Func<CellData, bool> callback, bool outsideAllowed) => CountSurroundingCells(cl, (cl2) => CheckCell(cl2, callback, false), outsideAllowed);
-    private int CountSurroundingCells(Point cl, Func<Point, bool> callback, bool outsideAllowed) => ApplySurroundingCells(cl, 0, (loc, sum) => sum + (callback(loc) ? 1 : 0), outsideAllowed);
-
-    // Oneliner Board Properties
-    internal Difficulty Difficulty => difficulty;
-    public Point Cursor => cursor.Clone();
-    public TimeSpan Time => timePaused ? preTime : preTime + (DateTime.Now - startTime);
-
-    public bool Paused => timePaused;
-
-    public Face Face { get; set; }
-
-    public int BoardWidth => Cells.GetLength(0);
-    public int BoardHeight => Cells.GetLength(1);
-    public int Mines => CountCells(x => x.Mine);
-    public int GameMines => difficulty.Mines;
-    public int Flags => CountCells(x => x.Flagged == FlagMarking.Flagged);
-    public int Discovered => CountCells(x => x.Discovered);
-    public int MinesLeft => GameMines - Flags - LivesLost;
-    public int LivesLost => difficulty.Lives - lives;
-    public int Tiles => BoardHeight * BoardWidth;
-
-    public double DiscoveryRate => (double)Discovered / Tiles;
-    public double MineRate => (double)(LivesLost + Flags) / Mines;
-    internal Rectangle Board => new(0, 0, BoardWidth, BoardHeight);
-
-    // Oneliner Board Queries
-    private bool CellOutsideBounds(Point cl) => !Board.Contains(cl);
-    public bool CellIsMine(Point cl) => CheckCell(cl, c => c.Mine, false);
-    public bool CellIsFlagged(Point cl) => CheckCell(cl, c => c.Flagged == FlagMarking.Flagged, false);
-    public bool CellIsDiscovered(Point cl) => CheckCell(cl, c => c.Discovered, false);
-    public bool CellIsQuestionMarked(Point cl) => CheckCell(cl, c => c.Flagged == FlagMarking.QuestionMarked, false);
-    public int CellMineNumber(Point cl) => CountSurroundingCells(cl, c => c.Mine, difficulty.WrapAround);
-    public int CellSubtractedMineNumber(Point cl) => CellMineNumber(cl) - CountSurroundingCells(cl, c => c.Flagged == FlagMarking.Flagged, difficulty.WrapAround);
-
-    //Other queries
-    public void Win()
-    {
-        Console.Title = "You win!";
-        PlayerState = PlayerState.Win;
-        Face = Face.Win;
-        FreezeGame();
-    }
-
-    public void LoseLife()
-    {
-        FailAction();
-
-        if (--lives > 0) return;
-
-        Console.Title = "You died!";
-        PlayerState = PlayerState.Dead;
-        Face = Face.Dead;
-        FreezeGame();
-    }
-
-    public void ResumeGame()
-    {
-        timePaused = false;
-        startTime = DateTime.Now;
-    }
-
-    public void FreezeGame()
-    {
-        timePaused = true;
-
-        preTime += DateTime.Now - startTime;
-    }
-
-    public static int FailAction()
+    public BoardState NotifyFailedAction()
     {
         Console.Beep();
-        return 0;
+        return this;
     }
 
-    public int Dig()
+    public BoardState Dig()
     {
-        // Beep if it's an invalid move 
-        if (CellIsDiscovered(cursor)) return 0;
-        if (CellIsFlagged(cursor)) return 0;
+        if (BoardData.CellIsDiscovered(RoundData.Cursor)) 
+            return NotifyFailedAction();
 
-        Face = Face.Surprise;
+        if (BoardData.CellIsFlagged(RoundData.Cursor)) 
+            return NotifyFailedAction();
 
-        // If needed, start the game
-        if (PlayerState == PlayerState.NewGame) PlaceMines(cursor);
+        if (RoundData.PlayerState == PlayerState.NewGame) 
+            return PlaceMines().Discover(RoundData.Cursor).CheckForWin();
 
-        //Do the digging
-        int res = Discover(cursor);
-
-        //Check for death
-        if (res < 0) LoseLife();
-
-        if (Discovered + Mines - LivesLost == Tiles) Win();
-
-        return res;
+        return Discover(RoundData.Cursor).CheckForWin();
     }
 
-    public int Discover(Point cl)
+    private BoardState CheckForWin()
+    {
+        if (BoardData.Discovered + RoundData.Mines - RoundData.LivesLost == BoardData.Tiles) 
+            return Win();
+        return this;
+    }
+
+    public BoardState Discover(Point cl)
     {
         List<Point> points = new();
+        List<Point> discoveredCells = new();
         points.Add(cl);
 
         int sum = 0;
@@ -225,190 +90,81 @@ class BoardState
             points.RemoveAt(0);
 
             // Check discoverable
-            if (CellOutsideBounds(cl)) continue;
-            if (CellIsDiscovered(cl)) continue;
-            if (CellIsFlagged(cl)) continue;
+            if (BoardData.CellOutsideBounds(cl)) continue;
+            if (BoardData.CellIsDiscovered(cl)) continue;
+            if (BoardData.CellIsFlagged(cl)) continue;
 
-            // Discover
-            Cells[cl.X, cl.Y].Discovered = true;
-            Cells[cl.X, cl.Y].Flagged = FlagMarking.Unflagged;
+            discoveredCells.Add(cl);
 
             // Check for mine
-            if (CellIsMine(cl))
+            if (BoardData.CellIsMine(cl))
             {
                 mineHit = true;
                 break;
             }
 
             // Continue discovering if encountering an empty cell
-            if (CellMineNumber(cl) == 0 && difficulty.AutomaticDiscovery)
+            if (BoardData.CellMineNumber(cl) == 0 && Difficulty.AutomaticDiscovery)
             {
-                ForAllSurroundingCells(cl, (p) => points.Add(p), difficulty.WrapAround);
+                BoardData.ForAllSurroundingCells(cl, (p) => points.Add(p), Difficulty.WrapAround);
             }
             sum += 1;
         }
 
-        if (mineHit) return -1;
-        return sum;
+        if (mineHit) return LoseLife();
+
+        return new BoardState(BoardData.Discover(discoveredCells), RoundData, Timing);
     }
 
-    public int ToggleFlag()
+    public BoardState ToggleFlag()
     {
-        if (!difficulty.FlagsAllowed) return FailAction();
-        if (CellIsDiscovered(cursor)) return FailAction();
+        if (!Difficulty.FlagsAllowed) return NotifyFailedAction();
+        if (BoardData.CellIsDiscovered(RoundData.Cursor)) return NotifyFailedAction();
 
-        switch (Cell(cursor).Flagged)
+        return new(BoardData.ToggleFlag(RoundData.Cursor),RoundData, Timing);
+
+    }
+    public BoardState MoveCursor(Direction d) => new(BoardData, RoundData.MoveCursor(d), Timing);
+
+    public List<Point> CompareForChanges(BoardState other, Rectangle? rect = null)
+    {
+        List<Point> hits = new();
+        if (rect == null) rect = BoardData.Bounds;
+        Rectangle area = (Rectangle)rect;
+
+        if (Difficulty.SubtractFlags)
+            area.Grow(Difficulty.DetectionRadius);
+
+        area = area.Intersect(BoardData.Bounds);
+
+        if (Difficulty.SubtractFlags) hits = BoardData.ExpandChangeHits(hits, Difficulty.DetectionRadius, Difficulty.WrapAround);
+
+        if (other.RoundData.Cursor != RoundData.Cursor)
         {
-            case FlagMarking.Flagged:
-                if (difficulty.QuestionMarkAllowed) return QuestionMark(cursor);
-                return Unflag(cursor);
-
-            case FlagMarking.QuestionMarked:
-                return Unflag(cursor);
-
-            case FlagMarking.Unflagged:
-            default:
-                return Flag(cursor);
+            hits.Add(RoundData.Cursor);
+            hits.Add(other.RoundData.Cursor);
         }
 
+        return hits;
     }
 
-    public int Flag(Point cl)
+    private BoardState PlaceMines() => new(BoardData.PlaceMines(RoundData.Cursor), RoundData.SetState(PlayerState.Playing), Timing.Resume());
+
+    public BoardState SetPlayerState(PlayerState state) => new(BoardData, RoundData.SetState(state), Timing);
+
+    public bool TimeMakesHighscore()
     {
-        int res = CellIsFlagged(cl) ? 0 : 1;
+        TimeSpan time = Timing.Time;
+        List<HighscoreRecord> scores = Difficulty.Highscores;
 
-        Cells[cl.X, cl.Y].Flagged = FlagMarking.Flagged;
-        return res;
-    }
-
-    public int Unflag(Point cl)
-    {
-        int res = CellIsFlagged(cl) ? -1 : 0;
-
-        Cells[cl.X, cl.Y].Flagged = FlagMarking.Unflagged;
-        return res;
-    }
-
-    public int QuestionMark(Point cl)
-    {
-        int res = CellIsFlagged(cl) ? -1 : 0;
-
-        Cells[cl.X, cl.Y].Flagged = FlagMarking.QuestionMarked;
-        return res;
-    }
-
-    public Point Wrap(Point cl)
-    {
-        cl = cl.Clone();
-        while (cl.X < 0) cl.X += BoardWidth;
-        while (cl.X >= BoardWidth) cl.X -= BoardWidth;
-
-        while (cl.Y < 0) cl.Y += BoardHeight;
-        while (cl.Y >= BoardHeight) cl.Y -= BoardHeight;
-
-        return cl;
-    }
-
-    public int Distance(Point cl1, Point cl2)
-    {
-        int xdist = Math.Abs(cl1.X - cl2.X);
-        int ydist = Math.Abs(cl1.Y - cl2.Y);
-
-        if (difficulty.WrapAround)
+        if (scores.Count >= Highscores.highscoreEntries)
         {
-            xdist = Math.Min(xdist, difficulty.Width - xdist);
-            ydist = Math.Min(ydist, difficulty.Height - xdist);
+            if (time < scores[Highscores.highscoreEntries - 1].Time)
+                return true;
+            else
+                return false;
         }
-
-        return Math.Max(xdist, ydist);
-    }
-    public Point MoveCursor(Direction d)
-    {
-        return d switch
-        {
-            Direction.Down => SetCursor(new Point(cursor.X, cursor.Y + 1)),
-            Direction.Up => SetCursor(new Point(cursor.X, cursor.Y - 1)),
-            Direction.Left => SetCursor(new Point(cursor.X - 1, cursor.Y)),
-            Direction.Right => SetCursor(new Point(cursor.X + 1, cursor.Y)),
-            _ => cursor,
-        };
-    }
-
-    public Point SetCursor(Point cl)
-    {
-        cursor = Wrap(cl);
-        return cursor;
-    }
-
-    public List<Point> CompareForChanges(BoardState other, Rectangle? area = null)
-    {
-        // Build a list of changed cells
-        List<Point> res = new();
-
-        if (area == null)
-            Board.ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
-        else if (difficulty.SubtractFlags) // overfit because a flag change outside can technically change the view inside the viewport :)
-            Board.Intersect(area.Grow(difficulty.DetectionRadius)).ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
-        else
-            Board.Intersect(area).ForAll((p) => { if (Cell(p) != other.Cell(p)) res.Add(p); });
-
-
-        if (difficulty.SubtractFlags)
-        {
-            List<Point> li = new();
-            foreach (Point cl in res)
-            {
-                li = ApplySurroundingCells(cl, li, (loc, list) => { if (!list.Contains(loc)) list.Add(loc); return list; }, difficulty.WrapAround);
-            }
-            res = li;
-        }
-
-        res.Add(cursor);
-        res.Add(other.cursor);
-
-        return res;
-    }
-
-    private void PlaceMines(Point cl)
-    {
-        int minesLeftToPlace = difficulty.Mines;
-        int placementFailures = 0;
-        int detectZoneSize = (2 * difficulty.DetectionRadius + 1) * (2 * difficulty.DetectionRadius + 1);
-        int maxMines = (int)Math.Floor(0.8 * detectZoneSize);
-        int mc;
-
-        Random rng = new();
-
-        // Try to randomly place mines and check if the are valid;
-        while (minesLeftToPlace > 0 && placementFailures < 1000)
-        {
-            placementFailures++;
-            int px = rng.Next() % BoardWidth;
-            int py = rng.Next() % BoardHeight;
-
-            Point pos = new(px, py);
-
-            if (Distance(cl, pos) <= difficulty.Safezone)
-                continue; // No mines at start
-
-            if (CellIsMine(pos))
-                continue; // No duplicate mines
-
-            mc = CellMineNumber(pos);
-            if (mc > maxMines)
-                continue; // Not too many mines around eachoter
-
-            // Succes
-            Cells[px, py].Mine = true;
-
-            placementFailures = 0;
-            minesLeftToPlace--;
-        }
-
-        if (minesLeftToPlace > 0) throw new Exception("Can't place mine after 1000 random tries");
-
-        PlayerState = PlayerState.Playing;
-        ResumeGame();
+        return true;
     }
 }
 

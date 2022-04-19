@@ -34,7 +34,7 @@ class TextRenderBox
         Bounds = bounds;
     }
 
-    public TextRenderBox Clone() => new(Text, Bounds.Clone())
+    public TextRenderBox Clone() => new(Text, Bounds)
     {
         LineSpacing = LineSpacing,
         VerticalScroll = VerticalScroll,

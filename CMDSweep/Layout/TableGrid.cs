@@ -7,20 +7,13 @@ class TableGrid
     private readonly LinearPartitioner cp;
     private readonly LinearPartitioner rp;
 
-    private Rectangle bounds;
-    public Rectangle Bounds { get => bounds; set { bounds = value; Sync(); } }
+    public Rectangle Bounds;
 
     public TableGrid()
     {
         cp = new();
         rp = new();
-        bounds = Rectangle.Zero;
-    }
-
-    public void Sync()
-    {
-        cp.Range = bounds.HorizontalRange;
-        rp.Range = bounds.VerticalRange;
+        Bounds = Rectangle.Zero;
     }
 
     public int Columns => cp.Count;
@@ -44,57 +37,33 @@ class TableGrid
     public Rectangle Row(string name, int offset = 0) => Row(rp[name].Offset(offset));
     public Rectangle Row(int offset) => Row(rp[offset]);
 
-    public Rectangle ColumnSeries(string name) => new(cp.All(name), bounds.VerticalRange);
-    public Rectangle RowSeries(string name) => new(bounds.HorizontalRange, rp.All(name));
+    public Rectangle ColumnSeries(string name) => new(cp.All(name), Bounds.VerticalRange);
+    public Rectangle RowSeries(string name) => new(Bounds.HorizontalRange, rp.All(name));
 
-    public Rectangle Column(Partition col) => new(col.Range, bounds.VerticalRange);
-    public Rectangle Row(Partition row) => new(bounds.HorizontalRange, row.Range);
+    public Rectangle Column(Partition col) => new(col.Range, Bounds.VerticalRange);
+    public Rectangle Row(Partition row) => new(Bounds.HorizontalRange, row.Range);
 
-    public int RowStart(int row)
-    {
-        Sync();
-        return rp.PartStart(row);
-    }
+    public int RowStart(int row) => rp.PartStart(row);
 
-    public int ColStart(int col)
-    {
-        Sync();
-        return cp.PartStart(col);
-    }
+    public int ColStart(int col) => cp.PartStart(col);
 
-    public int RowEnd(int row)
-    {
-        Sync();
-        return rp.PartEnd(row);
-    }
+    public int RowEnd(int row) => rp.PartEnd(row);
 
-    public int ColEnd(int col)
-    {
-        Sync();
-        return cp.PartEnd(col);
-    }
+    public int ColEnd(int col) => cp.PartEnd(col);
 
-    public Offset CenterOn(Point c)
-    {
-        Offset o = bounds.CenterOn(c);
-        Sync();
-        return o;
-    }
+    public void CenterOn(Point c) => Bounds = Bounds.CenterOn(c);
 
-    public Offset Shift(Offset o)
-    {
-        o = Bounds.Shift(o);
-        Sync();
-        return o;
-    }
+    public void Shift(Offset o) => Bounds = Bounds.Shift(o);
 
     public void FitAround(int scale = 0)
     {
-        bounds.Width = cp.ConstantSum + cp.VariableSum * scale;
-        bounds.Height = rp.ConstantSum + rp.VariableSum * scale;
-        Sync();
+        int width = cp.ConstantSum + cp.VariableSum * scale;
+        int height = rp.ConstantSum + rp.VariableSum * scale;
+
+        Bounds = new(Bounds.Left, Bounds.Top, width, height);
     }
 }
+/*
 class TableDimensionType
 {
     public int space = 0;
@@ -103,4 +72,4 @@ class TableDimensionType
     public TableDimensionType(int s, string n) { space = s; name = n; }
     public override string ToString() => String.Format("\"{0}\" ({1})", name, space);
 }
-
+*/

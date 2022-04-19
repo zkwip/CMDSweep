@@ -2,31 +2,20 @@
 
 namespace CMDSweep.Geometry;
 
-class Point
+record struct Point
 {
-    public int X;
-    public int Y;
+    public readonly int X;
+    public readonly int Y;
 
     public static Point Origin => new(0, 0);
 
-    public Point(int x, int y) { X = x; Y = y; }
-    public Point Clone() => new(X, Y);
+    public Point(int x, int y) { 
+        X = x; 
+        Y = y; 
+    }
 
     public override string ToString() => String.Format("({0}, {1})", X, Y);
-    public override bool Equals(object? obj)
-    {
-        return obj is Point p &&
-               X == p.X &&
-               Y == p.Y;
-    }
 
-    public override int GetHashCode() => HashCode.Combine(X, Y);
-
-    public void Shift(int x, int y)
-    {
-        X += x;
-        Y += y;
-    }
-
-    public Point Shifted(int x, int y) { Point p = this.Clone(); p.Shift(x, y); return p; }
+    public Point Shifted(int dx, int dy) => new Point(X + dx, Y + dy);
+    public Point Shifted(Offset offset) => new Point(X + offset.X, Y + offset.Y);
 }

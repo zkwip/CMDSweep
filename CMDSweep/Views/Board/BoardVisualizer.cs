@@ -27,7 +27,7 @@ class BoardVisualizer : Visualizer<BoardState>
         ScrollValidMask = Rectangle.Zero;
     }
     internal override BoardState RetrieveState() => ((BoardController)Controller).CurrentState;
-    internal override bool CheckFullRefresh() => CurrentState!.PlayerState != LastState!.PlayerState;
+    internal override bool CheckFullRefresh() => CurrentState!.RoundData.PlayerState != LastState!.RoundData.PlayerState;
 
     private void RenderHighscorePopup(BoardState curGS)
     {
@@ -126,12 +126,12 @@ class BoardVisualizer : Visualizer<BoardState>
     private void RenderClock(Point p)
     {
         StyleData clockStyle = Settings.GetStyle("stat-mines");
-        Renderer.PrintAtTile(p, clockStyle, CurrentState!.Time.ToString(@"\ h\:mm\:ss\ "));
+        Renderer.PrintAtTile(p, clockStyle, CurrentState!.Timing.Time.ToString(@"\ h\:mm\:ss\ "));
     }
 
     private void RenderFace(Point p)
     {
-        string face = CurrentState!.Face switch
+        string face = CurrentState!.RoundData.Face switch
         {
             Face.Surprise => Settings.Texts["face-surprise"],
             Face.Win => Settings.Texts["face-win"],
@@ -155,21 +155,24 @@ class BoardVisualizer : Visualizer<BoardState>
         StyleData livesGoneStyle = Settings.GetStyle("stat-lives-lost", "stat-mines-bg");
 
         string atext = " ";
-        for (int i = 0; i < CurrentState!.Difficulty.Lives - CurrentState!.LivesLost; i++) atext += life + " ";
+        for (int i = 0; i < CurrentState!.Difficulty.Lives - CurrentState!.RoundData.LivesLost; i++) atext += life + " ";
 
         string btext = "";
-        for (int i = 0; i < CurrentState!.LivesLost; i++) btext += life + " ";
+        for (int i = 0; i < CurrentState!.RoundData.LivesLost; i++) btext += life + " ";
 
         Renderer.PrintAtTile(p, livesLeftStyle, atext);
         Renderer.PrintAtTile(p.Shifted(atext.Length, 0), livesGoneStyle, btext);
     }
+
     Rectangle ScrollSafeZone => Viewport.Shrink(Settings.Dimensions["scroll-safezone"]);
-    internal override bool CheckScroll() => !ScrollSafeZone.Contains(CurrentState!.Cursor);
+
+    internal override bool CheckScroll() => !ScrollSafeZone.Contains(CurrentState!.RoundData.Cursor);
+
     internal override void Scroll()
     {
         // Change the offset
-        Offset offset = ScrollSafeZone.OffsetOutOfBounds(CurrentState!.Cursor);
-        Rectangle nvp = Viewport.Shifted(offset);
+        Offset offset = ScrollSafeZone.OffsetOutOfBounds(CurrentState!.RoundData.Cursor);
+        Rectangle nvp = Viewport.Shift(offset);
         ScrollValidMask = ScrollValidMask.Intersect(nvp);
 
         Rectangle oldArea = MapToRender(ScrollValidMask);
@@ -179,13 +182,13 @@ class BoardVisualizer : Visualizer<BoardState>
         Viewport.ForAll(p => { if (!ScrollValidMask.Contains(p)) RenderViewPortCell(p); });
         RenderBorder();
 
-        ScrollValidMask = Viewport.Clone();
+        ScrollValidMask = Viewport;
     }
 
     private void RenderViewPortCell(Point p)
     {
-        if (CurrentState!.Board.Contains(p)) RenderCell(p);
-        else if (CurrentState!.Board.Grow(1).Contains(p)) RenderBorderCell(p);
+        if (CurrentState!.BoardData.Bounds.Contains(p)) RenderCell(p);
+        else if (CurrentState!.BoardData.Bounds.Grow(1).Contains(p)) RenderBorderCell(p);
         else ClearCell(p);
     }
 
@@ -196,17 +199,17 @@ class BoardVisualizer : Visualizer<BoardState>
         // Corners
         if (p.Equals(new Point(-1, -1)))
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-tl"]);
-        else if (p.Equals(new Point(CurrentState!.BoardWidth, -1)))
+        else if (p.Equals(new Point(CurrentState!.BoardData.BoardWidth, -1)))
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-tr"]);
-        else if (p.Equals(new Point(-1, CurrentState!.BoardHeight)))
+        else if (p.Equals(new Point(-1, CurrentState!.BoardData.BoardHeight)))
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-bl"]);
-        else if (p.Equals(new Point(CurrentState!.BoardWidth, CurrentState!.BoardHeight)))
+        else if (p.Equals(new Point(CurrentState!.BoardData.BoardWidth, CurrentState!.BoardData.BoardHeight)))
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-br"]);
 
         // Edges
-        else if (p.Y == -1 || p.Y == CurrentState!.BoardHeight)
+        else if (p.Y == -1 || p.Y == CurrentState!.BoardData.BoardHeight)
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-horizontal"]);
-        else if (p.X == -1 || p.X == CurrentState!.BoardWidth)
+        else if (p.X == -1 || p.X == CurrentState!.BoardData.BoardWidth)
             MappedPrint(p.X, p.Y, data, Settings.Texts["border-vertical"]);
     }
 
@@ -218,8 +221,6 @@ class BoardVisualizer : Visualizer<BoardState>
 
     internal override bool CheckResize()
     {
-        if (Viewport == null) Viewport = CurrentState!.Board.Clone();
-
         ScaleX = Settings.Dimensions["cell-size-x"];
         ScaleY = Settings.Dimensions["cell-size-y"];
 
@@ -234,7 +235,6 @@ class BoardVisualizer : Visualizer<BoardState>
 
     internal override void Resize()
     {
-        if (Viewport == null) Viewport = CurrentState!.Board.Clone();
 
         ScaleX = Settings.Dimensions["cell-size-x"];
         ScaleY = Settings.Dimensions["cell-size-y"];
@@ -248,13 +248,11 @@ class BoardVisualizer : Visualizer<BoardState>
         ScrollValidMask = Rectangle.Zero;
 
         // Create a new viewport to fit
-        Rectangle newVP = Viewport.Clone();
-        newVP.Width = RenderMask.Width / ScaleX;
-        newVP.Height = RenderMask.Height / ScaleY;
+        Rectangle newVP = new(Viewport.Left, Viewport.Top, RenderMask.Width / ScaleX, RenderMask.Height / ScaleY);
 
         // Align the new viewport as best as we can
         if (Viewport.Equals(Rectangle.Zero))
-            newVP.CenterOn(CurrentState!.Board.Center);
+            newVP.CenterOn(CurrentState!.BoardData.Bounds.Center);
         else
             newVP.CenterOn(Viewport.Center);
 
@@ -269,34 +267,29 @@ class BoardVisualizer : Visualizer<BoardState>
         RenderBorder();
 
         // Tiles
-        Viewport.Intersect(CurrentState!.Board).ForAll((x, y) => RenderCell(new Point(x, y)));
+        Viewport.Intersect(CurrentState!.BoardData.Bounds).ForAll((x, y) => RenderCell(new Point(x, y)));
 
         // Extras
         RenderStatBoard();
         RenderMessages();
 
         Renderer.HideCursor(HideStyle);
-        ScrollValidMask = Viewport.Clone();
+        ScrollValidMask = Viewport;
     }
 
     private void RenderMessages()
     {
-        if (CurrentState!.PlayerState == PlayerState.Win)
-        {
+        if (CurrentState!.RoundData.PlayerState == PlayerState.Win)
             RenderPopup("Congratulations, You won!\n\nYou can play again by pressing any key.");
-        }
-        if (CurrentState!.PlayerState == PlayerState.Dead)
-        {
+
+        if (CurrentState!.RoundData.PlayerState == PlayerState.Dead)
             RenderPopup("You died!\n\nYou can play again by pressing any key.");
-        }
-        if (CurrentState!.PlayerState == PlayerState.ShowingHighscores)
-        {
+
+        if (CurrentState!.RoundData.PlayerState == PlayerState.ShowingHighscores)
             RenderHighscorePopup(CurrentState);
-        }
-        if (CurrentState.PlayerState == PlayerState.EnteringHighscore)
-        {
+
+        if (CurrentState.RoundData.PlayerState == PlayerState.EnteringHighscore)
             RenderNewHighscorePopup();
-        }
 
     }
 
@@ -310,7 +303,7 @@ class BoardVisualizer : Visualizer<BoardState>
         tg.AddRow(1, 0);
         tg.FitAround(0);
 
-        Rectangle shape = tg.Bounds.Clone();
+        Rectangle shape = tg.Bounds;
         RenderPopupAroundShape(shape);
         tg.Bounds = shape;
 
@@ -322,9 +315,9 @@ class BoardVisualizer : Visualizer<BoardState>
 
     private void TryCenterViewPort()
     {
-        if (CurrentState!.BoardWidth < ScrollSafeZone.Width && CurrentState!.BoardHeight < ScrollSafeZone.Height)
+        if (CurrentState!.BoardData.BoardWidth < ScrollSafeZone.Width && CurrentState!.BoardData.BoardHeight < ScrollSafeZone.Height)
         {
-            Viewport.CenterOn(CurrentState!.Board.Center);
+            Viewport.CenterOn(CurrentState!.BoardData.Bounds.Center);
         }
     }
 
@@ -341,20 +334,20 @@ class BoardVisualizer : Visualizer<BoardState>
 
         // Top
         MappedPrint(-1, -1, data, Settings.Texts["border-corner-tl"]);
-        for (int x = 0; x < CurrentState!.BoardWidth; x++) MappedPrint(x, -1, data, Settings.Texts["border-horizontal"]);
-        MappedPrint(CurrentState!.BoardWidth, -1, data, Settings.Texts["border-corner-tr"]);
+        for (int x = 0; x < CurrentState!.BoardData.BoardWidth; x++) MappedPrint(x, -1, data, Settings.Texts["border-horizontal"]);
+        MappedPrint(CurrentState!.BoardData.BoardWidth, -1, data, Settings.Texts["border-corner-tr"]);
 
         // Sides
-        for (int y = 0; y < CurrentState!.BoardHeight; y++)
+        for (int y = 0; y < CurrentState!.BoardData.BoardHeight; y++)
         {
             MappedPrint(-1, y, data, Settings.Texts["border-vertical"]);
-            MappedPrint(CurrentState!.BoardWidth, y, data, Settings.Texts["border-vertical"]);
+            MappedPrint(CurrentState!.BoardData.BoardWidth, y, data, Settings.Texts["border-vertical"]);
         }
 
         // Bottom
-        MappedPrint(-1, CurrentState!.BoardHeight, data, Settings.Texts["border-corner-bl"]);
-        for (int x = 0; x < CurrentState!.BoardWidth; x++) MappedPrint(x, CurrentState!.BoardHeight, data, Settings.Texts["border-horizontal"]);
-        MappedPrint(CurrentState!.BoardWidth, CurrentState!.BoardHeight, data, Settings.Texts["border-corner-br"]);
+        MappedPrint(-1, CurrentState!.BoardData.BoardHeight, data, Settings.Texts["border-corner-bl"]);
+        for (int x = 0; x < CurrentState!.BoardData.BoardWidth; x++) MappedPrint(x, CurrentState!.BoardData.BoardHeight, data, Settings.Texts["border-horizontal"]);
+        MappedPrint(CurrentState!.BoardData.BoardWidth, CurrentState!.BoardData.BoardHeight, data, Settings.Texts["border-corner-br"]);
     }
 
     void RenderCell(Point cl)
@@ -403,9 +396,9 @@ class BoardVisualizer : Visualizer<BoardState>
 
             case TileVisual.DeadDiscovered:
             case TileVisual.Discovered:
-                int num = CurrentState!.CellMineNumber(cl);
-                if (CurrentState!.Difficulty.SubtractFlags) num = CurrentState!.CellSubtractedMineNumber(cl);
-                if (num > 0 && (CurrentState!.Cursor.Equals(cl) || !CurrentState!.Difficulty.OnlyShowAtCursor))
+                int num = CurrentState!.BoardData.CellMineNumber(cl);
+                if (CurrentState!.Difficulty.SubtractFlags) num = CurrentState!.BoardData.CellSubtractedMineNumber(cl);
+                if (num > 0 && (CurrentState!.RoundData.Cursor.Equals(cl) || !CurrentState!.Difficulty.OnlyShowAtCursor))
                 {
                     text = num.ToString();
                     fg = Settings.Colors[string.Format("cell-{0}-discovered", num % 10)];
@@ -418,9 +411,9 @@ class BoardVisualizer : Visualizer<BoardState>
         }
 
         // Cursor
-        if (CurrentState!.PlayerState != PlayerState.Dead && CurrentState!.Cursor.Equals(cl))
+        if (CurrentState!.RoundData.PlayerState != PlayerState.Dead && CurrentState!.RoundData.Cursor.Equals(cl))
         {
-            if (!CurrentState!.Difficulty.OnlyShowAtCursor || GetTileVisual(cl) != TileVisual.Discovered || CurrentState!.CellMineNumber(cl) <= 0)
+            if (!CurrentState!.Difficulty.OnlyShowAtCursor || GetTileVisual(cl) != TileVisual.Discovered || CurrentState!.BoardData.CellMineNumber(cl) <= 0)
                 fg = Settings.Colors["cell-selected"];
             if (text == Settings.Texts["cell-undiscovered"] || text == Settings.Texts["cell-empty"])
                 text = Settings.Texts["cursor"];
@@ -455,27 +448,27 @@ class BoardVisualizer : Visualizer<BoardState>
     {
         BoardState gs = CurrentState!;
 
-        if (gs.PlayerState == PlayerState.Dead)
+        if (gs.RoundData.PlayerState == PlayerState.Dead)
         {
-            if (gs.CellIsMine(cl))
+            if (gs.BoardData.CellIsMine(cl))
             {
-                if (gs.CellIsFlagged(cl)) return TileVisual.DeadMineFlagged;
-                if (gs.CellIsDiscovered(cl)) return TileVisual.DeadMineExploded;
+                if (gs.BoardData.CellIsFlagged(cl)) return TileVisual.DeadMineFlagged;
+                if (gs.BoardData.CellIsDiscovered(cl)) return TileVisual.DeadMineExploded;
                 else return TileVisual.DeadMine;
             }
             else
             {
-                if (gs.CellIsFlagged(cl)) return TileVisual.DeadWrongFlag;
-                if (gs.CellIsDiscovered(cl)) return TileVisual.DeadDiscovered;
+                if (gs.BoardData.CellIsFlagged(cl)) return TileVisual.DeadWrongFlag;
+                if (gs.BoardData.CellIsDiscovered(cl)) return TileVisual.DeadDiscovered;
                 else return TileVisual.DeadUndiscovered;
             }
         }
         else
         {
-            if (gs.CellIsDiscovered(cl) && gs.CellIsMine(cl)) return TileVisual.DiscoveredMine;
-            if (gs.CellIsDiscovered(cl)) return TileVisual.Discovered;
-            if (gs.CellIsFlagged(cl)) return TileVisual.Flagged;
-            if (gs.CellIsQuestionMarked(cl)) return TileVisual.QuestionMarked;
+            if (gs.BoardData.CellIsDiscovered(cl) && gs.BoardData.CellIsMine(cl)) return TileVisual.DiscoveredMine;
+            if (gs.BoardData.CellIsDiscovered(cl)) return TileVisual.Discovered;
+            if (gs.BoardData.CellIsFlagged(cl)) return TileVisual.Flagged;
+            if (gs.BoardData.CellIsQuestionMarked(cl)) return TileVisual.QuestionMarked;
             if (cl.X % Settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
             if (cl.Y % Settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
             else return TileVisual.Undiscovered;

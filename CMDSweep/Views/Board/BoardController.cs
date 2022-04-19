@@ -23,64 +23,60 @@ class BoardController : Controller
         if (SaveData.PlayerName == null) SaveData.PlayerName = "You";
         HighscoreTextField = new TextEnterField(this, new(0, 0, 15, 1), App.Renderer, Settings.GetStyle("popup-textbox")) { Text = SaveData.PlayerName };
     }
+    
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
+    
     internal override bool Step()
     {
         InputAction ia = App.ReadAction();
-        CurrentState.Face = Face.Normal;
 
-        if (ia == InputAction.NewGame) NewGame();
-        else if (ia == InputAction.Help)
+        switch (ia)
         {
-            refreshTimer.Stop();
-            App.ShowHelp();
+            case InputAction.NewGame:
+                NewGame();
+                return true;
+
+            case InputAction.Help:
+                refreshTimer.Stop();
+                App.ShowHelp();
+                return true;
+
+            case InputAction.Quit:
+                refreshTimer.Stop();
+                App.ShowMainMenu();
+                return true;
+
+            default:
+                return ProcessBoardChange(ia);
         }
-        else if (ia == InputAction.Quit)
-        {
-            refreshTimer.Stop();
-            App.ShowMainMenu();
-        }
-        else if (App.AppState == ApplicationState.Done)
+    }
+
+    private bool ProcessBoardChange(InputAction ia)
+    {
+        if (App.AppState == ApplicationState.Done)
         {
             NewGame(); // Todo: check if this flow still makes sense
+            return true;
         }
-        else
+
+        CurrentState = ia switch
         {
-            // Process actions on this controller
-            CurrentState = CurrentState.Clone();
+            InputAction.Up => CurrentState.MoveCursor(Direction.Up),
+            InputAction.Down => CurrentState.MoveCursor(Direction.Down),
+            InputAction.Left => CurrentState.MoveCursor(Direction.Left),
+            InputAction.Right => CurrentState.MoveCursor(Direction.Right),
+            InputAction.Dig => CurrentState.Dig(),
+            InputAction.Flag => CurrentState.ToggleFlag(),
+            _ => CurrentState
+        };
 
-            // Handle the keypresses as board actions
-            switch (ia)
-            {
-                case InputAction.Up:
-                    CurrentState.MoveCursor(Direction.Up);
-                    break;
-                case InputAction.Down:
-                    CurrentState.MoveCursor(Direction.Down);
-                    break;
-                case InputAction.Left:
-                    CurrentState.MoveCursor(Direction.Left);
-                    break;
-                case InputAction.Right:
-                    CurrentState.MoveCursor(Direction.Right);
-                    break;
-                case InputAction.Dig:
-                    CurrentState.Dig();
-                    break;
-                case InputAction.Flag:
-                    CurrentState.ToggleFlag();
-                    break;
-            }
-
-            // Determine what the consequences are for the game state and rendering
-            AfterStepStateChanges();
-        }
+        AfterStepStateChanges();
         return true;
     }
 
     private void AfterStepStateChanges()
     {
-        switch (CurrentState.PlayerState)
+        switch (CurrentState.RoundData.PlayerState)
         {
             case PlayerState.Playing:
                 if (!refreshTimer.Enabled) refreshTimer.Start();
@@ -90,7 +86,7 @@ class BoardController : Controller
             case PlayerState.Dead:
             case PlayerState.Win:
                 refreshTimer.Stop();
-                if (CurrentState.PlayerState == PlayerState.Win)
+                if (CurrentState.RoundData.PlayerState == PlayerState.Win)
                     CheckHighscoreFlow(CurrentState);
 
                 App.AppState = ApplicationState.Done;
@@ -103,12 +99,12 @@ class BoardController : Controller
         }
     }
 
-    private void CheckHighscoreFlow(BoardState currentState)
+    private BoardState CheckHighscoreFlow(BoardState currentState)
     {
-        TimeSpan time = currentState.Time;
-        if (CheckForHighscore(currentState))
+        TimeSpan time = currentState.Timing.Time;
+        if (currentState.TimeMakesHighscore())
         {
-            currentState.PlayerState = PlayerState.EnteringHighscore;
+            currentState = currentState.SetPlayerState(PlayerState.EnteringHighscore);
             App.Refresh(RefreshMode.Full);
 
             bool textActive = true;
@@ -121,30 +117,17 @@ class BoardController : Controller
                     case InputAction.Quit:
                         textActive = false;
                         break;
+
                     default:
                         break;
                 }
             }
 
-            currentState.PlayerState = PlayerState.ShowingHighscores;
+            currentState = currentState.SetPlayerState(PlayerState.ShowingHighscores);
             AddHighscore(time);
             App.Refresh(RefreshMode.Full);
         }
-    }
-
-    private bool CheckForHighscore(BoardState currentState)
-    {
-        TimeSpan time = currentState.Time;
-        List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
-
-        if (scores.Count >= Highscores.highscoreEntries)
-        {
-            if (time < scores[Highscores.highscoreEntries - 1].Time)
-                return true;
-            else
-                return false;
-        }
-        return true;
+        return currentState;
     }
 
     private void AddHighscore(TimeSpan time)

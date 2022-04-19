@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CMDSweep;
+namespace CMDSweep.Geometry;
 
 class LinearPartitioner
 {
