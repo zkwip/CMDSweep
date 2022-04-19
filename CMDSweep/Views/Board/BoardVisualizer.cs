@@ -1,7 +1,10 @@
-﻿using System;
+﻿using CMDSweep.Geometry;
+using CMDSweep.Layout;
+using CMDSweep.Rendering;
+using System;
 using System.Collections.Generic;
 
-namespace CMDSweep;
+namespace CMDSweep.Views.Board;
 
 class BoardVisualizer : Visualizer<BoardState>
 {
@@ -226,7 +229,7 @@ class BoardVisualizer : Visualizer<BoardState>
         Rectangle newRenderMask = consoleBounds.Shrink(0, barheight, 0, 0); // Area that the board can be drawn into
 
         // Return if the measurements did not change
-        return (!newRenderMask.Equals(newRenderMask));
+        return !newRenderMask.Equals(newRenderMask);
     }
 
     internal override void Resize()
@@ -245,7 +248,7 @@ class BoardVisualizer : Visualizer<BoardState>
         ScrollValidMask = Rectangle.Zero;
 
         // Create a new viewport to fit
-        Rectangle newVP = this.Viewport.Clone();
+        Rectangle newVP = Viewport.Clone();
         newVP.Width = RenderMask.Width / ScaleX;
         newVP.Height = RenderMask.Height / ScaleY;
 
@@ -312,7 +315,7 @@ class BoardVisualizer : Visualizer<BoardState>
         tg.Bounds = shape;
 
         tef.Bounds = tg.GetCell(0, 1);
-        TextRenderBox trb = new TextRenderBox(Settings.Texts["popup-enter-hs-message"],tg.GetCell(0, 0));
+        TextRenderBox trb = new TextRenderBox(Settings.Texts["popup-enter-hs-message"], tg.GetCell(0, 0));
         trb.Render(Renderer, Settings.GetStyle("popup"), false);
 
     }
@@ -473,8 +476,8 @@ class BoardVisualizer : Visualizer<BoardState>
             if (gs.CellIsDiscovered(cl)) return TileVisual.Discovered;
             if (gs.CellIsFlagged(cl)) return TileVisual.Flagged;
             if (gs.CellIsQuestionMarked(cl)) return TileVisual.QuestionMarked;
-            if ((cl.X) % Settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
-            if ((cl.Y) % Settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
+            if (cl.X % Settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
+            if (cl.Y % Settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
             else return TileVisual.Undiscovered;
         }
     }

@@ -1,4 +1,7 @@
-﻿namespace CMDSweep;
+﻿using CMDSweep.IO;
+using CMDSweep.Rendering;
+
+namespace CMDSweep;
 
 abstract class Controller
 {

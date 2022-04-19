@@ -1,11 +1,16 @@
-﻿using System;
+﻿using CMDSweep.IO;
+using CMDSweep.Rendering;
+using CMDSweep.Views;
+using CMDSweep.Views.Board;
+using CMDSweep.Views.Help;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SweepTests")]
 namespace CMDSweep;
 
- class GameApp
+class GameApp
 {
     // Modules
     internal readonly GameSettings Settings;

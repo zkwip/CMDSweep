@@ -1,7 +1,10 @@
-﻿using System;
+﻿using CMDSweep.IO;
+using CMDSweep.Layout;
+using CMDSweep.Rendering;
+using System;
 using System.Collections.Generic;
 
-namespace CMDSweep;
+namespace CMDSweep.Views;
 
 class HighscoreController : Controller
 {
@@ -46,7 +49,7 @@ static class Highscores
         tg.AddRow(dims["highscore-header-height"], 0, "title");
         tg.AddRow(dims["popup-padding-y"], 0, "");
         tg.AddRow(dims["highscore-header-height"], 0, "head");
-        tg.AddRow(dims["highscore-row-height"], 0, "row", Highscores.highscoreEntries);
+        tg.AddRow(dims["highscore-row-height"], 0, "row", highscoreEntries);
         tg.FitAround(0);
 
         return tg;
@@ -64,9 +67,9 @@ static class Highscores
 
         for (int i = 0; i < highscores.Count; i++)
         {
-            string time = String.Format(
+            string time = string.Format(
                 "{0:D3}:{1:D2}.{2:D3}",
-                (int)(highscores[i].Time.TotalMinutes),
+                (int)highscores[i].Time.TotalMinutes,
                 highscores[i].Time.Seconds,
                 highscores[i].Time.Milliseconds
             );

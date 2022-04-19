@@ -1,6 +1,7 @@
-﻿using System;
+﻿using CMDSweep.Geometry;
+using System;
 
-namespace CMDSweep;
+namespace CMDSweep.Rendering;
 
 interface IRenderer
 {
@@ -39,6 +40,6 @@ struct StyleData
 
     public override string ToString()
     {
-        return String.Format("{0} on {1}", Foreground, Background);
+        return string.Format("{0} on {1}", Foreground, Background);
     }
 }

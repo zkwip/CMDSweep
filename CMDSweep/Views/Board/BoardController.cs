@@ -1,7 +1,10 @@
-﻿using System;
+﻿using CMDSweep.IO;
+using CMDSweep.Layout;
+using System;
 using System.Collections.Generic;
 using System.Timers;
-namespace CMDSweep;
+
+namespace CMDSweep.Views.Board;
 
 class BoardController : Controller
 {
@@ -37,7 +40,7 @@ class BoardController : Controller
             refreshTimer.Stop();
             App.ShowMainMenu();
         }
-        else if (App.AppState == ApplicationState.Done) 
+        else if (App.AppState == ApplicationState.Done)
         {
             NewGame(); // Todo: check if this flow still makes sense
         }
@@ -87,7 +90,7 @@ class BoardController : Controller
             case PlayerState.Dead:
             case PlayerState.Win:
                 refreshTimer.Stop();
-                if (CurrentState.PlayerState == PlayerState.Win) 
+                if (CurrentState.PlayerState == PlayerState.Win)
                     CheckHighscoreFlow(CurrentState);
 
                 App.AppState = ApplicationState.Done;
@@ -109,8 +112,9 @@ class BoardController : Controller
             App.Refresh(RefreshMode.Full);
 
             bool textActive = true;
-            while (textActive) { 
-                InputAction ia  = App.ParseAction(HighscoreTextField.Activate());
+            while (textActive)
+            {
+                InputAction ia = App.ParseAction(HighscoreTextField.Activate());
                 switch (ia)
                 {
                     case InputAction.Dig:
@@ -137,7 +141,7 @@ class BoardController : Controller
         {
             if (time < scores[Highscores.highscoreEntries - 1].Time)
                 return true;
-            else 
+            else
                 return false;
         }
         return true;
@@ -148,7 +152,7 @@ class BoardController : Controller
         SaveData.PlayerName = HighscoreTextField.Text;
         List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
-        while (scores.Count >= Highscores.highscoreEntries) 
+        while (scores.Count >= Highscores.highscoreEntries)
             scores.RemoveAt(Highscores.highscoreEntries - 1);
 
         scores.Add(new()

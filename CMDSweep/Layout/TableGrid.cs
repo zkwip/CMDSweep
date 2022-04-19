@@ -1,6 +1,7 @@
-﻿using System;
+﻿using CMDSweep.Geometry;
+using System;
 
-namespace CMDSweep;
+namespace CMDSweep.Layout;
 class TableGrid
 {
     private readonly LinearPartitioner cp;

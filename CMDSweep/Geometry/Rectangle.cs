@@ -1,35 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace CMDSweep;
-class Point
-{
-    public int X;
-    public int Y;
+namespace CMDSweep.Geometry;
 
-    public static Point Origin => new(0, 0);
-
-    public Point(int x, int y) { X = x; Y = y; }
-    public Point Clone() => new(X, Y);
-
-    public override string ToString() => String.Format("({0}, {1})", X, Y);
-    public override bool Equals(object? obj)
-    {
-        return obj is Point p &&
-               X == p.X &&
-               Y == p.Y;
-    }
-
-    public override int GetHashCode() => HashCode.Combine(X, Y);
-
-    public void Shift(int x, int y)
-    {
-        X += x;
-        Y += y;
-    }
-
-    public Point Shifted(int x, int y) { Point p = this.Clone(); p.Shift(x, y); return p; }
-}
 class Rectangle
 {
     public int Left;
@@ -178,24 +150,4 @@ class Rectangle
     }
 
     public Offset OffsetOutOfBounds(Point p) => new Offset(HorizontalRange.OffsetOutOfBounds(p.X), VerticalRange.OffsetOutOfBounds(p.Y));
-}
-
-class Offset : Point
-{
-    public Offset(int x, int y) : base(x, y) { }
-
-    public static Offset ToPoint(Point newOrigin) => new(newOrigin.X, newOrigin.Y);
-    public static Offset FromPoint(Point newOrigin) => new(-newOrigin.X, -newOrigin.Y);
-    public static Offset FromChange(Point oldp, Point newp) => new(newp.X - oldp.X, newp.Y - oldp.Y);
-
-    public new Offset Clone() => new(X, Y);
-}
-
-class Functions
-{
-    internal static TOut Apply<TIn, TOut>(TOut zero, IEnumerable<TIn> set, Func<TOut, TOut, TOut> func, Func<TIn, TOut> map)
-    {
-        foreach (TIn item in set) zero = func(zero, map(item));
-        return zero;
-    }
 }

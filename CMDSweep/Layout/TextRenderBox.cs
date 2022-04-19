@@ -1,35 +1,9 @@
-﻿using System;
+﻿using CMDSweep.Geometry;
+using CMDSweep.Rendering;
+using System;
 using System.Collections.Generic;
 
-namespace CMDSweep;
-
-static class Text
-{
-    internal static List<string> WrapText(string text, int horRoom)
-    {
-        List<String> lines = new(text.Split('\n'));
-        int broadest = 0;
-
-        for (int i = 0; i < lines.Count; i++)
-        {
-            // Wrapping
-            if (lines[i].Length > horRoom)
-            {
-                string line = lines[i];
-
-                int breakpoint = horRoom;
-                for (int j = 0; j < horRoom; j++) if (line[j] == ' ') breakpoint = j;
-
-                lines.RemoveAt(i);
-                lines.Insert(i, line[..breakpoint]);
-                lines.Insert(i + 1, line[..(breakpoint + 1)]);
-            }
-
-            broadest = Math.Max(broadest, lines[i].Length);
-        }
-        return lines;
-    }
-}
+namespace CMDSweep.Layout;
 
 class TextRenderBox
 {
@@ -100,11 +74,11 @@ class TextRenderBox
         return HorizontalScroll;
     }
 
-    Rectangle CharTable => new(0,0, Bounds.Width, Lines);
-    Rectangle CharTableViewPort => new Rectangle(new LinearRange(HorizontalScroll, Bounds.Width), new LinearRange(VerticalScroll,MaxLineCount));
+    Rectangle CharTable => new(0, 0, Bounds.Width, Lines);
+    Rectangle CharTableViewPort => new Rectangle(new LinearRange(HorizontalScroll, Bounds.Width), new LinearRange(VerticalScroll, MaxLineCount));
 
     internal int Lines => GetLines().Count;
-    internal int LongestLineWidth => Functions.Apply(0, GetLines(), Math.Max, x => x.Length);
+    internal int LongestLineWidth => GeometryFunctions.Apply(0, GetLines(), Math.Max, x => x.Length);
     internal int MaxLineCount => Bounds.Height / LineSpacing;
     internal int RenderLineCount => Math.Min(MaxLineCount, Lines);
     internal int LowestScroll => Math.Max(0, Lines - MaxLineCount);
@@ -112,8 +86,8 @@ class TextRenderBox
 
     internal List<string> GetLines()
     {
-        List<String> lines = new(Text.Split('\n'));
-        List<String> res = new();
+        List<string> lines = new(Text.Split('\n'));
+        List<string> res = new();
 
         // Wrapping
         foreach (string line in lines)
@@ -176,7 +150,7 @@ class TextRenderBox
             // trim the start if it the line extends back before the start of the box, if needed
             if (cut > 0)
             {
-                if (text.Length > cut) text = text[(cut)..];
+                if (text.Length > cut) text = text[cut..];
                 else continue;
                 render_x += cut;
             }
@@ -201,71 +175,4 @@ class TextRenderBox
         return res;
     }
 
-}
-
-class TextEnterField : TextRenderBox
-{
-    internal bool AllowEnter = false;
-
-    public IRenderer Renderer;
-    public StyleData Style;
-    internal bool Active { get; private set; }
-    public Controller Controller { get; }
-
-    internal TextEnterField(Controller c, Rectangle bounds, IRenderer r, StyleData sd) : base("", bounds)
-    {
-        Renderer = r;
-        Style = sd;
-        Active = false;
-        Controller = c;
-        Wrap = false;
-    }
-
-    public void Render() => Render(Renderer, Style, true);
-    public ConsoleKeyInfo Activate()
-    {
-        Active = true;
-        ConsoleKeyInfo info;
-
-        Render();
-        while (true)
-        {
-            info = Console.ReadKey(true);
-            char c = info.KeyChar;
-
-            if (c == '\0') break;
-            if (info.Key == ConsoleKey.Enter && !AllowEnter) break;
-            if (info.Key == ConsoleKey.Enter && AllowEnter) c='\n';
-            if (info.Key == ConsoleKey.Escape) break;
-
-            if (info.Key == ConsoleKey.Backspace)
-            {
-                if (Text.Length > 0) Text = Text[..(Text.Length - 1)];
-                else Console.Beep();
-            }
-            else
-            {
-                Text += c;
-            }
-            HorizontalScroll = RightmostScroll;
-            Render();
-        }
-
-        Active = false;
-        return info;
-    }
-}
-
-enum HorzontalAlignment
-{
-    Left = 0,
-    Center = 1,
-    Right = 2,
-}
-
-enum VerticalAlignment
-{
-    Top = 0,
-    Middle = 1,
-    Bottom = 2,
 }

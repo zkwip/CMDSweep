@@ -1,11 +1,14 @@
-﻿namespace CMDSweep;
+﻿using CMDSweep.IO;
+
+namespace CMDSweep.Rendering;
 abstract class Visualizer<TState> : IVisualizer
 {
     private RefreshMode ModeWaiting = RefreshMode.None;
     private bool IsRendering = false;
 
     internal StyleData HideStyle;
-    internal Controller Controller;
+    Controller IVisualizer.Controller => Controller;
+    internal Controller Controller { get; }
     internal TState? LastState { get; private set; }
     internal TState? CurrentState { get; private set; }
 
@@ -83,9 +86,4 @@ abstract class Visualizer<TState> : IVisualizer
         IsRendering = false;
         return true;
     }
-}
-
-interface IVisualizer
-{
-    internal bool Visualize(RefreshMode mode);
 }

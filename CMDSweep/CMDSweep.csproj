@@ -25,10 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="help.txt">
+    <None Update="Assets\help.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="settings.json">
+    <None Update="Assets\settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

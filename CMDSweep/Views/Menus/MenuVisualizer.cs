@@ -1,7 +1,10 @@
-﻿using System;
+﻿using CMDSweep.Geometry;
+using CMDSweep.Layout;
+using CMDSweep.Rendering;
+using System;
 using System.Collections.Generic;
 
-namespace CMDSweep;
+namespace CMDSweep.Views.Menus;
 
 class MenuVisualizer : Visualizer<MenuList>
 {

@@ -1,7 +1,9 @@
-﻿using System;
+﻿using CMDSweep.Geometry;
+using CMDSweep.IO;
+using System;
 using System.Collections.Generic;
 
-namespace CMDSweep;
+namespace CMDSweep.Views.Board;
 
 class BoardState
 {
@@ -24,14 +26,14 @@ class BoardState
     {
         return new BoardState((CellData[,])Cells.Clone())
         {
-            PlayerState = this.PlayerState,
-            cursor = this.cursor.Clone(),
-            difficulty = this.difficulty,
-            lives = this.lives,
+            PlayerState = PlayerState,
+            cursor = cursor.Clone(),
+            difficulty = difficulty,
+            lives = lives,
 
-            startTime = this.startTime,
-            preTime = this.preTime,
-            timePaused = this.timePaused
+            startTime = startTime,
+            preTime = preTime,
+            timePaused = timePaused
         };
     }
 
@@ -118,7 +120,7 @@ class BoardState
     // Oneliner Board Properties
     internal Difficulty Difficulty => difficulty;
     public Point Cursor => cursor.Clone();
-    public TimeSpan Time => (timePaused ? (preTime) : (preTime + (DateTime.Now - startTime)));
+    public TimeSpan Time => timePaused ? preTime : preTime + (DateTime.Now - startTime);
 
     public bool Paused => timePaused;
 
@@ -178,7 +180,7 @@ class BoardState
     {
         timePaused = true;
 
-        preTime += (DateTime.Now - startTime);
+        preTime += DateTime.Now - startTime;
     }
 
     public static int FailAction()
@@ -407,44 +409,6 @@ class BoardState
 
         PlayerState = PlayerState.Playing;
         ResumeGame();
-    }
-}
-
-struct CellData
-{
-    public CellData(bool m, bool d, FlagMarking f, bool q) { Mine = m; Discovered = d; Flagged = f; QuestionMarked = q; }
-    public bool Mine;
-    public bool Discovered;
-    public FlagMarking Flagged;
-    public bool QuestionMarked;
-
-
-    public static bool operator ==(CellData c1, CellData c2)
-    {
-        return c1.Mine == c2.Mine &&
-               c1.Discovered == c2.Discovered &&
-               c1.Flagged == c2.Flagged;
-    }
-
-    public static bool operator !=(CellData c1, CellData c2)
-    {
-        return c1.Mine != c2.Mine ||
-               c1.Discovered != c2.Discovered ||
-               c1.Flagged != c2.Flagged;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is CellData data &&
-               Mine == data.Mine &&
-               Discovered == data.Discovered &&
-               Flagged == data.Flagged &&
-               QuestionMarked == data.QuestionMarked;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Mine, Discovered, Flagged, QuestionMarked);
     }
 }
 
