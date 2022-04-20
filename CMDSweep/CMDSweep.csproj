@@ -37,8 +37,5 @@
 	  <_Parameter1>CMDSweepTests</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Layout\Popup\" />
-  </ItemGroup>
 
 </Project>

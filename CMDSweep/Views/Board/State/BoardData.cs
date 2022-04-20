@@ -2,6 +2,7 @@
 using CMDSweep.Data;
 using System;
 using System.Collections.Generic;
+using CMDSweep.Views.Board.State;
 
 namespace CMDSweep.Views.Board;
 

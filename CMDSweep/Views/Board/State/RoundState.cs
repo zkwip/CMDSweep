@@ -4,7 +4,7 @@ using System;
 
 namespace CMDSweep.Views.Board.State;
 
-internal record struct RoundStats
+internal record struct RoundState
 {
     public readonly Difficulty Difficulty;
     public readonly PlayerState PlayerState;
@@ -12,7 +12,7 @@ internal record struct RoundStats
     public readonly bool Highscore;
     public Face Face;
 
-    public RoundStats(Difficulty difficulty, PlayerState playerState, int lives, bool highscore, Face face)
+    public RoundState(Difficulty difficulty, PlayerState playerState, int lives, bool highscore, Face face)
     {
         Difficulty = difficulty;
         PlayerState = playerState;
@@ -21,7 +21,7 @@ internal record struct RoundStats
         Face = face;
     }
 
-    public static RoundStats NewGame(Difficulty diff)
+    public static RoundState NewGame(Difficulty diff)
     {
         return new RoundStats(
             diff,
@@ -38,11 +38,11 @@ internal record struct RoundStats
 
     public bool CanLoseLife => Lives > 1;
 
-    public RoundStats Win() => new(Difficulty, PlayerState.Win, Lives, Highscore, Face.Win);
+    public RoundState Win() => new(Difficulty, PlayerState.Win, Lives, Highscore, Face.Win);
 
-    public RoundStats LoseLife() => new(Difficulty, PlayerState, Lives, Highscore, Face);
+    public RoundState LoseLife() => new(Difficulty, PlayerState, Lives, Highscore, Face);
 
-    public RoundStats Die() => new(Difficulty, PlayerState.Dead, 0, Highscore, Face.Dead);
+    public RoundState Die() => new(Difficulty, PlayerState.Dead, 0, Highscore, Face.Dead);
 
-    public RoundStats SetState(PlayerState state) => new(Difficulty, state, Lives, Highscore, Face);
+    public RoundState SetState(PlayerState state) => new(Difficulty, state, Lives, Highscore, Face);
 }

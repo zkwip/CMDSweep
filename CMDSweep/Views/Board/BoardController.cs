@@ -78,7 +78,7 @@ class BoardController : Controller
 
     private void AfterStepStateChanges()
     {
-        switch (CurrentState.RoundStats.PlayerState)
+        switch (CurrentState.RoundState.PlayerState)
         {
             case PlayerState.Playing:
                 if (!refreshTimer.Enabled) refreshTimer.Start();
@@ -88,7 +88,7 @@ class BoardController : Controller
             case PlayerState.Dead:
             case PlayerState.Win:
                 refreshTimer.Stop();
-                if (CurrentState.RoundStats.PlayerState == PlayerState.Win)
+                if (CurrentState.RoundState.PlayerState == PlayerState.Win)
                     CheckHighscoreFlow(CurrentState);
 
                 App.AppState = ApplicationState.Done;

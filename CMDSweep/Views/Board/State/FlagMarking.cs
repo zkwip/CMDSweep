@@ -1,4 +1,4 @@
-﻿namespace CMDSweep.Views.Board;
+﻿namespace CMDSweep.Views.Board.State;
 
 enum FlagMarking
 {

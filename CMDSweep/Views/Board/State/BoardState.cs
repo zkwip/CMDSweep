@@ -10,14 +10,14 @@ internal record class BoardState
 {
     // Properties
     public readonly BoardData BoardData;
-    public readonly RoundStats RoundStats;
+    public readonly RoundState RoundState;
     public readonly Timing Timing;
     public readonly BoardView View;
 
-    public BoardState(BoardData boardData, RoundStats roundStats, Timing timing, BoardView view)
+    public BoardState(BoardData boardData, RoundState roundStats, Timing timing, BoardView view)
     {
         BoardData = boardData;
-        RoundStats = roundStats;
+        RoundState = roundStats;
         Timing = timing;
         View = view;
     }
@@ -25,7 +25,7 @@ internal record class BoardState
     internal static BoardState NewGame(Difficulty diff, GameSettings settings)
     {
         BoardData boardData = BoardData.NewGame(diff);
-        RoundStats roundData = RoundStats.NewGame(diff);
+        RoundState roundData = RoundState.NewGame(diff);
 
         BoardView view = new BoardView(settings,boardData.Bounds);
         Timing timing = Timing.NewGame(diff);
@@ -33,27 +33,27 @@ internal record class BoardState
         return new BoardState(boardData, roundData, timing, view);
     }
 
-    public Difficulty Difficulty => RoundStats.Difficulty;
+    public Difficulty Difficulty => RoundState.Difficulty;
 
-    public int MinesLeft => RoundStats.Mines - BoardData.Flags - RoundStats.LivesLost;
+    public int MinesLeft => RoundState.Mines - BoardData.Flags - RoundState.LivesLost;
 
-    public double MineRate => (double)(RoundStats.LivesLost + BoardData.Flags) / RoundStats.Mines;
+    public double MineRate => (double)(RoundState.LivesLost + BoardData.Flags) / RoundState.Mines;
 
-    public BoardState Win() => new(BoardData, RoundStats.Win(), Timing.Stop(),View);
+    public BoardState Win() => new(BoardData, RoundState.Win(), Timing.Stop(),View);
 
     public BoardState LoseLife()
     {
         NotifyFailedAction();
 
-        if (RoundStats.CanLoseLife)
-            return new BoardState(BoardData, RoundStats.LoseLife(), Timing, View);
+        if (RoundState.CanLoseLife)
+            return new BoardState(BoardData, RoundState.LoseLife(), Timing, View);
 
-        return new BoardState(BoardData, RoundStats.Die(), Timing.Stop(), View);
+        return new BoardState(BoardData, RoundState.Die(), Timing.Stop(), View);
     }
 
-    public BoardState ResumeGame() => new(BoardData, RoundStats, Timing.Resume(), View);
+    public BoardState ResumeGame() => new(BoardData, RoundState, Timing.Resume(), View);
 
-    public BoardState FreezeGame() => new(BoardData, RoundStats, Timing.Pause(), View);
+    public BoardState FreezeGame() => new(BoardData, RoundState, Timing.Pause(), View);
 
     public BoardState NotifyFailedAction()
     {
@@ -69,7 +69,7 @@ internal record class BoardState
         if (BoardData.CellIsFlagged(BoardData.Cursor)) 
             return NotifyFailedAction();
 
-        if (RoundStats.PlayerState == PlayerState.NewGame) 
+        if (RoundState.PlayerState == PlayerState.NewGame) 
             return PlaceMines().Discover(BoardData.Cursor).CheckForWin();
 
         return Discover(BoardData.Cursor).CheckForWin();
@@ -77,7 +77,7 @@ internal record class BoardState
 
     private BoardState CheckForWin()
     {
-        if (BoardData.Discovered + RoundStats.Mines - RoundStats.LivesLost == BoardData.Tiles) 
+        if (BoardData.Discovered + RoundState.Mines - RoundState.LivesLost == BoardData.Tiles) 
             return Win();
         return this;
     }
@@ -120,7 +120,7 @@ internal record class BoardState
 
         if (mineHit) return LoseLife();
 
-        return new BoardState(BoardData.Discover(discoveredCells), RoundStats, Timing, View);
+        return new BoardState(BoardData.Discover(discoveredCells), RoundState, Timing, View);
     }
 
     public BoardState ToggleFlag()
@@ -128,10 +128,10 @@ internal record class BoardState
         if (!Difficulty.FlagsAllowed) return NotifyFailedAction();
         if (BoardData.CellIsDiscovered(BoardData.Cursor)) return NotifyFailedAction();
 
-        return new(BoardData.ToggleFlag(),RoundStats, Timing, View);
+        return new(BoardData.ToggleFlag(),RoundState, Timing, View);
     }
 
-    public BoardState MoveCursor(Direction d) => new(BoardData.MoveCursor(d), RoundStats, Timing, View);
+    public BoardState MoveCursor(Direction d) => new(BoardData.MoveCursor(d), RoundState, Timing, View);
 
     public List<Point> CompareForVisibleChanges(BoardState other)
     {
@@ -139,9 +139,9 @@ internal record class BoardState
         return BoardData.CompareForVisibleChanges(other.BoardData, area); 
     }
 
-    private BoardState PlaceMines() => new(BoardData.PlaceMines(), RoundStats.SetState(PlayerState.Playing), Timing.Resume(), View);
+    private BoardState PlaceMines() => new(BoardData.PlaceMines(), RoundState.SetState(PlayerState.Playing), Timing.Resume(), View);
 
-    public BoardState SetPlayerState(PlayerState state) => new(BoardData, RoundStats.SetState(state), Timing, View);
+    public BoardState SetPlayerState(PlayerState state) => new(BoardData, RoundState.SetState(state), Timing, View);
 
     public bool TimeMakesHighscore()
     {
@@ -170,7 +170,7 @@ internal record class BoardState
 
         RenderBufferCopyTask task = new(oldCopyArea, newCopyArea);
 
-        return (new(BoardData,RoundStats,Timing,newView), task);
+        return (new(BoardData,RoundState,Timing,newView), task);
     }
 }
 
