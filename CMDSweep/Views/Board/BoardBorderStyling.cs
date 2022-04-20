@@ -1,5 +1,5 @@
 ﻿using CMDSweep.Geometry;
-using CMDSweep.IO;
+using CMDSweep.Data;
 using CMDSweep.Rendering;
 using System;
 
@@ -17,25 +17,6 @@ internal class BoardBorderStyling
     }
 
     StyleData _borderStyle;
-    void RenderBorder()
-    {
-        // Top
-        MappedPrint(-1, -1, _borderStyle, _settings.Texts["border-corner-tl"]);
-        for (int x = 0; x < _boardData.BoardWidth; x++) MappedPrint(x, -1, _borderStyle, _settings.Texts["border-horizontal"]);
-        MappedPrint(_boardData.BoardWidth, -1, _borderStyle, _settings.Texts["border-corner-tr"]);
-
-        // Sides
-        for (int y = 0; y < _boardData.BoardHeight; y++)
-        {
-            MappedPrint(-1, y, _borderStyle, _settings.Texts["border-vertical"]);
-            MappedPrint(_boardData.BoardWidth, y, _borderStyle, _settings.Texts["border-vertical"]);
-        }
-
-        // Bottom
-        MappedPrint(-1, _boardData.BoardHeight, _borderStyle, _settings.Texts["border-corner-bl"]);
-        for (int x = 0; x < _boardData.BoardWidth; x++) MappedPrint(x, _boardData.BoardHeight, _borderStyle, _settings.Texts["border-horizontal"]);
-        MappedPrint(_boardData.BoardWidth, _boardData.BoardHeight, _borderStyle, _settings.Texts["border-corner-br"]);
-    }
 
     public StyledText GetBorderStyle(Point p)
     {

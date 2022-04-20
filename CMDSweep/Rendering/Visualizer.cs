@@ -1,4 +1,4 @@
-﻿using CMDSweep.IO;
+﻿using CMDSweep.Data;
 
 namespace CMDSweep.Rendering;
 abstract class Visualizer<TState> : IVisualizer

@@ -22,6 +22,7 @@ partial class BoardVisualizer : Visualizer<BoardState>
     internal override bool CheckFullRefresh() => CurrentState!.RoundStats.PlayerState != LastState!.RoundStats.PlayerState;
 
     internal override bool CheckScroll() => !CurrentState!.ScrollIsNeeded;
+
     internal override void Scroll()
     {
         RenderBufferCopyTask task = CurrentState!.Scroll();
@@ -239,7 +240,6 @@ partial class BoardVisualizer : Visualizer<BoardState>
 
         if (CurrentState.RoundStats.PlayerState == PlayerState.EnteringHighscore)
             RenderNewHighscorePopup();
-
     }
 
     private void RenderNewHighscorePopup()
@@ -269,6 +269,7 @@ partial class BoardVisualizer : Visualizer<BoardState>
         if (CurrentState!.View.IsVisible(p))
             Renderer.PrintAtTile(CurrentState!.View.MapToRender(p), data, s);
     }
+
     void MappedPrint(int x, int y, StyleData data, string s) => MappedPrint(new Point(x, y), data, s);
 
     void MappedPrint(Point p, StyledText text) => MappedPrint(p, text.Style, text.Text);

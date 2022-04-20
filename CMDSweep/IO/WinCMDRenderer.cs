@@ -1,9 +1,10 @@
 ﻿using CMDSweep.Geometry;
+using CMDSweep.Rendering;
 using System;
 using System.Runtime.InteropServices;
 using System.Timers;
 
-namespace CMDSweep.Rendering;
+namespace CMDSweep.IO;
 
 class WinCMDRenderer : IRenderer
 {

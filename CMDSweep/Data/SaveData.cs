@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CMDSweep.IO;
+namespace CMDSweep.Data;
 
 class SaveData
 {

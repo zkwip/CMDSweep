@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CMDSweep.IO;
+namespace CMDSweep.Data;
 
 class HighscoreRecord
 {
