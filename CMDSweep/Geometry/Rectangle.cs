@@ -43,14 +43,20 @@ record struct Rectangle
     public int MidLine => Top + Height / 2;
 
     public Point TopLeft => new(Left, Top);
+
     public Point BottomRight => new(Right, Bottom);
+
     public Point TopRight => new(Right, Top);
+
     public Point BottomLeft => new(Left, Bottom);
+
     public Point Center => new(Left + Width / 2, Top + Height / 2);
 
     public static Rectangle Zero => new(0, 0, 0, 0);
 
     public int Area => Width * Height;
+
+    public Dimensions Dimensions => new(Width, Height);
 
     public Rectangle Grow(int left, int top, int right, int bottom) => new(
             Left - left,
@@ -61,11 +67,15 @@ record struct Rectangle
     public Rectangle Grow(int size) => Grow(size, size, size, size);
 
     public Rectangle Shrink(int left, int top, int right, int bottom) => Grow(-left, -top, -right, -bottom);
+    
     public Rectangle Shrink(int size) => Grow(-size, -size, -size, -size);
+    
     public bool Contains(Point p) => Contains(p.X, p.Y);
+    
     public bool Contains(int x, int y) => x >= Left && y >= Top && x < Right && y < Bottom;
 
     public bool Contains(Rectangle r) => Contains(r.TopLeft) && Contains(r.BottomRight.Shifted(-1, -1));
+    
     public Rectangle Intersect(Rectangle other)
     {
         int l = Left > other.Left ? Left : other.Left;
@@ -92,11 +102,13 @@ record struct Rectangle
             for (int y = Top; y < Bottom; y++) callback(new(x, y));
         }
     }
-
+    
     public Rectangle CenterOn(Point p) => Shift(Offset.FromChange(Center, p));
+    
     public Rectangle ShiftTo(Point p) => Shift(Offset.FromChange(TopLeft, p));
 
     public Rectangle Shift(Offset o) => Shift(o.X, o.Y);
+    
     public Rectangle Shift(int x, int y)
     {
         return new Rectangle(HorizontalRange.Shift(x), VerticalRange.Shift(y));

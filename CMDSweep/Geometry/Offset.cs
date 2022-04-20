@@ -4,6 +4,9 @@ record struct Offset
 {
     public int X;
     public int Y;
+
+    public static Offset Zero => new (0, 0);
+
     public Offset(int x, int y)
     {
         X = x; 

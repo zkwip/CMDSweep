@@ -1,8 +1,7 @@
 ﻿using CMDSweep.IO;
 using System;
 
-namespace CMDSweep.Views.Board;
-
+namespace CMDSweep.Views.Board.State;
 internal record struct Timing
 {
     public readonly bool Paused;

@@ -6,6 +6,8 @@ namespace CMDSweep.Rendering;
 interface IRenderer
 {
     bool PrintAtTile(Point p, StyleData data, string s);
+
+    bool PrintAtTile(Point p, StyledText st) => PrintAtTile(p, st.Style, st.Text);
     bool SetCursor(Point p);
     bool ClearScreen(StyleData data);
     bool ClearScreen(StyleData data, Rectangle r);
@@ -19,6 +21,7 @@ interface IRenderer
     public event EventHandler BoundsChanged;
 
     void CopyArea(Rectangle oldArea, Rectangle newArea);
+    void CopyArea(RenderBufferCopyTask task) { if (!task.Empty) CopyArea(task.Source, task.Destination); }
 }
 
 class BoundsChangedEventArgs : EventArgs

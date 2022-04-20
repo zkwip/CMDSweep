@@ -1,5 +1,6 @@
 ﻿using CMDSweep.IO;
 using CMDSweep.Layout;
+using CMDSweep.Views.Board.State;
 using System;
 using System.Collections.Generic;
 using System.Timers;
@@ -8,11 +9,11 @@ namespace CMDSweep.Views.Board;
 
 class BoardController : Controller
 {
-    internal BoardState CurrentState;
+    public BoardState CurrentState;
     private readonly Timer refreshTimer;
-    internal TextEnterField HighscoreTextField;
+    public TextEnterField HighscoreTextField;
 
-    internal BoardController(GameApp g) : base(g)
+    public BoardController(GameApp g) : base(g)
     {
         Visualizer = new BoardVisualizer(this);
 
@@ -76,7 +77,7 @@ class BoardController : Controller
 
     private void AfterStepStateChanges()
     {
-        switch (CurrentState.RoundData.PlayerState)
+        switch (CurrentState.RoundStats.PlayerState)
         {
             case PlayerState.Playing:
                 if (!refreshTimer.Enabled) refreshTimer.Start();
@@ -86,7 +87,7 @@ class BoardController : Controller
             case PlayerState.Dead:
             case PlayerState.Win:
                 refreshTimer.Stop();
-                if (CurrentState.RoundData.PlayerState == PlayerState.Win)
+                if (CurrentState.RoundStats.PlayerState == PlayerState.Win)
                     CheckHighscoreFlow(CurrentState);
 
                 App.AppState = ApplicationState.Done;
@@ -152,8 +153,10 @@ class BoardController : Controller
     internal void NewGame()
     {
         refreshTimer.Stop();
-        CurrentState = BoardState.NewGame(SaveData.CurrentDifficulty);
+        CurrentState = BoardState.NewGame(SaveData.CurrentDifficulty, Settings);
         Storage.WriteSave(SaveData);
         App.ChangeMode(ApplicationState.Playing);
     }
+
+
 }

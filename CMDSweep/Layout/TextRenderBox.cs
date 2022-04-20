@@ -5,23 +5,23 @@ using System.Collections.Generic;
 
 namespace CMDSweep.Layout;
 
-class TextRenderBox
+class TextRenderBox : IBounded
 {
     internal string Text;
-    internal Rectangle Bounds;
-    internal int LineSpacing = 1;
+    public Rectangle Bounds { get; set; }
+    public int LineSpacing = 1;
 
-    internal int VerticalScroll = 0;
-    internal int HorizontalScroll = 0;
+    public int VerticalScroll = 0;
+    public int HorizontalScroll = 0;
 
-    internal bool HorizontalOverflow = false;
-    internal bool VerticalOverflow = true;
-    internal bool Wrap = true;
+    public bool HorizontalOverflow = false;
+    public bool VerticalOverflow = true;
+    public bool Wrap = true;
 
-    internal VerticalAlignment VerticalAlign = VerticalAlignment.Top;
-    internal HorzontalAlignment HorizontalAlign = HorzontalAlignment.Left;
+    public VerticalAlignment VerticalAlign = VerticalAlignment.Top;
+    public HorzontalAlignment HorizontalAlign = HorzontalAlignment.Left;
 
-    internal Rectangle Used => new(Bounds.Left, Bounds.Top, LongestLineWidth, RenderLineCount);
+    public Rectangle Used => new(Bounds.Left, Bounds.Top, LongestLineWidth, RenderLineCount);
 
     public TextRenderBox()
     {
@@ -46,43 +46,45 @@ class TextRenderBox
         Wrap = Wrap,
     };
 
-    internal int ScrollUp()
+    public int ScrollUp()
     {
         if (VerticalScroll == 0) VerticalScroll = LowestScroll;
         else VerticalScroll--;
         return VerticalScroll;
     }
 
-    internal int ScrollDown()
+    public int ScrollDown()
     {
         if (VerticalScroll >= LowestScroll) VerticalScroll = 0;
         else VerticalScroll++;
         return VerticalScroll;
     }
 
-    internal int ScrollLeft()
+    public int ScrollLeft()
     {
         if (HorizontalScroll == 0) HorizontalScroll = RightmostScroll;
         else HorizontalScroll--;
         return HorizontalScroll;
     }
 
-    internal int ScrollRight()
+    public int ScrollRight()
     {
         if (HorizontalScroll >= RightmostScroll) HorizontalScroll = 0;
         else HorizontalScroll++;
         return HorizontalScroll;
     }
 
-    Rectangle CharTable => new(0, 0, Bounds.Width, Lines);
-    Rectangle CharTableViewPort => new Rectangle(new LinearRange(HorizontalScroll, Bounds.Width), new LinearRange(VerticalScroll, MaxLineCount));
-
-    internal int Lines => GetLines().Count;
-    internal int LongestLineWidth => GeometryFunctions.Apply(0, GetLines(), Math.Max, x => x.Length);
-    internal int MaxLineCount => Bounds.Height / LineSpacing;
-    internal int RenderLineCount => Math.Min(MaxLineCount, Lines);
-    internal int LowestScroll => Math.Max(0, Lines - MaxLineCount);
-    internal int RightmostScroll => Math.Max(0, LongestLineWidth - Bounds.Width);
+    public int Lines => GetLines().Count;
+    
+    public int LongestLineWidth => GeometryFunctions.Apply(0, GetLines(), Math.Max, x => x.Length);
+    
+    public int MaxLineCount => Bounds.Height / LineSpacing;
+    
+    public int RenderLineCount => Math.Min(MaxLineCount, Lines);
+    
+    public int LowestScroll => Math.Max(0, Lines - MaxLineCount);
+    
+    public int RightmostScroll => Math.Max(0, LongestLineWidth - Bounds.Width);
 
     internal List<string> GetLines()
     {
@@ -117,7 +119,6 @@ class TextRenderBox
         }
         return res;
     }
-
 
     internal void Render(IRenderer renderer, StyleData style, bool clear)
     {

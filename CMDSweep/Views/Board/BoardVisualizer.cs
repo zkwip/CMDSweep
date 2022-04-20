@@ -1,42 +1,50 @@
 ﻿using CMDSweep.Geometry;
 using CMDSweep.Layout;
 using CMDSweep.Rendering;
-using System;
+using CMDSweep.Views.Board.State;
 using System.Collections.Generic;
 
 namespace CMDSweep.Views.Board;
 
-class BoardVisualizer : Visualizer<BoardState>
+partial class BoardVisualizer : Visualizer<BoardState>
 {
-    private int OffsetX => RenderMask.Left - Viewport.Left * ScaleX;
-    private int OffsetY => RenderMask.Top - Viewport.Top * ScaleY;
-
-    private int ScaleX = 1;
-    private int ScaleY = 1;
-
-    Rectangle ScrollValidMask; // the area that is still valid (board space)
-    Rectangle RenderMask; // the area the board can be drawn into (screen space)
-    Rectangle Viewport; // rendermask mapped to (board space)
-
+    TileStyling _tileStyling;
+    BoardBorderStyling _borderStyling;
     public BoardVisualizer(BoardController bctrl) : base(bctrl)
     {
         HideStyle = Settings.GetStyle("cell-bg-out-of-bounds", "cell-bg-out-of-bounds");
-
-        RenderMask = Rectangle.Zero;
-        Viewport = Rectangle.Zero;
-        ScrollValidMask = Rectangle.Zero;
+        _tileStyling = new TileStyling();
+        _borderStyling = new BoardBorderStyling();
     }
+
     internal override BoardState RetrieveState() => ((BoardController)Controller).CurrentState;
-    internal override bool CheckFullRefresh() => CurrentState!.RoundData.PlayerState != LastState!.RoundData.PlayerState;
+    
+    internal override bool CheckFullRefresh() => CurrentState!.RoundStats.PlayerState != LastState!.RoundStats.PlayerState;
+
+    internal override bool CheckScroll() => !CurrentState!.ScrollIsNeeded;
+    internal override void Scroll()
+    {
+        RenderBufferCopyTask task = CurrentState!.Scroll();
+        Renderer.CopyArea(task);
+
+        CurrentState!.View.Viewport.ForAll(p => { 
+            if (!CurrentState!.View.IsScrollValid(p)) 
+                RenderViewPortCell(p); 
+            }
+        );
+
+        //RenderBorder();
+    }
 
     private void RenderHighscorePopup(BoardState curGS)
     {
-        TableGrid tg = Highscores.GetHSTableGrid(Settings);
-        tg.CenterOn(Renderer.Bounds.Center);
+        TableGrid tableGrid = Highscores.GetHSTableGrid(Settings);
+        tableGrid.CenterOn(Renderer.Bounds.Center);
 
-        RenderPopupBox(Settings.GetStyle("popup"), tg.Bounds.Grow(2), "popup-border");
-        Highscores.RenderHSTable(Renderer, Settings, tg, curGS.Difficulty, Settings.GetStyle("popup"));
+        RenderPopupBox(Settings.GetStyle("popup"), tableGrid.Bounds.Grow(2), "popup-border");
+        Highscores.RenderHSTable(Renderer, Settings, tableGrid, curGS.Difficulty, Settings.GetStyle("popup"));
     }
+
     private void RenderPopup(string text)
     {
         int xpad = Settings.Dimensions["popup-padding-x"];
@@ -81,8 +89,8 @@ class BoardVisualizer : Visualizer<BoardState>
     internal override void RenderChanges()
     {
         List<Point> changes;
-        changes = CurrentState!.CompareForChanges(LastState!, Viewport);
-        foreach (Point cl in changes) RenderCell(cl);
+        changes = CurrentState!.CompareForVisibleChanges(LastState!);
+        foreach (Point cl in changes) RenderBoardCell(cl);
         RenderStatBoard();
     }
 
@@ -131,13 +139,14 @@ class BoardVisualizer : Visualizer<BoardState>
 
     private void RenderFace(Point p)
     {
-        string face = CurrentState!.RoundData.Face switch
+        string face = CurrentState!.RoundStats.Face switch
         {
             Face.Surprise => Settings.Texts["face-surprise"],
             Face.Win => Settings.Texts["face-win"],
             Face.Dead => Settings.Texts["face-dead"],
             _ => Settings.Texts["face-normal"],
         };
+
         StyleData faceStyle = Settings.GetStyle("face");
         Renderer.PrintAtTile(p, faceStyle, face);
     }
@@ -155,140 +164,80 @@ class BoardVisualizer : Visualizer<BoardState>
         StyleData livesGoneStyle = Settings.GetStyle("stat-lives-lost", "stat-mines-bg");
 
         string atext = " ";
-        for (int i = 0; i < CurrentState!.Difficulty.Lives - CurrentState!.RoundData.LivesLost; i++) atext += life + " ";
+        for (int i = 0; i < CurrentState!.Difficulty.Lives - CurrentState!.RoundStats.LivesLost; i++) atext += life + " ";
 
         string btext = "";
-        for (int i = 0; i < CurrentState!.RoundData.LivesLost; i++) btext += life + " ";
+        for (int i = 0; i < CurrentState!.RoundStats.LivesLost; i++) btext += life + " ";
 
         Renderer.PrintAtTile(p, livesLeftStyle, atext);
         Renderer.PrintAtTile(p.Shifted(atext.Length, 0), livesGoneStyle, btext);
     }
 
-    Rectangle ScrollSafeZone => Viewport.Shrink(Settings.Dimensions["scroll-safezone"]);
+    
 
-    internal override bool CheckScroll() => !ScrollSafeZone.Contains(CurrentState!.RoundData.Cursor);
-
-    internal override void Scroll()
+    private void RenderViewPortCell(Point p, bool clearOutside = true)
     {
-        // Change the offset
-        Offset offset = ScrollSafeZone.OffsetOutOfBounds(CurrentState!.RoundData.Cursor);
-        Rectangle nvp = Viewport.Shift(offset);
-        ScrollValidMask = ScrollValidMask.Intersect(nvp);
-
-        Rectangle oldArea = MapToRender(ScrollValidMask);
-        Viewport.Shift(offset);
-        if (oldArea.Area > 0) Renderer.CopyArea(oldArea, MapToRender(ScrollValidMask));
-
-        Viewport.ForAll(p => { if (!ScrollValidMask.Contains(p)) RenderViewPortCell(p); });
-        RenderBorder();
-
-        ScrollValidMask = Viewport;
+        if (CurrentState!.BoardData.Bounds.Contains(p)) 
+            RenderBoardCell(p);
+        else if (CurrentState!.BoardData.Bounds.Grow(1).Contains(p)) 
+            RenderBorderCell(p);
+        else if (clearOutside) ClearCell(p);
     }
 
-    private void RenderViewPortCell(Point p)
-    {
-        if (CurrentState!.BoardData.Bounds.Contains(p)) RenderCell(p);
-        else if (CurrentState!.BoardData.Bounds.Grow(1).Contains(p)) RenderBorderCell(p);
-        else ClearCell(p);
-    }
-
-    private void RenderBorderCell(Point p)
-    {
-        StyleData data = Settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
-
-        // Corners
-        if (p.Equals(new Point(-1, -1)))
-            MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-tl"]);
-        else if (p.Equals(new Point(CurrentState!.BoardData.BoardWidth, -1)))
-            MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-tr"]);
-        else if (p.Equals(new Point(-1, CurrentState!.BoardData.BoardHeight)))
-            MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-bl"]);
-        else if (p.Equals(new Point(CurrentState!.BoardData.BoardWidth, CurrentState!.BoardData.BoardHeight)))
-            MappedPrint(p.X, p.Y, data, Settings.Texts["border-corner-br"]);
-
-        // Edges
-        else if (p.Y == -1 || p.Y == CurrentState!.BoardData.BoardHeight)
-            MappedPrint(p.X, p.Y, data, Settings.Texts["border-horizontal"]);
-        else if (p.X == -1 || p.X == CurrentState!.BoardData.BoardWidth)
-            MappedPrint(p.X, p.Y, data, Settings.Texts["border-vertical"]);
-    }
+    private void RenderBorderCell(Point p) => MappedPrint(p, _borderStyling.GetBorderStyle(p));
 
     private void ClearCell(Point p) => MappedPrint(p, HideStyle, "  ");
 
-    private Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
-    private Point MapToRender(Point p) => new(OffsetX + p.X * ScaleX, OffsetY + p.Y * ScaleY);
-
-
     internal override bool CheckResize()
     {
-        ScaleX = Settings.Dimensions["cell-size-x"];
-        ScaleY = Settings.Dimensions["cell-size-y"];
-
-        int barheight = 1 + 2 * Settings.Dimensions["stat-padding-y"];
-
-        Rectangle consoleBounds = Renderer.Bounds; // Whole Console
-        Rectangle newRenderMask = consoleBounds.Shrink(0, barheight, 0, 0); // Area that the board can be drawn into
+        Rectangle newRenderMask = RenderMaskFromConsoleDimension();
 
         // Return if the measurements did not change
-        return !newRenderMask.Equals(newRenderMask);
+        return !newRenderMask.Equals(CurrentState!.View.RenderMask);
     }
 
     internal override void Resize()
     {
+        Rectangle newRenderMask = RenderMaskFromConsoleDimension(); // Area that the board can be drawn into
+        CurrentState!.View.ChangeRenderMask(newRenderMask);
+    }
 
-        ScaleX = Settings.Dimensions["cell-size-x"];
-        ScaleY = Settings.Dimensions["cell-size-y"];
-
+    private Rectangle RenderMaskFromConsoleDimension()
+    {
         int barheight = 1 + 2 * Settings.Dimensions["stat-padding-y"];
 
-        Rectangle newRenderMask = Renderer.Bounds.Shrink(0, barheight, 0, 0); // Area that the board can be drawn into
-
-        // Reset render shortcuts
-        RenderMask = newRenderMask;
-        ScrollValidMask = Rectangle.Zero;
-
-        // Create a new viewport to fit
-        Rectangle newVP = new(Viewport.Left, Viewport.Top, RenderMask.Width / ScaleX, RenderMask.Height / ScaleY);
-
-        // Align the new viewport as best as we can
-        if (Viewport.Equals(Rectangle.Zero))
-            newVP.CenterOn(CurrentState!.BoardData.Bounds.Center);
-        else
-            newVP.CenterOn(Viewport.Center);
-
-        Viewport = newVP;
+        Rectangle newRenderMask = Renderer.Bounds.Shrink(0, barheight, 0, 0);
+        return newRenderMask;
     }
 
     internal override void RenderFull()
     {
-        TryCenterViewPort();
+        CurrentState!.View.TryCenterViewPort();
+
         // Border
         Renderer.ClearScreen(HideStyle);
-        RenderBorder();
-
-        // Tiles
-        Viewport.Intersect(CurrentState!.BoardData.Bounds).ForAll((x, y) => RenderCell(new Point(x, y)));
+        CurrentState!.View.VisibleBoardSection.ForAll(p => RenderViewPortCell(p, false));
 
         // Extras
         RenderStatBoard();
         RenderMessages();
 
         Renderer.HideCursor(HideStyle);
-        ScrollValidMask = Viewport;
+        CurrentState!.View.ValidateViewPort();
     }
 
     private void RenderMessages()
     {
-        if (CurrentState!.RoundData.PlayerState == PlayerState.Win)
+        if (CurrentState!.RoundStats.PlayerState == PlayerState.Win)
             RenderPopup("Congratulations, You won!\n\nYou can play again by pressing any key.");
 
-        if (CurrentState!.RoundData.PlayerState == PlayerState.Dead)
+        if (CurrentState!.RoundStats.PlayerState == PlayerState.Dead)
             RenderPopup("You died!\n\nYou can play again by pressing any key.");
 
-        if (CurrentState!.RoundData.PlayerState == PlayerState.ShowingHighscores)
+        if (CurrentState!.RoundStats.PlayerState == PlayerState.ShowingHighscores)
             RenderHighscorePopup(CurrentState);
 
-        if (CurrentState.RoundData.PlayerState == PlayerState.EnteringHighscore)
+        if (CurrentState.RoundStats.PlayerState == PlayerState.EnteringHighscore)
             RenderNewHighscorePopup();
 
     }
@@ -297,7 +246,9 @@ class BoardVisualizer : Visualizer<BoardState>
     {
         BoardController bc = (BoardController)Controller;
         TextEnterField tef = bc.HighscoreTextField;
+
         TableGrid tg = new();
+
         tg.AddColumn(Settings.Dimensions["popup-enter-hs-width"], 0);
         tg.AddRow(2, 0);
         tg.AddRow(1, 0);
@@ -313,182 +264,14 @@ class BoardVisualizer : Visualizer<BoardState>
 
     }
 
-    private void TryCenterViewPort()
-    {
-        if (CurrentState!.BoardData.BoardWidth < ScrollSafeZone.Width && CurrentState!.BoardData.BoardHeight < ScrollSafeZone.Height)
-        {
-            Viewport.CenterOn(CurrentState!.BoardData.Bounds.Center);
-        }
-    }
-
     void MappedPrint(Point p, StyleData data, string s)
     {
-        if (Viewport.Contains(p))
-            Renderer.PrintAtTile(MapToRender(p), data, s);
+        if (CurrentState!.View.IsVisible(p))
+            Renderer.PrintAtTile(CurrentState!.View.MapToRender(p), data, s);
     }
     void MappedPrint(int x, int y, StyleData data, string s) => MappedPrint(new Point(x, y), data, s);
 
-    void RenderBorder()
-    {
-        StyleData data = Settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
+    void MappedPrint(Point p, StyledText text) => MappedPrint(p, text.Style, text.Text);
 
-        // Top
-        MappedPrint(-1, -1, data, Settings.Texts["border-corner-tl"]);
-        for (int x = 0; x < CurrentState!.BoardData.BoardWidth; x++) MappedPrint(x, -1, data, Settings.Texts["border-horizontal"]);
-        MappedPrint(CurrentState!.BoardData.BoardWidth, -1, data, Settings.Texts["border-corner-tr"]);
-
-        // Sides
-        for (int y = 0; y < CurrentState!.BoardData.BoardHeight; y++)
-        {
-            MappedPrint(-1, y, data, Settings.Texts["border-vertical"]);
-            MappedPrint(CurrentState!.BoardData.BoardWidth, y, data, Settings.Texts["border-vertical"]);
-        }
-
-        // Bottom
-        MappedPrint(-1, CurrentState!.BoardData.BoardHeight, data, Settings.Texts["border-corner-bl"]);
-        for (int x = 0; x < CurrentState!.BoardData.BoardWidth; x++) MappedPrint(x, CurrentState!.BoardData.BoardHeight, data, Settings.Texts["border-horizontal"]);
-        MappedPrint(CurrentState!.BoardData.BoardWidth, CurrentState!.BoardData.BoardHeight, data, Settings.Texts["border-corner-br"]);
-    }
-
-    void RenderCell(Point cl)
-    {
-        ConsoleColor fg = GetTileVisual(cl) switch
-        {
-            TileVisual.Discovered => Settings.Colors["cell-fg-discovered"],
-            TileVisual.Undiscovered => Settings.Colors["cell-fg-undiscovered"],
-            TileVisual.UndiscoveredGrid => Settings.Colors["cell-fg-undiscovered-grid"],
-            TileVisual.Flagged => Settings.Colors["cell-flagged"],
-            TileVisual.DiscoveredMine => Settings.Colors["cell-mine-discovered"],
-            TileVisual.DeadWrongFlag => Settings.Colors["cell-dead-wrong-flag"],
-            TileVisual.DeadMine => Settings.Colors["cell-dead-mine-missed"],
-            TileVisual.DeadMineExploded => Settings.Colors["cell-dead-mine-hit"],
-            TileVisual.DeadMineFlagged => Settings.Colors["cell-dead-mine-flagged"],
-            TileVisual.DeadDiscovered => Settings.Colors["cell-fg-discovered"],
-            TileVisual.DeadUndiscovered => Settings.Colors["cell-fg-undiscovered"],
-            TileVisual.QuestionMarked => Settings.Colors["cell-questionmarked"],
-            _ => Settings.Colors["cell-fg-out-of-bounds"],
-        };
-
-        string text = Settings.Texts["cell-empty"];
-        switch (GetTileVisual(cl))
-        {
-            case TileVisual.Undiscovered:
-            case TileVisual.DeadUndiscovered:
-            case TileVisual.UndiscoveredGrid:
-                text = Settings.Texts["cell-undiscovered"];
-                break;
-
-            case TileVisual.DeadWrongFlag:
-            case TileVisual.DeadMineFlagged:
-            case TileVisual.Flagged:
-                text = Settings.Texts["cell-flag"];
-                break;
-
-            case TileVisual.DeadMine:
-            case TileVisual.DiscoveredMine:
-            case TileVisual.DeadMineExploded:
-                text = Settings.Texts["cell-mine"];
-                break;
-
-            case TileVisual.QuestionMarked:
-                text = Settings.Texts["cell-questionmarked"];
-                break;
-
-            case TileVisual.DeadDiscovered:
-            case TileVisual.Discovered:
-                int num = CurrentState!.BoardData.CellMineNumber(cl);
-                if (CurrentState!.Difficulty.SubtractFlags) num = CurrentState!.BoardData.CellSubtractedMineNumber(cl);
-                if (num > 0 && (CurrentState!.RoundData.Cursor.Equals(cl) || !CurrentState!.Difficulty.OnlyShowAtCursor))
-                {
-                    text = num.ToString();
-                    fg = Settings.Colors[string.Format("cell-{0}-discovered", num % 10)];
-                }
-                else
-                {
-                    text = Settings.Texts["cell-empty"];
-                }
-                break;
-        }
-
-        // Cursor
-        if (CurrentState!.RoundData.PlayerState != PlayerState.Dead && CurrentState!.RoundData.Cursor.Equals(cl))
-        {
-            if (!CurrentState!.Difficulty.OnlyShowAtCursor || GetTileVisual(cl) != TileVisual.Discovered || CurrentState!.BoardData.CellMineNumber(cl) <= 0)
-                fg = Settings.Colors["cell-selected"];
-            if (text == Settings.Texts["cell-undiscovered"] || text == Settings.Texts["cell-empty"])
-                text = Settings.Texts["cursor"];
-        }
-
-        ConsoleColor bg = GetTileVisual(cl) switch
-        {
-            TileVisual.Discovered or
-            TileVisual.DeadDiscovered or
-            TileVisual.DeadMineExploded or
-            TileVisual.DiscoveredMine => Settings.Colors["cell-bg-discovered"],
-
-            TileVisual.UndiscoveredGrid => Settings.Colors["cell-bg-undiscovered-grid"],
-
-            _ => Settings.Colors["cell-bg-undiscovered"]
-        };
-
-        StyleData data = new(fg, bg, false);
-
-        // Padding
-        int padRight = 0;
-        if (text.Length < ScaleX) padRight = ScaleX - text.Length;
-        int padLeft = padRight / 2;
-        padRight = ScaleX - padLeft;
-
-        // Actual rendering
-        MappedPrint(cl, data, " ".PadLeft(padLeft));
-        MappedPrint(cl, data, text.PadRight(padRight));
-    }
-
-    private TileVisual GetTileVisual(Point cl)
-    {
-        BoardState gs = CurrentState!;
-
-        if (gs.RoundData.PlayerState == PlayerState.Dead)
-        {
-            if (gs.BoardData.CellIsMine(cl))
-            {
-                if (gs.BoardData.CellIsFlagged(cl)) return TileVisual.DeadMineFlagged;
-                if (gs.BoardData.CellIsDiscovered(cl)) return TileVisual.DeadMineExploded;
-                else return TileVisual.DeadMine;
-            }
-            else
-            {
-                if (gs.BoardData.CellIsFlagged(cl)) return TileVisual.DeadWrongFlag;
-                if (gs.BoardData.CellIsDiscovered(cl)) return TileVisual.DeadDiscovered;
-                else return TileVisual.DeadUndiscovered;
-            }
-        }
-        else
-        {
-            if (gs.BoardData.CellIsDiscovered(cl) && gs.BoardData.CellIsMine(cl)) return TileVisual.DiscoveredMine;
-            if (gs.BoardData.CellIsDiscovered(cl)) return TileVisual.Discovered;
-            if (gs.BoardData.CellIsFlagged(cl)) return TileVisual.Flagged;
-            if (gs.BoardData.CellIsQuestionMarked(cl)) return TileVisual.QuestionMarked;
-            if (cl.X % Settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
-            if (cl.Y % Settings.Dimensions["cell-grid-size"] == 0) return TileVisual.UndiscoveredGrid;
-            else return TileVisual.Undiscovered;
-        }
-    }
-
-    enum TileVisual
-    {
-        Undiscovered,
-        Flagged,
-        QuestionMarked,
-        Discovered,
-        DiscoveredMine,
-
-        DeadUndiscovered,
-        DeadDiscovered,
-        DeadMine,
-        DeadMineExploded,
-        DeadMineFlagged,
-        DeadWrongFlag,
-        UndiscoveredGrid,
-    }
+    void RenderBoardCell(Point cl) => MappedPrint(cl, _tileStyling.CellVisual(cl));
 }

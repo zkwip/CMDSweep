@@ -7,13 +7,15 @@ namespace CMDSweep.Views.Board;
 
 internal record class BoardData
 {
-    internal readonly CellData[,] Cells;
-    internal readonly Difficulty Difficulty;
+    public readonly CellData[,] Cells;
+    public readonly Difficulty Difficulty;
+    public readonly Point Cursor;
 
-    public BoardData(CellData[,] cells, Difficulty difficulty)
+    public BoardData(CellData[,] cells, Difficulty difficulty, Point cursor)
     {
         Cells = cells;
         Difficulty = difficulty;
+        Cursor = cursor;
     }
 
     public static BoardData NewGame(Difficulty diff)
@@ -21,8 +23,10 @@ internal record class BoardData
         int width = diff.Width;
         int height = diff.Height;
 
+        Point cursor = new Point(width / 2, height / 2);
+
         CellData[,] cells = new CellData[width, height];
-        return new BoardData(cells, diff);
+        return new BoardData(cells, diff, cursor);
     }
 
     private int CountCells(Predicate<CellData> p)
@@ -69,21 +73,21 @@ internal record class BoardData
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.Flagged;
-        return new(newCells, Difficulty);
+        return new(newCells, Difficulty, Cursor);
     }
 
     public BoardData Unflag(Point cl)
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.Unflagged;
-        return new(newCells, Difficulty);
+        return new(newCells, Difficulty, Cursor);
     }
 
     public BoardData QuestionMark(Point cl)
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.QuestionMarked;
-        return new(newCells, Difficulty);
+        return new(newCells, Difficulty, Cursor);
     }
 
     public Point Wrap(Point cl)
@@ -167,24 +171,38 @@ internal record class BoardData
             Cells[cell.X, cell.Y].Flagged = FlagMarking.Unflagged;
         }
 
-        return new BoardData(newCells, Difficulty);
+        return new BoardData(newCells, Difficulty, Cursor);
     }
 
-    public BoardData ToggleFlag(Point cursor)
+    public BoardData MoveCursor(Direction direction)
     {
-        switch (Cell(cursor).Flagged)
+        return direction switch
+        {
+            Direction.Down => SetCursor(new Point(Cursor.X, Cursor.Y + 1)),
+            Direction.Up => SetCursor(new Point(Cursor.X, Cursor.Y - 1)),
+            Direction.Left => SetCursor(new Point(Cursor.X - 1, Cursor.Y)),
+            Direction.Right => SetCursor(new Point(Cursor.X + 1, Cursor.Y)),
+            _ => this,
+        };
+    }
+
+    private BoardData SetCursor(Point cursor) => new BoardData(Cells, Difficulty, cursor);
+
+    public BoardData ToggleFlag()
+    {
+        switch (Cell(Cursor).Flagged)
         {
             case FlagMarking.Flagged:
                 if (Difficulty.QuestionMarkAllowed)
-                    return QuestionMark(cursor);
-                return Unflag(cursor);
+                    return QuestionMark(Cursor);
+                return Unflag(Cursor);
 
             case FlagMarking.QuestionMarked:
-                return Unflag(cursor);
+                return Unflag(Cursor);
 
             case FlagMarking.Unflagged:
             default:
-                return Flag(cursor);
+                return Flag(Cursor);
         }
     }
 
@@ -199,7 +217,30 @@ internal record class BoardData
         return hits;
     }
 
-    public BoardData PlaceMines(Point seedPoint)
+    public List<Point> CompareForVisibleChanges(BoardData other, Rectangle area)
+    {
+        List<Point> hits = new();
+
+        if (Difficulty.SubtractFlags)
+            area.Grow(Difficulty.DetectionRadius);
+
+        area = area.Intersect(Bounds);
+
+        hits = DiffersFrom(other, area);
+
+
+        if (Difficulty.SubtractFlags) hits = ExpandChangeHits(hits, Difficulty.DetectionRadius, Difficulty.WrapAround);
+
+        if (other.Cursor != Cursor)
+        {
+            hits.Add(Cursor);
+            hits.Add(other.Cursor);
+        }
+
+        return hits;
+    }
+
+    public BoardData PlaceMines()
     {
         int minesLeftToPlace = Difficulty.Mines;
         int detectZoneSize = (2 * Difficulty.DetectionRadius + 1) * (2 * Difficulty.DetectionRadius + 1);
@@ -207,7 +248,7 @@ internal record class BoardData
         int maxMines = (int)Math.Floor(0.8 * detectZoneSize);
         Random rng = new();
 
-        BoardData bd = new(Cells, Difficulty);
+        BoardData bd = new(Cells, Difficulty, this.Cursor);
 
         // Try to randomly place mines and check if the are valid;
         while (minesLeftToPlace > 0 && placementFailures < 1000)
@@ -218,7 +259,7 @@ internal record class BoardData
 
             Point pos = new(px, py);
 
-            if (bd.Distance(seedPoint, pos) <= Difficulty.Safezone)
+            if (bd.Distance(Cursor, pos) <= Difficulty.Safezone)
                 continue; // No mines at start
 
             if (bd.CellIsMine(pos))
