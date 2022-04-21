@@ -1,6 +1,7 @@
 ﻿using CMDSweep.Geometry;
 using CMDSweep.Data;
 using System;
+using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Board.State;
 
@@ -20,6 +21,8 @@ internal class BoardView
 
     public Rectangle Board { get; private set; }
 
+    public RenderBufferCopyTask RenderTask { get; private set; }
+
     public BoardView(GameSettings settings, Rectangle board)
     {
         _scrollSafezoneDistance = settings.Dimensions["scroll-safezone"];
@@ -30,6 +33,8 @@ internal class BoardView
         Viewport = Rectangle.Zero;
         ScrollValidMask = Rectangle.Zero;
         Board = board;
+
+        RenderTask = RenderBufferCopyTask.None;
     }
 
     public BoardView(int scaleX, int scaleY, int scrollSafezoneDistance, Rectangle scrollValidMask, Rectangle renderMask, Rectangle viewport, Rectangle board)
@@ -41,6 +46,7 @@ internal class BoardView
         RenderMask = renderMask;
         Viewport = viewport;
         Board = board;
+        RenderTask = RenderBufferCopyTask.None;
     }
 
     private int _offsetX => RenderMask.Left - Viewport.Left * _scaleX;
@@ -55,11 +61,20 @@ internal class BoardView
 
     public BoardView ScrollTo(Point cursor)
     {
+        
         Offset offset = ScrollSafezone.OffsetOutOfBounds(cursor);
         Rectangle newViewport = Viewport.Shift(offset);
         Rectangle newScrollValidMask = ScrollValidMask.Intersect(newViewport);
 
-        return new(_scaleX, _scaleY, _scrollSafezoneDistance, newScrollValidMask, RenderMask, newViewport, Board);
+        BoardView newView = new(_scaleX, _scaleY, _scrollSafezoneDistance, newScrollValidMask, RenderMask, newViewport, Board);
+
+        Rectangle oldCopyArea = this.MapToRender(newView.ScrollValidMask);
+        Rectangle newCopyArea = newView.MapToRender(newView.ScrollValidMask);
+
+        newView.RenderTask = new(oldCopyArea, newCopyArea);
+        return newView;
+
+
     }
     public Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
 

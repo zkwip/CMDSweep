@@ -24,6 +24,17 @@ record struct Rectangle
         VerticalRange = new LinearRange(point1.Y, point2.Y - point1.Y);
     }
 
+    public Rectangle(Point topLeft, Dimensions dimensions)
+    {
+        HorizontalRange = new LinearRange(topLeft.X, dimensions.Width);
+        VerticalRange = new LinearRange(topLeft.Y, dimensions.Height);
+    }
+
+    internal static Rectangle Centered(Point center, Dimensions dimensions)
+    {
+        return new Rectangle(Point.Origin, dimensions).CenterOn(center);
+    }
+
     public override string ToString() => String.Format("({0} to {1}, w: {2}, h: {3})", TopLeft, BottomRight, Width, Height);
 
     public int Left => HorizontalRange.Start;

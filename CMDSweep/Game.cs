@@ -1,13 +1,13 @@
 ﻿using CMDSweep.Data;
+using CMDSweep.IO;
 using CMDSweep.Rendering;
 using CMDSweep.Views;
 using CMDSweep.Views.Board;
 using CMDSweep.Views.Help;
+using CMDSweep.Views.Highscore;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("SweepTests")]
 namespace CMDSweep;
 
 class GameApp
@@ -24,7 +24,8 @@ class GameApp
 
     // Curent States
     internal ApplicationState AppState;
-    internal Controller? CurrentController => AppState switch
+
+    internal IViewController? CurrentController => AppState switch
     {
         ApplicationState.Playing => BControl,
         ApplicationState.Done => BControl,
@@ -33,6 +34,7 @@ class GameApp
         ApplicationState.Help => HLControl,
         _ => null,
     };
+
     static void Main(string[] _)
     {
         IRenderer cmdr = new WinCMDRenderer();

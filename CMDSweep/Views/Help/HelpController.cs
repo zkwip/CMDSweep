@@ -1,17 +1,26 @@
 ﻿using CMDSweep.Geometry;
-using CMDSweep.Data;
 using CMDSweep.Layout;
+using CMDSweep.IO;
+using CMDSweep.Data;
+using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Help;
 
-class HelpController : Controller
+class HelpController : IViewController
 {
     internal TextRenderBox Box;
 
-    internal HelpController(GameApp app) : base(app)
+    public GameApp App { get; }
+
+    public HelpVisualizer Visualizer { get; }
+
+    internal HelpController(GameApp app)
     {
         Visualizer = new HelpVisualizer(this);
-        Box = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero)
+        App = app;
+        StyleData styleData = Settings.GetStyle("menu");
+
+        Box = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero, styleData)
         {
             Wrap = true,
             VerticalOverflow = false,
@@ -21,7 +30,10 @@ class HelpController : Controller
         };
     }
 
-    internal override bool Step()
+    public GameSettings Settings => App.Settings;
+    public SaveData SaveData => App.SaveData;
+
+    public bool Step()
     {
         InputAction ia = App.ReadAction();
         switch (ia)

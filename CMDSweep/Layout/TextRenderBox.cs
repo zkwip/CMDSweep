@@ -21,20 +21,24 @@ class TextRenderBox : IBounded
     public VerticalAlignment VerticalAlign = VerticalAlignment.Top;
     public HorzontalAlignment HorizontalAlign = HorzontalAlignment.Left;
 
+    public StyleData StyleData { get; set; }
+
     public Rectangle Used => new(Bounds.Left, Bounds.Top, LongestLineWidth, RenderLineCount);
 
-    public TextRenderBox()
+    public TextRenderBox(StyleData styleData)
     {
         Text = "";
         Bounds = Rectangle.Zero;
+        StyleData = styleData;
     }
-    public TextRenderBox(string text, Rectangle bounds)
+    public TextRenderBox(string text, Rectangle bounds, StyleData styleData)
     {
         Text = text;
         Bounds = bounds;
+        StyleData = styleData;
     }
 
-    public TextRenderBox Clone() => new(Text, Bounds)
+    public TextRenderBox Clone() => new(Text, Bounds, StyleData)
     {
         LineSpacing = LineSpacing,
         VerticalScroll = VerticalScroll,
@@ -120,9 +124,9 @@ class TextRenderBox : IBounded
         return res;
     }
 
-    internal void Render(IRenderer renderer, StyleData style, bool clear)
+    internal void Render(IRenderer renderer, bool clear)
     {
-        if (clear) renderer.ClearScreen(style, Bounds);
+        if (clear) renderer.ClearScreen(StyleData, Bounds);
 
         List<string> lines = GetLines();
         int inner_width = Math.Max(Bounds.Width, LongestLineWidth);
@@ -165,7 +169,7 @@ class TextRenderBox : IBounded
             }
 
             if (text.Length > 0)
-                renderer.PrintAtTile(new(render_x, render_y), style, text);
+                renderer.PrintAtTile(new(render_x, render_y), StyleData, text);
         }
     }
 

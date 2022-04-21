@@ -7,26 +7,26 @@ abstract class Visualizer<TState> : IVisualizer
     private bool IsRendering = false;
 
     internal StyleData HideStyle;
-    Controller IVisualizer.Controller => Controller;
-    internal Controller Controller { get; }
-    internal TState? LastState { get; private set; }
-    internal TState? CurrentState { get; private set; }
+    IViewController IVisualizer.Controller => Controller;
+    public IViewController Controller { get; }
+    public TState? LastState { get; private set; }
+    public TState? CurrentState { get; private set; }
 
-    internal IRenderer Renderer => Controller.App.Renderer;
-    internal GameSettings Settings => Controller.App.Settings;
-    internal SaveData SaveData => Controller.App.SaveData;
-    internal GameApp App => Controller.App;
+    public IRenderer Renderer => Controller.App.Renderer;
+    public GameSettings Settings => Controller.App.Settings;
+    public SaveData SaveData => Controller.App.SaveData;
+    public GameApp App => Controller.App;
 
-    abstract internal void RenderFull();
-    abstract internal void RenderChanges();
-    abstract internal bool CheckResize();
-    abstract internal void Resize();
-    abstract internal bool CheckScroll();
-    abstract internal void Scroll();
-    abstract internal bool CheckFullRefresh();
-    abstract internal TState RetrieveState();
+    abstract public void RenderFull();
+    abstract public void RenderChanges();
+    abstract public bool CheckResize();
+    abstract public void Resize();
+    abstract public bool CheckScroll();
+    abstract public void Scroll();
+    abstract public bool CheckFullRefresh();
+    abstract public TState RetrieveState();
 
-    public Visualizer(Controller ctrl)
+    public Visualizer(IViewController ctrl)
     {
         Controller = ctrl;
         HideStyle = Settings.GetStyle("menu");

@@ -148,9 +148,9 @@ internal record class BoardState
         TimeSpan time = Timing.Time;
         List<HighscoreRecord> scores = Difficulty.Highscores;
 
-        if (scores.Count >= Highscores.highscoreEntries)
+        if (scores.Count >= HighscoreTable.highscoreEntries)
         {
-            if (time < scores[Highscores.highscoreEntries - 1].Time)
+            if (time < scores[HighscoreTable.highscoreEntries - 1].Time)
                 return true;
             else
                 return false;
@@ -160,26 +160,10 @@ internal record class BoardState
 
     public bool ScrollIsNeeded => View.ScrollSafezone.Contains(BoardData.Cursor);
 
-    public (BoardState, RenderBufferCopyTask) Scroll()
+    public BoardState Scroll()
     {
-        BoardView oldView = View;
-        BoardView newView = oldView.ScrollTo(BoardData.Cursor);
+        BoardView newView = View.ScrollTo(BoardData.Cursor);
 
-        Rectangle oldCopyArea = oldView.MapToRender(newView.ScrollValidMask);
-        Rectangle newCopyArea = newView.MapToRender(newView.ScrollValidMask);
-
-        RenderBufferCopyTask task = new(oldCopyArea, newCopyArea);
-
-        return (new(BoardData,RoundState,Timing,newView), task);
+        return new(BoardData, RoundState, Timing, newView);
     }
-}
-
-enum PlayerState
-{
-    NewGame,
-    Playing,
-    Dead,
-    Win,
-    EnteringHighscore,
-    ShowingHighscores,
 }

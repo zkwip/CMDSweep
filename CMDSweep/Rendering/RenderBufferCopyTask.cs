@@ -33,4 +33,6 @@ internal record struct RenderBufferCopyTask
     }
 
     public Rectangle Destination => Source.Shift(Offset);
+
+    public static RenderBufferCopyTask None => new RenderBufferCopyTask(Rectangle.Zero, Rectangle.Zero);
 }

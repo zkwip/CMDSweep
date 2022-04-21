@@ -1,22 +1,32 @@
 ﻿using CMDSweep.Data;
+using CMDSweep.Views;
 using CMDSweep.Views.Menus;
 using System;
 
 namespace CMDSweep;
-class MenuController : Controller
+class MenuController : IViewController
 {
     internal MenuList currentMenuList;
 
     internal MenuList MainMenu;
     internal MenuList SettingsMenu;
     internal MenuList AdvancedSettingsMenu;
-    public MenuController(GameApp app) : base(app)
+
+    public GameApp App { get; }
+
+    public MenuVisualizer Visualizer { get; }
+
+    public MenuController(GameApp app)
     {
+        App = app;
         Visualizer = new MenuVisualizer(this);
         BuildMenus();
     }
 
-    internal override bool Step()
+    public GameSettings Settings => App.Settings;
+    public SaveData SaveData => App.SaveData;
+
+    public bool Step()
     {
         InputAction ia = App.ReadAction();
         if (ia == InputAction.NewGame)

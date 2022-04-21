@@ -21,7 +21,7 @@ class TileVisualizer : ITypeVisualizer<Point>
     StyleData _borderStyle;
     private readonly StyledText _clearVisual;
 
-    public TileVisualizer(BoardState state, GameSettings settings, IRenderer renderer)
+    public TileVisualizer(IRenderer renderer, GameSettings settings, BoardState state)
     {
         _difficulty = state.Difficulty;
         _settings = settings;
@@ -33,6 +33,13 @@ class TileVisualizer : ITypeVisualizer<Point>
         _gridSize = settings.Dimensions["cell-grid-size"];
         _tileWidth = settings.Dimensions["cell-size-x"];
         _borderStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
+    }
+
+    public void UpdateBoardState(BoardState state)
+    {
+        _view = state.View;
+        _boardData = state.BoardData;
+        _dead = state.RoundState.PlayerState == PlayerState.Dead;
     }
 
     public void Visualize(Point p, RefreshMode _) => Visualize(p);

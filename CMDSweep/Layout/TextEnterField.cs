@@ -6,29 +6,25 @@ namespace CMDSweep.Layout;
 
 class TextEnterField : TextRenderBox
 {
-    internal bool AllowEnter = false;
+    private StyleData _styleData;
 
-    public IRenderer Renderer;
-    public StyleData Style;
-    internal bool Active { get; private set; }
-    public Controller Controller { get; }
+    public bool AllowEnter = false;
+    public bool Active { get; private set; }
 
-    internal TextEnterField(Controller c, Rectangle bounds, IRenderer r, StyleData sd) : base("", bounds)
+    internal TextEnterField(Rectangle bounds, StyleData sd) : base("", bounds)
     {
-        Renderer = r;
-        Style = sd;
+        _styleData = sd;
         Active = false;
-        Controller = c;
         Wrap = false;
     }
-
-    public void Render() => Render(Renderer, Style, true);
-    public ConsoleKeyInfo Activate()
+    
+    
+    public ConsoleKeyInfo Activate(IRenderer renderer)
     {
         Active = true;
         ConsoleKeyInfo info;
 
-        Render();
+        Render(renderer, _styleData, true);
         while (true)
         {
             info = Console.ReadKey(true);
@@ -49,7 +45,7 @@ class TextEnterField : TextRenderBox
                 Text += c;
             }
             HorizontalScroll = RightmostScroll;
-            Render();
+            Render(renderer, _styleData, true);
         }
 
         Active = false;

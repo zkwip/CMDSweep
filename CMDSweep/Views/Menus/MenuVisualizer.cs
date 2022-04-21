@@ -22,8 +22,9 @@ class MenuVisualizer : Visualizer<MenuList>
         Resize();
     }
 
-    internal override bool CheckResize() => false;
-    internal override void Resize()
+    public override bool CheckResize() => false;
+
+    public override void Resize()
     {
         Dictionary<string, int> dims = Settings.Dimensions;
         TableGrid tg = new();
@@ -48,7 +49,7 @@ class MenuVisualizer : Visualizer<MenuList>
         TableGrid = tg;
     }
 
-    internal override void RenderFull()
+    public override void RenderFull()
     {
         Renderer.ClearScreen(HideStyle);
         scrollDepth = CurrentState!.FixScroll(scrollDepth, maxRows);
@@ -70,13 +71,13 @@ class MenuVisualizer : Visualizer<MenuList>
         return text.PadLeft(length);
     }
 
-    internal override void RenderChanges() => RenderFull();
+    public override void RenderChanges() => RenderFull();
 
-    internal override bool CheckScroll() => false;
+    public override bool CheckScroll() => false;
 
-    internal override void Scroll() { }
+    public override void Scroll() { }
 
-    internal override bool CheckFullRefresh() => false;
+    public override bool CheckFullRefresh() => false;
 
-    internal override MenuList RetrieveState() => ((MenuController)Controller).currentMenuList;
+    public override MenuList RetrieveState() => ((MenuController)Controller).currentMenuList;
 }

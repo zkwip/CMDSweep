@@ -20,9 +20,7 @@ internal class StatboardVisualizer : ITypeVisualizer<BoardState>
         _tableGrid = new();
     }
 
-    public void Visualize(BoardState state, RefreshMode mode = RefreshMode.Full) => RenderStatBoard(state);
-
-    private void RenderStatBoard(BoardState state)
+    public void Visualize(BoardState state)
     {
         GenerateTableGrid();
 

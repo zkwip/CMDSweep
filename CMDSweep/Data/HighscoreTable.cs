@@ -1,39 +1,12 @@
-﻿using CMDSweep.Data;
-using CMDSweep.Layout;
+﻿using CMDSweep.Layout;
 using CMDSweep.Rendering;
 using System;
 using System.Collections.Generic;
 
-namespace CMDSweep.Views;
+namespace CMDSweep.Data;
 
-class HighscoreController : Controller
+static class HighscoreTable
 {
-    internal Difficulty SelectedDifficulty;
-    public HighscoreController(GameApp app) : base(app)
-    {
-        Visualizer = new HighscoreVisualizer(this);
-        SelectedDifficulty = app.SaveData.CurrentDifficulty;
-    }
-
-    internal override bool Step()
-    {
-        InputAction ia = App.ReadAction();
-        switch (ia)
-        {
-            case InputAction.Quit:
-                App.MControl.OpenMenu(App.MControl.MainMenu);
-                break;
-            case InputAction.NewGame:
-                App.BControl.NewGame();
-                break;
-        }
-        return true;
-    }
-    internal void ShowHighscores() => App.AppState = ApplicationState.Highscore;
-}
-static class Highscores
-{
-
     internal const int highscoreEntries = 5;
     internal static TableGrid GetHSTableGrid(GameSettings settings)
     {
@@ -93,38 +66,4 @@ static class Highscores
             renderer.PrintAtTile(tg.GetPoint("date", 0, "row", i), rowstyle, date);
         }
     }
-}
-
-class HighscoreVisualizer : Visualizer<Difficulty>
-{
-    TableGrid ScoreTable;
-    public HighscoreVisualizer(HighscoreController hctrl) : base(hctrl)
-    {
-        HideStyle = Settings.GetStyle("menu");
-        Resize();
-    }
-
-    internal override bool CheckFullRefresh() => true;
-
-    internal override bool CheckResize() => true;
-
-    internal override bool CheckScroll() => false;
-
-    internal override void RenderChanges() => RenderFull();
-
-    internal override void RenderFull()
-    {
-        Renderer.ClearScreen(HideStyle);
-        Highscores.RenderHSTable(Renderer, Settings, ScoreTable, CurrentState!, HideStyle);
-    }
-
-    internal override void Resize()
-    {
-        ScoreTable = Highscores.GetHSTableGrid(Settings);
-        ScoreTable.CenterOn(Renderer.Bounds.Center);
-    }
-
-    internal override Difficulty RetrieveState() => ((HighscoreController)Controller).SelectedDifficulty;
-
-    internal override void Scroll() { }
 }

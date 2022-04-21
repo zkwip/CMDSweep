@@ -1,31 +1,27 @@
 ﻿using CMDSweep.Rendering;
-using CMDSweep.Layout;
 using CMDSweep.Data;
 using CMDSweep.Geometry;
 
 namespace CMDSweep.Layout.Popup;
 
-internal class PopupVisualizer : ITypeVisualizer<Popup>
+internal class PopupVisualizer : ITypeVisualizer<IPopup>
 {
     private GameSettings _settings;
     private IRenderer _renderer;
-    public PopupVisualizer(GameSettings settings, IRenderer renderer)
+    public PopupVisualizer(IRenderer renderer, GameSettings settings)
     {
         _settings = settings;
         _renderer = renderer;
     }
 
-    private void RenderPopup(string text)
+    public void Visualize(IPopup item, RefreshMode mode = RefreshMode.Full)
     {
-        int xpad = _settings.Dimensions["popup-padding-x"];
-        int ypad = _settings.Dimensions["popup-padding-y"];
-        StyleData style = _settings.GetStyle("popup");
+        Rectangle shape = Rectangle.Centered(_renderer.Bounds.Center, item.ContentDimensions);
 
-        TextRenderBox textbox = new(text, _renderer.Bounds.Shrink(xpad, ypad, xpad, ypad));
-        textbox.HorizontalAlign = HorzontalAlignment.Center;
-        textbox.Bounds = textbox.Used;
-        RenderPopupAroundShape(textbox.Bounds);
-        textbox.Render(_renderer, style, false);
+        if (mode == RefreshMode.Full)
+            RenderPopupAroundShape(shape);
+
+        item.RenderContent(shape, _renderer);
     }
 
     private void RenderPopupAroundShape(Rectangle rect)

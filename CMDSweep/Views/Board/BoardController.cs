@@ -1,6 +1,7 @@
 ﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
 using CMDSweep.IO;
-using CMDSweep.Layout;
+using CMDSweep.Rendering;
 using CMDSweep.Views.Board.State;
 using System;
 using System.Collections.Generic;
@@ -8,27 +9,38 @@ using System.Timers;
 
 namespace CMDSweep.Views.Board;
 
-class BoardController : Controller
+class BoardController : IViewController
 {
-    public BoardState CurrentState;
     private readonly Timer refreshTimer;
-    public TextEnterField HighscoreTextField;
 
-    public BoardController(GameApp g) : base(g)
+    public BoardState CurrentState { get; private set; }
+    private readonly IRenderer _renderer;
+    private BoardVisualizer _visualizer;
+
+    public GameApp App { get; }
+
+    public BoardController(GameApp app)
     {
-        Visualizer = new BoardVisualizer(this);
+        App = app;
+        _renderer = App.Renderer;
+        if (SaveData.PlayerName == null) SaveData.PlayerName = "You";
+
+        CurrentState = BoardState.NewGame(SaveData.CurrentDifficulty, Settings);
 
         refreshTimer = new Timer(100);
         refreshTimer.Elapsed += RefreshTimerElapsed;
         refreshTimer.AutoReset = true;
 
-        if (SaveData.PlayerName == null) SaveData.PlayerName = "You";
-        HighscoreTextField = new TextEnterField(this, new(0, 0, 15, 1), App.Renderer, Settings.GetStyle("popup-textbox")) { Text = SaveData.PlayerName };
+        _visualizer = new BoardVisualizer(_renderer, Settings, CurrentState);
     }
-    
+
+    public GameSettings Settings => App.Settings;
+
+    public SaveData SaveData => App.SaveData;
+
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
     
-    internal override bool Step()
+    public bool Step()
     {
         InputAction ia = App.ReadAction();
 
@@ -49,11 +61,11 @@ class BoardController : Controller
                 return true;
 
             default:
-                return ProcessBoardChange(ia);
+                return ProcessBoardChangeInput(ia);
         }
     }
 
-    private bool ProcessBoardChange(InputAction ia)
+    private bool ProcessBoardChangeInput(InputAction ia)
     {
         if (App.AppState == ApplicationState.Done)
         {
@@ -137,8 +149,8 @@ class BoardController : Controller
         SaveData.PlayerName = HighscoreTextField.Text;
         List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
-        while (scores.Count >= Highscores.highscoreEntries)
-            scores.RemoveAt(Highscores.highscoreEntries - 1);
+        while (scores.Count >= HighscoreTable.highscoreEntries)
+            scores.RemoveAt(HighscoreTable.highscoreEntries - 1);
 
         scores.Add(new()
         {
@@ -153,11 +165,40 @@ class BoardController : Controller
 
     internal void NewGame()
     {
-        refreshTimer.Stop();
-        CurrentState = BoardState.NewGame(SaveData.CurrentDifficulty, Settings);
-        Storage.WriteSave(SaveData);
+        ResetGameState();
+
         App.ChangeMode(ApplicationState.Playing);
     }
 
+    private void ResetGameState()
+    {
+        refreshTimer.Stop();
+        CurrentState = BoardState.NewGame(SaveData.CurrentDifficulty, Settings);
+        Storage.WriteSave(SaveData);
+    }
+
+    public bool CheckScroll() => !CurrentState!.ScrollIsNeeded;
+
+    public void Scroll() => CurrentState = CurrentState!.Scroll();
+
+    public bool CheckResize()
+    {
+        Rectangle newRenderMask = RenderMaskFromConsoleDimension();
+        return !newRenderMask.Equals(CurrentState!.View.RenderMask);
+    }
+
+    public void Resize()
+    {
+        Rectangle newRenderMask = RenderMaskFromConsoleDimension(); // Area that the board can be drawn into
+        CurrentState!.View.ChangeRenderMask(newRenderMask);
+    }
+
+    private Rectangle RenderMaskFromConsoleDimension()
+    {
+        int barheight = 1 + 2 * Settings.Dimensions["stat-padding-y"];
+
+        Rectangle newRenderMask = _renderer.Bounds.Shrink(0, barheight, 0, 0);
+        return newRenderMask;
+    }
 
 }

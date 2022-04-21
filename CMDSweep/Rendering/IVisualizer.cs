@@ -3,5 +3,5 @@
 interface IVisualizer
 {
     internal bool Visualize(RefreshMode mode);
-    internal Controller Controller { get; }
+    internal IViewController Controller { get; }
 }
