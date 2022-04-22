@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep.Views.Menus;
 
-class MenuVisualizer : Visualizer<MenuList>
+class MenuVisualizer : IChangeableTypeVisualizer<MenuList>
 {
     internal TableGrid TableGrid;
     internal int scrollDepth = 0;

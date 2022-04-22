@@ -5,6 +5,7 @@ namespace CMDSweep.Views.Highscore;
 
 class HighscoreController : IViewController
 {
+    private HighscoreVisualizer _visualizer;
     internal Difficulty SelectedDifficulty;
 
     public GameApp App { get; }
@@ -13,11 +14,11 @@ class HighscoreController : IViewController
     {
         App = app;
 
-        Visualizer = new HighscoreVisualizer(this);
+        _visualizer = new HighscoreVisualizer(app.Renderer, app.Settings);
         SelectedDifficulty = app.SaveData.CurrentDifficulty;
     }
 
-    internal override bool Step()
+    public bool Step()
     {
         InputAction ia = App.ReadAction();
         switch (ia)
@@ -31,15 +32,10 @@ class HighscoreController : IViewController
         }
         return true;
     }
-    internal void ShowHighscores() => App.AppState = ApplicationState.Highscore;
 
-    public void Visualize(RefreshMode mode)
-    {
-        throw new NotImplementedException();
-    }
+    public void ShowHighscores() => App.AppState = ApplicationState.Highscore;
 
-    bool IViewController.Step()
-    {
-        throw new NotImplementedException();
-    }
+    public void Refresh(RefreshMode _) => _visualizer.Visualize(SelectedDifficulty);
+
+    public void ResizeView() => _visualizer.Resize(); 
 }

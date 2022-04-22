@@ -12,11 +12,10 @@ namespace CMDSweep.Views.Board;
 class BoardController : IViewController
 {
     private readonly Timer refreshTimer;
-
-    public BoardState CurrentState { get; private set; }
     private readonly IRenderer _renderer;
     private BoardVisualizer _visualizer;
 
+    public BoardState CurrentState { get; private set; }
     public GameApp App { get; }
 
     public BoardController(GameApp app)
@@ -187,7 +186,7 @@ class BoardController : IViewController
         return !newRenderMask.Equals(CurrentState!.View.RenderMask);
     }
 
-    public void Resize()
+    public void ResizeView()
     {
         Rectangle newRenderMask = RenderMaskFromConsoleDimension(); // Area that the board can be drawn into
         CurrentState!.View.ChangeRenderMask(newRenderMask);
@@ -201,4 +200,8 @@ class BoardController : IViewController
         return newRenderMask;
     }
 
+    public void Refresh(RefreshMode mode)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -1,37 +1,28 @@
-﻿using CMDSweep.Layout;
+﻿using CMDSweep.Data;
+using CMDSweep.Layout;
 using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Help;
 
-class HelpVisualizer : Visualizer<TextRenderBox>
+class HelpVisualizer : IChangeableTypeVisualizer<TextRenderBox>
 {
-    public HelpVisualizer(HelpController hctrl) : base(hctrl) { }
-    
-    public override bool CheckFullRefresh() => LastState!.Text != CurrentState!.Text;
-    
-    public override bool CheckResize() => !CurrentState!.Bounds.Equals(Renderer.Bounds.Shrink(2));
-    
-    public override bool CheckScroll() => true;
-    
-    public override void RenderChanges()
+    IRenderer _renderer;
+    StyleData _styleData;
+
+    public HelpVisualizer(IRenderer renderer, GameSettings settings)
     {
-        CurrentState!.Render(Renderer, HideStyle, true);
-    }
-    
-    public override void RenderFull()
-    {
-        Renderer.ClearScreen(HideStyle);
-        CurrentState!.Render(Renderer, HideStyle, true);
+        _renderer = renderer;
+        _styleData = settings.GetStyle("menu");
     }
 
-    
-    public override void Resize()
+    public void VisualizeChanges(TextRenderBox state, TextRenderBox old)
     {
-        CurrentState!.Bounds = Renderer.Bounds.Shrink(2);
+        state.Render(_renderer, true);
     }
-
     
-    public override TextRenderBox RetrieveState() => ((HelpController)Controller).Box;
-    
-    public override void Scroll() { }
+    public void Visualize(TextRenderBox state)
+    {
+        _renderer.ClearScreen(_styleData);
+        state.Render(_renderer, true);
+    }
 }

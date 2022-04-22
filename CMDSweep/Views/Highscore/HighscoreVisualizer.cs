@@ -4,36 +4,29 @@ using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Highscore;
 
-class HighscoreVisualizer : Visualizer<Difficulty>
+class HighscoreVisualizer : ITypeVisualizer<Difficulty>
 {
-    TableGrid ScoreTable;
-    public HighscoreVisualizer(HighscoreController hctrl) : base(hctrl)
+    private TableGrid _scoreTable;
+    private IRenderer _renderer;
+    private StyleData _styleData;
+    private GameSettings _gameSettings;
+
+    public HighscoreVisualizer(IRenderer renderer, GameSettings settings)
     {
-        HideStyle = Settings.GetStyle("menu");
+        _renderer = renderer;
+        _styleData = settings.GetStyle("menu");
         Resize();
     }
 
-    public override bool CheckFullRefresh() => true;
-
-    public override bool CheckResize() => true;
-
-    public override bool CheckScroll() => false;
-
-    public override void RenderChanges() => RenderFull();
-
-    public override void RenderFull()
+    public void Visualize(Difficulty difficulty)
     {
-        Renderer.ClearScreen(HideStyle);
-        HighscoreTable.RenderHSTable(Renderer, Settings, ScoreTable, CurrentState!, HideStyle);
+        _renderer.ClearScreen(_styleData);
+        HighscoreTable.RenderHSTable(_renderer, _gameSettings, _scoreTable, difficulty, _styleData);
     }
 
-    public override void Resize()
+    public void Resize()
     {
-        ScoreTable = HighscoreTable.GetHSTableGrid(Settings);
-        ScoreTable.CenterOn(Renderer.Bounds.Center);
+        _scoreTable = HighscoreTable.GetHSTableGrid(_gameSettings);
+        _scoreTable.CenterOn(_renderer.Bounds.Center);
     }
-
-    public override Difficulty RetrieveState() => ((HighscoreController)Controller).SelectedDifficulty;
-
-    public override void Scroll() { }
 }

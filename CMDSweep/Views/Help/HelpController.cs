@@ -7,20 +7,22 @@ using CMDSweep.Rendering;
 namespace CMDSweep.Views.Help;
 
 class HelpController : IViewController
-{
-    internal TextRenderBox Box;
+{ 
+    private TextRenderBox _textBox;
+    private HelpVisualizer _visualizer;
+    private IRenderer _renderer;
 
     public GameApp App { get; }
 
-    public HelpVisualizer Visualizer { get; }
-
     internal HelpController(GameApp app)
     {
-        Visualizer = new HelpVisualizer(this);
         App = app;
-        StyleData styleData = Settings.GetStyle("menu");
+        _renderer = App.Renderer;
+        _visualizer = new HelpVisualizer(_renderer, App.Settings);
 
-        Box = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero, styleData)
+        StyleData styleData = App.Settings.GetStyle("menu");
+
+        _textBox = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero, styleData)
         {
             Wrap = true,
             VerticalOverflow = false,
@@ -29,9 +31,6 @@ class HelpController : IViewController
             VerticalAlign = VerticalAlignment.Top,
         };
     }
-
-    public GameSettings Settings => App.Settings;
-    public SaveData SaveData => App.SaveData;
 
     public bool Step()
     {
@@ -50,13 +49,23 @@ class HelpController : IViewController
 
     private void TryScrollDown()
     {
-        Box = Box.Clone();
-        Box.ScrollDown();
+        _textBox = _textBox.Clone();
+        _textBox.ScrollDown();
     }
 
     private void TryScrollUp()
     {
-        Box = Box.Clone();
-        Box.ScrollUp();
+        _textBox = _textBox.Clone();
+        _textBox.ScrollUp();
+    }
+
+    public void ResizeView()
+    {
+        
+    }
+
+    public void Refresh(RefreshMode mode)
+    {
+        _visualizer.Visualize(_textBox);
     }
 }

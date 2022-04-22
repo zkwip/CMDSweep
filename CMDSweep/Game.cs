@@ -25,14 +25,14 @@ class GameApp
     // Curent States
     internal ApplicationState AppState;
 
-    internal IViewController? CurrentController => AppState switch
+    internal IViewController CurrentController => AppState switch
     {
         ApplicationState.Playing => BControl,
         ApplicationState.Done => BControl,
         ApplicationState.Highscore => HSControl,
         ApplicationState.Menu => MControl,
         ApplicationState.Help => HLControl,
-        _ => null,
+        _ => MControl
     };
 
     static void Main(string[] _)
@@ -59,7 +59,7 @@ class GameApp
         while (Step()) ;
     }
 
-    private void Renderer_BoundsChanged(object? sender, EventArgs _) => Refresh(RefreshMode.Full);
+    private void Renderer_BoundsChanged(object? sender, EventArgs _) => CurrentController!.ResizeView();
 
     private bool Step()
     {
@@ -71,8 +71,9 @@ class GameApp
     {
         if (AppState == ApplicationState.Quit) return;
         if (CurrentController == null) return;
-        CurrentController.Visualize(mode);
+        CurrentController.Refresh(mode);
     }
+
     internal InputAction ReadAction() => ParseAction(Console.ReadKey(true));
     internal InputAction ParseAction(ConsoleKeyInfo info)
     {
