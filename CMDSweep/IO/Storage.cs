@@ -10,13 +10,19 @@ static class Storage
     private const string SaveFilePath = "save.json";
     private const string SettingsFilePath = "Assets/settings.json";
     private const string HelpFilePath = "Assets/help.txt";
+
     internal static GameSettings LoadSettings()
     {
         string settingsText = File.ReadAllText(SettingsFilePath);
+
         GameSettings? settings = JsonConvert.DeserializeObject<GameSettings>(settingsText);
-        if (settings == null) throw new Exception("Failed to load settings");
+
+        if (settings == null) 
+            throw new Exception("Failed to load settings");
+
         return settings;
     }
+
     internal static SaveData LoadSaveFile(GameSettings settings)
     {
         SaveData? sd;
@@ -30,8 +36,10 @@ static class Storage
             sd = new(settings.DefaultDifficulties);
             WriteSave(sd);
         }
+
         if (sd == null)
             throw new Exception("Failed to open or storage file");
+
         return sd;
     }
 

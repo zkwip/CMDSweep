@@ -11,7 +11,7 @@ class TextEnterField : TextRenderBox
     public bool AllowEnter = false;
     public bool Active { get; private set; }
 
-    internal TextEnterField(Rectangle bounds, StyleData sd) : base("", bounds)
+    internal TextEnterField(Rectangle bounds, StyleData sd) : base("", bounds, sd)
     {
         _styleData = sd;
         Active = false;
@@ -24,7 +24,7 @@ class TextEnterField : TextRenderBox
         Active = true;
         ConsoleKeyInfo info;
 
-        Render(renderer, _styleData, true);
+        Render(renderer, true);
         while (true)
         {
             info = Console.ReadKey(true);
@@ -45,7 +45,7 @@ class TextEnterField : TextRenderBox
                 Text += c;
             }
             HorizontalScroll = RightmostScroll;
-            Render(renderer, _styleData, true);
+            Render(renderer, true);
         }
 
         Active = false;

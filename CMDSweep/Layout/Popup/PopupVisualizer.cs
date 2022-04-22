@@ -4,23 +4,29 @@ using CMDSweep.Geometry;
 
 namespace CMDSweep.Layout.Popup;
 
-internal class PopupVisualizer : ITypeVisualizer<IPopup>
+internal class PopupVisualizer : IChangeableTypeVisualizer<IPopup>
 {
     private GameSettings _settings;
     private IRenderer _renderer;
+    private StyleData _styleData;
+
     public PopupVisualizer(IRenderer renderer, GameSettings settings)
     {
         _settings = settings;
         _renderer = renderer;
+        _styleData = settings.GetStyle("popup");
     }
 
-    public void Visualize(IPopup item, RefreshMode mode = RefreshMode.Full)
+    public void Visualize(IPopup item)
     {
         Rectangle shape = Rectangle.Centered(_renderer.Bounds.Center, item.ContentDimensions);
+        RenderPopupAroundShape(shape);
+        item.RenderContent(shape, _renderer);
+    }
 
-        if (mode == RefreshMode.Full)
-            RenderPopupAroundShape(shape);
-
+    public void VisualizeChanges(IPopup item, IPopup oldItem)
+    {
+        Rectangle shape = Rectangle.Centered(_renderer.Bounds.Center, item.ContentDimensions);
         item.RenderContent(shape, _renderer);
     }
 
@@ -28,9 +34,9 @@ internal class PopupVisualizer : ITypeVisualizer<IPopup>
     {
         int xpad = _settings.Dimensions["popup-padding-x"];
         int ypad = _settings.Dimensions["popup-padding-y"];
-        StyleData style = _settings.GetStyle("popup");
+
         rect.CenterOn(_renderer.Bounds.Center);
-        RenderPopupBox(style, rect.Grow(xpad, ypad, xpad, ypad), "popup-border");
+        RenderPopupBox(_styleData, rect.Grow(xpad, ypad, xpad, ypad), "popup-border");
     }
 
     private void RenderPopupBox(StyleData style, Rectangle r, string border)

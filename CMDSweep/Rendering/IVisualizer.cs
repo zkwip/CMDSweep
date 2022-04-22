@@ -1,4 +1,6 @@
-﻿namespace CMDSweep.Rendering;
+﻿using CMDSweep.Views;
+
+namespace CMDSweep.Rendering;
 
 interface IVisualizer
 {

@@ -1,4 +1,5 @@
-﻿using CMDSweep.Geometry;
+﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
 using CMDSweep.Layout;
 using CMDSweep.Rendering;
 using System;
@@ -6,27 +7,36 @@ using System.Collections.Generic;
 
 namespace CMDSweep.Views.Menus;
 
-class MenuVisualizer : IChangeableTypeVisualizer<MenuList>
+class MenuVisualizer : ITypeVisualizer<MenuList>
 {
-    internal TableGrid TableGrid;
-    internal int scrollDepth = 0;
-    internal int maxRows = 4;
-    public StyleData MenuTextStyle => Settings.GetStyle("menu");
-    public StyleData FocusBoxStyle => Settings.GetStyle("menu-highlight-box");
-    public StyleData FocusTitleStyle => Settings.GetStyle("menu-highlight-title");
-    internal Dictionary<string, ConsoleColor> Colors => Settings.Colors;
+    private TableGrid _tableGrid;
+    private IRenderer _renderer;
+    private GameSettings _settings;
 
-    public MenuVisualizer(MenuController mctrl) : base(mctrl)
+    private int scrollDepth = 0;
+    private int maxRows = 4;
+
+    private StyleData _menuTextStyle;
+    private StyleData _focusBoxStyle;
+    private StyleData _focusTitleStyle;
+    private StyleData _hideStyle;
+
+    public MenuVisualizer(GameSettings settings, IRenderer renderer)
     {
-        HideStyle = Settings.GetStyle("menu");
+        _settings = settings;
+
+        _hideStyle = settings.GetStyle("menu");
+        _menuTextStyle = settings.GetStyle("menu");
+        _focusBoxStyle = settings.GetStyle("menu-highlight-box");
+        _focusTitleStyle = settings.GetStyle("menu-highlight-title");
+        _renderer = renderer;
+
         Resize();
     }
 
-    public override bool CheckResize() => false;
-
-    public override void Resize()
+    public void Resize()
     {
-        Dictionary<string, int> dims = Settings.Dimensions;
+        Dictionary<string, int> dims = _settings.Dimensions;
         TableGrid tg = new();
 
         maxRows = dims["menu-rows"];
@@ -44,40 +54,41 @@ class MenuVisualizer : IChangeableTypeVisualizer<MenuList>
         tg.AddRow(dims["menu-row-scale"], 0, "items", maxRows);
 
         tg.FitAround();
-        tg.CenterOn(Renderer.Bounds.Center);
+        tg.CenterOn(_renderer.Bounds.Center);
 
-        TableGrid = tg;
+        _tableGrid = tg;
     }
 
-    public override void RenderFull()
+    public void Visualize(MenuList state)
     {
-        Renderer.ClearScreen(HideStyle);
-        scrollDepth = CurrentState!.FixScroll(scrollDepth, maxRows);
-        RenderTitle(CurrentState!.Title);
-        for (int i = 0; i + scrollDepth < CurrentState!.Items.Count && i < maxRows; i++)
-            CurrentState!.Items[i + scrollDepth].RenderItem(i, this, CurrentState!.FocusIndex == i + scrollDepth);
-        Renderer.HideCursor(MenuTextStyle);
+        _renderer.ClearScreen(_hideStyle);
+        scrollDepth = state.FixScroll(scrollDepth, maxRows);
+
+        RenderMenuTitle(state.Title);
+
+        for (int i = 0; i + scrollDepth < state.Items.Count && i < maxRows; i++)
+        {
+            MenuItem item = state.Items[i + scrollDepth];
+            RenderMenuItem(i, state.FocusIndex == i + scrollDepth, item);
+        }
+
+        //_renderer.HideCursor(_menuTextStyle);
     }
-    private void RenderTitle(string title)
+
+    private void RenderMenuTitle(string title)
     {
-        Point p = TableGrid.GetPoint("labels", "title");
-        Renderer.PrintAtTile(p, MenuTextStyle, title);
+        Point p = _tableGrid.GetPoint("labels", "title");
+        _renderer.PrintAtTile(p, _menuTextStyle, title);
     }
 
-    public static string CenterAlign(string text, int length)
+    internal void RenderMenuItem(int row, bool focus, MenuItem item)
     {
-        int offset = (length - text.Length) / 2;
-        text += "".PadRight(offset);
-        return text.PadLeft(length);
+        StyleData styl = focus ? _focusTitleStyle : _menuTextStyle;
+
+        _renderer.ClearScreen(_menuTextStyle, _tableGrid.Row("items", row));
+
+        _renderer.PrintAtTile(_tableGrid.GetPoint("labels", 0, "items", row), styl, item.Title);
+
+        item.RenderItemExtras(_renderer, row, _tableGrid, focus);
     }
-
-    public override void RenderChanges() => RenderFull();
-
-    public override bool CheckScroll() => false;
-
-    public override void Scroll() { }
-
-    public override bool CheckFullRefresh() => false;
-
-    public override MenuList RetrieveState() => ((MenuController)Controller).currentMenuList;
 }

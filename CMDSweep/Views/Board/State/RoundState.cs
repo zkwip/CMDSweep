@@ -1,6 +1,4 @@
-﻿using CMDSweep.Geometry;
-using CMDSweep.Data;
-using System;
+﻿using CMDSweep.Data;
 
 namespace CMDSweep.Views.Board.State;
 
@@ -23,7 +21,7 @@ internal record struct RoundState
 
     public static RoundState NewGame(Difficulty diff)
     {
-        return new RoundStats(
+        return new RoundState(
             diff,
             PlayerState.NewGame,
             diff.Lives,

@@ -40,14 +40,18 @@ internal class BoardPopupVisualizer : ITypeVisualizer<BoardState>
     public void Visualize(BoardState state)
     {
         _difficulty = state.Difficulty;
+
         IPopup? popup = (state.RoundState.PlayerState) switch
         {
-            PlayerState.Win => _popupVisualizer.Visualize(YouWinPopup),
-            PlayerState.Dead => _popupVisualizer.Visualize(YouLosePopup),
-            PlayerState.ShowingHighscores => _popupVisualizer.Visualize(HighscoreTablePopup),
-            PlayerState.EnteringHighscore => _popupVisualizer.Visualize(EnterHighscorePopup),
+            PlayerState.Win => YouWinPopup,
+            PlayerState.Dead => YouLosePopup,
+            PlayerState.ShowingHighscores => HighscoreTablePopup,
+            PlayerState.EnteringHighscore => EnterHighscorePopup,
+            _ => null
         };
-        _popupVisualizer.Visualize(popup);
+
+        if (popup is not null)
+            _popupVisualizer.Visualize(popup);
     }
 
     private IPopup PrepareTextPopup(string text) => new TextPopup(_settings, text, default);

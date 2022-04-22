@@ -14,6 +14,7 @@ class HighscoreVisualizer : ITypeVisualizer<Difficulty>
     public HighscoreVisualizer(IRenderer renderer, GameSettings settings)
     {
         _renderer = renderer;
+        _gameSettings = settings;
         _styleData = settings.GetStyle("menu");
         Resize();
     }

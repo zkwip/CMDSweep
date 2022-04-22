@@ -1,4 +1,5 @@
-﻿using CMDSweep.Rendering;
+﻿using CMDSweep.Layout;
+using CMDSweep.Rendering;
 using System;
 
 namespace CMDSweep.Views.Menus;
@@ -10,10 +11,13 @@ abstract class MenuItem
     internal MenuList Parent;
 
     public event EventHandler ValueChanged;
-    internal abstract void RenderItemExtras(int row, MenuVisualizer mv, bool focus);
+
+    internal abstract void RenderItemExtras(IRenderer renderer, int row, TableGrid tableGrid, bool focus);
+
     internal abstract bool HandleItemActions(InputAction ia);
 
     internal virtual void OnValueChanged() => ValueChanged?.Invoke(this, EventArgs.Empty);
+
     internal void BindParent(MenuList menuList) => Parent = menuList;
 
     internal MenuItem(string title)
@@ -36,14 +40,11 @@ abstract class MenuItem
         }
     }
 
-    internal void RenderItem(int row, MenuVisualizer mv, bool focus)
+    public static string CenterAlign(string text, int length)
     {
-        StyleData styl = focus ? mv.FocusTitleStyle : mv.MenuTextStyle;
-
-        mv.Renderer.ClearScreen(mv.MenuTextStyle, mv.TableGrid.Row("items", row));
-
-        mv.Renderer.PrintAtTile(mv.TableGrid.GetPoint("labels", 0, "items", row), styl, Title);
-        RenderItemExtras(row, mv, focus);
+        int offset = (length - text.Length) / 2;
+        text += "".PadRight(offset);
+        return text.PadLeft(length);
     }
 
 }

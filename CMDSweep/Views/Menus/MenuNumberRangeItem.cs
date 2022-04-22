@@ -1,14 +1,15 @@
-﻿using System;
+﻿using CMDSweep.Data;
+using System;
 using System.Collections.Generic;
 
 namespace CMDSweep.Views.Menus;
 
-class MenuNumberRange : MenuChoice<int>
+class MenuNumberRangeItem : MenuOptionItem<int>
 {
     public readonly int Min;
     public readonly int Max;
 
-    public MenuNumberRange(string title, int min, int max) : base(title, Range(min, max), x => x.ToString())
+    public MenuNumberRangeItem(string title, int min, int max, GameSettings settings) : base(title, Range(min, max), x => x.ToString(), settings)
     {
         Min = min;
         Max = max;

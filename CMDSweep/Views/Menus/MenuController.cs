@@ -6,20 +6,20 @@ using System;
 namespace CMDSweep;
 class MenuController : IViewController
 {
-    internal MenuList currentMenuList;
-
-    internal MenuList MainMenu;
-    internal MenuList SettingsMenu;
-    internal MenuList AdvancedSettingsMenu;
+    private MenuList _currentMenuList;
+    private MenuVisualizer _visualizer;
 
     public GameApp App { get; }
 
-    public MenuVisualizer Visualizer { get; }
+    public MenuList MainMenu;
+    public MenuList SettingsMenu;
+    public MenuList AdvancedSettingsMenu;
+
 
     public MenuController(GameApp app)
     {
         App = app;
-        Visualizer = new MenuVisualizer(this);
+        _visualizer = new MenuVisualizer(Settings, app.Renderer);
         BuildMenus();
     }
 
@@ -34,7 +34,7 @@ class MenuController : IViewController
             App.BControl.NewGame();
             return true;
         }
-        bool res = currentMenuList.HandleInput(ia);
+        bool res = _currentMenuList.HandleInput(ia);
         App.Refresh(RefreshMode.ChangesOnly);
         return res;
     }
@@ -55,32 +55,32 @@ class MenuController : IViewController
         MainMenu.AddButton("Settings", () => OpenMenu(SettingsMenu));
         MainMenu.AddButton("Quit Game", () => App.QuitGame());
 
-        CreateSettingsItem(SettingsMenu, new MenuChoice<Difficulty>("Difficulty", SaveData.Difficulties, x => x.Name), x => x, (d, val) => SaveData.CurrentDifficulty = val);
+        CreateSettingsItem(SettingsMenu, new MenuOptionItem<Difficulty>("Difficulty", SaveData.Difficulties, x => x.Name, Settings), x => x, (d, val) => SaveData.CurrentDifficulty = val);
 
-        CreateSettingsItem(SettingsMenu, new MenuNumberRange("Width", 5, 1000), x => x.Width, (d, val) => d.Width = val);
-        CreateSettingsItem(SettingsMenu, new MenuNumberRange("Height", 5, 1000), x => x.Height, (d, val) => d.Height = val);
-        CreateSettingsItem(SettingsMenu, new MenuNumberRange("Mines", 1, 10000), x => x.Mines, (d, val) => d.Mines = val);
-        CreateSettingsItem(SettingsMenu, new MenuNumberRange("Lives", 1, 100), x => x.Lives, (d, val) => d.Lives = val);
+        CreateSettingsItem(SettingsMenu, new MenuNumberRangeItem("Width", 5, 1000, Settings), x => x.Width, (d, val) => d.Width = val);
+        CreateSettingsItem(SettingsMenu, new MenuNumberRangeItem("Height", 5, 1000, Settings), x => x.Height, (d, val) => d.Height = val);
+        CreateSettingsItem(SettingsMenu, new MenuNumberRangeItem("Mines", 1, 10000, Settings), x => x.Mines, (d, val) => d.Mines = val);
+        CreateSettingsItem(SettingsMenu, new MenuNumberRangeItem("Lives", 1, 100, Settings), x => x.Lives, (d, val) => d.Lives = val);
 
         SettingsMenu.AddButton("Advanced", () => OpenMenu(AdvancedSettingsMenu));
 
-        CreateSettingsItem(AdvancedSettingsMenu, new MenuNumberRange("Safe Zone", 1, 100), x => x.Safezone, (d, val) => d.Safezone = val);
-        CreateSettingsItem(AdvancedSettingsMenu, new MenuNumberRange("Counting Radius", 1, 100), x => x.DetectionRadius, (d, val) => d.DetectionRadius = val);
+        CreateSettingsItem(AdvancedSettingsMenu, new MenuNumberRangeItem("Safe Zone", 1, 100, Settings), x => x.Safezone, (d, val) => d.Safezone = val);
+        CreateSettingsItem(AdvancedSettingsMenu, new MenuNumberRangeItem("Counting Radius", 1, 100, Settings), x => x.DetectionRadius, (d, val) => d.DetectionRadius = val);
 
-        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Counting Wraps Around"), x => x.WrapAround, (d, val) => d.WrapAround = val);
-        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Flags Allowed"), x => x.FlagsAllowed, (d, val) => d.FlagsAllowed = val);
-        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Question Marks Allowed"), x => x.QuestionMarkAllowed, (d, val) => d.QuestionMarkAllowed = val);
-        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Automatic Discovery"), x => x.AutomaticDiscovery, (d, val) => d.AutomaticDiscovery = val);
-        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Subtract Flags From Count"), x => x.SubtractFlags, (d, val) => d.SubtractFlags = val);
-        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOption("Only Show Numbers At Cursor"), x => x.OnlyShowAtCursor, (d, val) => d.OnlyShowAtCursor = val);
+        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOptionItem("Counting Wraps Around", Settings), x => x.WrapAround, (d, val) => d.WrapAround = val);
+        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOptionItem("Flags Allowed", Settings), x => x.FlagsAllowed, (d, val) => d.FlagsAllowed = val);
+        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOptionItem("Question Marks Allowed", Settings), x => x.QuestionMarkAllowed, (d, val) => d.QuestionMarkAllowed = val);
+        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOptionItem("Automatic Discovery", Settings), x => x.AutomaticDiscovery, (d, val) => d.AutomaticDiscovery = val);
+        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOptionItem("Subtract Flags From Count", Settings), x => x.SubtractFlags, (d, val) => d.SubtractFlags = val) ;
+        CreateSettingsItem(AdvancedSettingsMenu, new MenuBoolOptionItem("Only Show Numbers At Cursor", Settings), x => x.OnlyShowAtCursor, (d, val) => d.OnlyShowAtCursor = val);
     }
 
     private event EventHandler DifficultyChanged;
 
-    private void CreateSettingsItem<TOption>(MenuList Parent, MenuChoice<TOption> Item, Func<Difficulty, TOption> ReadProperty, Action<Difficulty, TOption> WriteProperty)
+    private void CreateSettingsItem<TOption>(MenuList Parent, MenuOptionItem<TOption> Item, Func<Difficulty, TOption> ReadProperty, Action<Difficulty, TOption> WriteProperty)
     {
         // Changing the difficulty itself works differently
-        if (Item is MenuChoice<Difficulty> choice)
+        if (Item is MenuOptionItem<Difficulty> choice)
             Item.ValueChanged += (i, o) => ChangePreset(choice);
         else
             Item.ValueChanged += (i, o) => ForkCurrentDifficulty(WriteProperty, Item.SelectedOption);
@@ -111,7 +111,7 @@ class MenuController : IViewController
         DifficultyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private void ChangePreset(MenuChoice<Difficulty> choice)
+    private void ChangePreset(MenuOptionItem<Difficulty> choice)
     {
         Difficulty d = choice.SelectedOption;
         if (d == null) return;
@@ -125,7 +125,11 @@ class MenuController : IViewController
     public void OpenMenu(MenuList? menu)
     {
         if (menu == null) return;
-        currentMenuList = menu;
+        _currentMenuList = menu;
         App.ChangeMode(ApplicationState.Menu);
     }
+
+    public void ResizeView() => _visualizer.Resize();
+
+    public void Refresh(RefreshMode mode) => _visualizer.Visualize(_currentMenuList);
 }

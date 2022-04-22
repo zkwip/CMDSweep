@@ -7,31 +7,28 @@ namespace CMDSweep.Layout.Popup;
 internal class TextPopup : IPopup
 {
     private TextRenderBox _textRenderBox;
+    private StyleData _textStyle;
 
-    public TextPopup(GameSettings settings, string text, Dimensions d)
+    public TextPopup(GameSettings settings, string text, Dimensions maxDimensions)
     {
-        _textRenderBox = new TextRenderBox();
-        _textRenderBox.Bounds = new Rectangle(0, 0, d.Width, d.Height);
+        _textStyle = settings.GetStyle("popup");
+        _textRenderBox = new TextRenderBox(_textStyle);
+        _textRenderBox.Bounds = new Rectangle(0, 0, maxDimensions.Width, maxDimensions.Height);
         _textRenderBox.Text = text;
         _textRenderBox.Bounds = _textRenderBox.Used;
-
-        TextStyle = settings.GetStyle("popup");
     }
 
-    public TextPopup(GameSettings settings, TextRenderBox textRenderBox)
+    public TextPopup(TextRenderBox textRenderBox)
     {
         _textRenderBox = textRenderBox;
-
-        TextStyle = settings.GetStyle("popup");
+        _textStyle = _textRenderBox.StyleData;
     }
-
-    public StyleData TextStyle { get; set; }
 
     public Dimensions ContentDimensions => _textRenderBox.Bounds.Dimensions;
 
     public void RenderContent(Rectangle bounds, IRenderer renderer)
     {
         _textRenderBox.Bounds = bounds;
-        _textRenderBox.Render(renderer, TextStyle, false);
+        _textRenderBox.Render(renderer, false);
     }
 }

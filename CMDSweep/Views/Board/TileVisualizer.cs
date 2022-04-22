@@ -33,6 +33,7 @@ class TileVisualizer : ITypeVisualizer<Point>
         _gridSize = settings.Dimensions["cell-grid-size"];
         _tileWidth = settings.Dimensions["cell-size-x"];
         _borderStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
+        _clearVisual = new ("  ", _borderStyle);
     }
 
     public void UpdateBoardState(BoardState state)

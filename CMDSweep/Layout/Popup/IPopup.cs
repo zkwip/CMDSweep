@@ -5,7 +5,6 @@ namespace CMDSweep.Layout.Popup;
 
 internal interface IPopup
 {
-    public StyleData TextStyle { get; }
 
     public Dimensions ContentDimensions { get; }
 
