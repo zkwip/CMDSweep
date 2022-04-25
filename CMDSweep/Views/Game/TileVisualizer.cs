@@ -3,9 +3,9 @@ using CMDSweep.Data;
 using CMDSweep.Layout;
 using CMDSweep.Rendering;
 using System;
-using CMDSweep.Views.Board.State;
+using CMDSweep.Views.Game.State;
 
-namespace CMDSweep.Views.Board;
+namespace CMDSweep.Views.Game;
 
 class TileVisualizer : ITypeVisualizer<Point>
 {
@@ -13,34 +13,34 @@ class TileVisualizer : ITypeVisualizer<Point>
     private GameSettings _settings;
     private IRenderer _renderer;
 
-    private BoardView _view;
-    private BoardData _boardData;
+    private BoardViewState _view;
+    private BoardState _boardData;
     private bool _dead;
     private readonly int _gridSize;
     private readonly int _tileWidth;
     StyleData _borderStyle;
     private readonly StyledText _clearVisual;
 
-    public TileVisualizer(IRenderer renderer, GameSettings settings, BoardState state)
+    public TileVisualizer(IRenderer renderer, GameSettings settings, GameState initialState)
     {
-        _difficulty = state.Difficulty;
+        _difficulty = initialState.Difficulty;
         _settings = settings;
         _renderer = renderer;
 
-        _view = state.View;
-        _boardData = state.BoardData;
-        _dead = state.RoundState.PlayerState == PlayerState.Dead;
+        _view = initialState.View;
+        _boardData = initialState.BoardState;
+        _dead = initialState.ProgressState.PlayerState == PlayerState.Dead;
         _gridSize = settings.Dimensions["cell-grid-size"];
         _tileWidth = settings.Dimensions["cell-size-x"];
         _borderStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
         _clearVisual = new ("  ", _borderStyle);
     }
 
-    public void UpdateBoardState(BoardState state)
+    public void UpdateBoardState(GameState state)
     {
         _view = state.View;
-        _boardData = state.BoardData;
-        _dead = state.RoundState.PlayerState == PlayerState.Dead;
+        _boardData = state.BoardState;
+        _dead = state.ProgressState.PlayerState == PlayerState.Dead;
     }
 
     public void Visualize(Point p, RefreshMode _) => Visualize(p);

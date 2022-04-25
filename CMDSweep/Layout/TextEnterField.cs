@@ -19,12 +19,11 @@ class TextEnterField : TextRenderBox
     }
     
     
-    public ConsoleKeyInfo Activate(IRenderer renderer)
+    public ConsoleKeyInfo HandleInput()
     {
         Active = true;
         ConsoleKeyInfo info;
 
-        Render(renderer, true);
         while (true)
         {
             info = Console.ReadKey(true);
@@ -45,7 +44,6 @@ class TextEnterField : TextRenderBox
                 Text += c;
             }
             HorizontalScroll = RightmostScroll;
-            Render(renderer, true);
         }
 
         Active = false;

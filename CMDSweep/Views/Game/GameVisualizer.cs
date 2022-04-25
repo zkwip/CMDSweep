@@ -1,12 +1,12 @@
 ﻿using CMDSweep.Data;
 using CMDSweep.Geometry;
 using CMDSweep.Rendering;
-using CMDSweep.Views.Board.State;
+using CMDSweep.Views.Game.State;
 using System.Collections.Generic;
 
-namespace CMDSweep.Views.Board;
+namespace CMDSweep.Views.Game;
 
-partial class BoardVisualizer : IChangeableTypeVisualizer<BoardState>
+partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
 {
     private readonly IRenderer _renderer;
     private BoardPopupVisualizer _boardPopups;
@@ -14,17 +14,17 @@ partial class BoardVisualizer : IChangeableTypeVisualizer<BoardState>
     private TileVisualizer _tileVisualizer;
     private StyleData _hideStyle;
 
-    public BoardVisualizer(IRenderer renderer, GameSettings settings, BoardState currentState)
+    public GameVisualizer(IRenderer renderer, GameSettings settings, GameState initialState)
     {
         _renderer = renderer;
         _hideStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
         _statboardVisualizer = new StatboardVisualizer(_renderer, settings);
         _boardPopups = new BoardPopupVisualizer(_renderer, settings);
-        _tileVisualizer = new TileVisualizer(_renderer, settings, currentState);
+        _tileVisualizer = new TileVisualizer(_renderer, settings, initialState);
     }
 
-    public void Visualize(BoardState state)
+    public void Visualize(GameState state)
     {
         state.View.TryCenterViewPort();
 
@@ -40,7 +40,7 @@ partial class BoardVisualizer : IChangeableTypeVisualizer<BoardState>
         state.View.ValidateViewPort();
     }
 
-    public void VisualizeChanges(BoardState state, BoardState previousState)
+    public void VisualizeChanges(GameState state, GameState previousState)
     {
         List<Point> changes;
         changes = state.CompareForVisibleChanges(previousState);

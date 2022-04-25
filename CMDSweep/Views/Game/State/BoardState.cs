@@ -2,24 +2,24 @@
 using CMDSweep.Data;
 using System;
 using System.Collections.Generic;
-using CMDSweep.Views.Board.State;
+using CMDSweep.Views.Game.State;
 
-namespace CMDSweep.Views.Board;
+namespace CMDSweep.Views.Game;
 
-internal record class BoardData
+internal record class BoardState
 {
     public readonly CellData[,] Cells;
     public readonly Difficulty Difficulty;
     public readonly Point Cursor;
 
-    public BoardData(CellData[,] cells, Difficulty difficulty, Point cursor)
+    public BoardState(CellData[,] cells, Difficulty difficulty, Point cursor)
     {
         Cells = cells;
         Difficulty = difficulty;
         Cursor = cursor;
     }
 
-    public static BoardData NewGame(Difficulty diff)
+    public static BoardState NewGame(Difficulty diff)
     {
         int width = diff.Width;
         int height = diff.Height;
@@ -27,7 +27,7 @@ internal record class BoardData
         Point cursor = new Point(width / 2, height / 2);
 
         CellData[,] cells = new CellData[width, height];
-        return new BoardData(cells, diff, cursor);
+        return new BoardState(cells, diff, cursor);
     }
 
     private int CountCells(Predicate<CellData> p)
@@ -70,21 +70,21 @@ internal record class BoardData
     public CellData Cell(Point cl) => Cells[cl.X, cl.Y];
 
 
-    public BoardData Flag(Point cl)
+    public BoardState Flag(Point cl)
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.Flagged;
         return new(newCells, Difficulty, Cursor);
     }
 
-    public BoardData Unflag(Point cl)
+    public BoardState Unflag(Point cl)
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.Unflagged;
         return new(newCells, Difficulty, Cursor);
     }
 
-    public BoardData QuestionMark(Point cl)
+    public BoardState QuestionMark(Point cl)
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.QuestionMarked;
@@ -162,7 +162,7 @@ internal record class BoardData
 
     public int Tiles => BoardHeight * BoardWidth;
 
-    public BoardData Discover(List<Point> discoveredCells)
+    public BoardState Discover(List<Point> discoveredCells)
     {
         CellData[,] newCells = (CellData[,])Cells.Clone();
 
@@ -172,10 +172,10 @@ internal record class BoardData
             Cells[cell.X, cell.Y].Flagged = FlagMarking.Unflagged;
         }
 
-        return new BoardData(newCells, Difficulty, Cursor);
+        return new BoardState(newCells, Difficulty, Cursor);
     }
 
-    public BoardData MoveCursor(Direction direction)
+    public BoardState MoveCursor(Direction direction)
     {
         return direction switch
         {
@@ -187,9 +187,9 @@ internal record class BoardData
         };
     }
 
-    private BoardData SetCursor(Point cursor) => new BoardData(Cells, Difficulty, cursor);
+    private BoardState SetCursor(Point cursor) => new BoardState(Cells, Difficulty, cursor);
 
-    public BoardData ToggleFlag()
+    public BoardState ToggleFlag()
     {
         switch (Cell(Cursor).Flagged)
         {
@@ -207,7 +207,7 @@ internal record class BoardData
         }
     }
 
-    public List<Point> DiffersFrom(BoardData other, Rectangle area)
+    public List<Point> DiffersFrom(BoardState other, Rectangle area)
     {
         List<Point> hits = new List<Point>();
         area.ForAll((Point p) =>
@@ -218,7 +218,7 @@ internal record class BoardData
         return hits;
     }
 
-    public List<Point> CompareForVisibleChanges(BoardData other, Rectangle area)
+    public List<Point> CompareForVisibleChanges(BoardState other, Rectangle area)
     {
         List<Point> hits = new();
 
@@ -241,7 +241,7 @@ internal record class BoardData
         return hits;
     }
 
-    public BoardData PlaceMines()
+    public BoardState PlaceMines()
     {
         int minesLeftToPlace = Difficulty.Mines;
         int detectZoneSize = (2 * Difficulty.DetectionRadius + 1) * (2 * Difficulty.DetectionRadius + 1);
@@ -249,7 +249,7 @@ internal record class BoardData
         int maxMines = (int)Math.Floor(0.8 * detectZoneSize);
         Random rng = new();
 
-        BoardData bd = new(Cells, Difficulty, this.Cursor);
+        BoardState bd = new(Cells, Difficulty, this.Cursor);
 
         // Try to randomly place mines and check if the are valid;
         while (minesLeftToPlace > 0 && placementFailures < 1000)

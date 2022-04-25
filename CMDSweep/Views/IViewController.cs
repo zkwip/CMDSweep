@@ -2,7 +2,7 @@
 
 interface IViewController
 {
-    public GameApp App { get; }
+    public MineApp App { get; }
 
     public bool Step();
     void ResizeView();

@@ -2,22 +2,22 @@
 using CMDSweep.Data;
 using CMDSweep.Rendering;
 using System;
-using CMDSweep.Views.Board.State;
+using CMDSweep.Views.Game.State;
 
-namespace CMDSweep.Views.Board;
+namespace CMDSweep.Views.Game;
 
 internal class BoardBorderVisualizer : ITypeVisualizer<Point>
 {
     GameSettings _settings;
-    BoardData _boardData;
-    BoardView _boardView;
+    BoardState _boardData;
+    BoardViewState _boardView;
     IRenderer _renderer;
     StyleData _borderStyle;
 
-    public BoardBorderVisualizer(GameSettings settings, BoardState state, IRenderer renderer, BoardView boardView)
+    public BoardBorderVisualizer(GameSettings settings, GameState state, IRenderer renderer, BoardViewState boardView)
     {
         _settings = settings;
-        _boardData = state.BoardData;
+        _boardData = state.BoardState;
         _boardView = boardView;
         _renderer = renderer;
         _borderStyle = _settings.GetStyle("border-fg", "cell-bg-out-of-bounds");

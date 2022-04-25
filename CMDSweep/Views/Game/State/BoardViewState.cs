@@ -3,9 +3,9 @@ using CMDSweep.Data;
 using System;
 using CMDSweep.Rendering;
 
-namespace CMDSweep.Views.Board.State;
+namespace CMDSweep.Views.Game.State;
 
-internal class BoardView
+internal class BoardViewState
 {
     private readonly int _scaleX;
 
@@ -23,7 +23,7 @@ internal class BoardView
 
     public RenderBufferCopyTask RenderTask { get; private set; }
 
-    public BoardView(GameSettings settings, Rectangle board)
+    public BoardViewState(GameSettings settings, Rectangle board)
     {
         _scrollSafezoneDistance = settings.Dimensions["scroll-safezone"];
         _scaleX = settings.Dimensions["cell-size-x"];
@@ -37,7 +37,7 @@ internal class BoardView
         RenderTask = RenderBufferCopyTask.None;
     }
 
-    public BoardView(int scaleX, int scaleY, int scrollSafezoneDistance, Rectangle scrollValidMask, Rectangle renderMask, Rectangle viewport, Rectangle board)
+    public BoardViewState(int scaleX, int scaleY, int scrollSafezoneDistance, Rectangle scrollValidMask, Rectangle renderMask, Rectangle viewport, Rectangle board)
     {
         _scaleX = scaleX;
         _scaleY = scaleY;
@@ -59,14 +59,14 @@ internal class BoardView
 
     public Rectangle ScrollSafezone => Viewport.Shrink(_scrollSafezoneDistance);
 
-    public BoardView ScrollTo(Point cursor)
+    public BoardViewState ScrollTo(Point cursor)
     {
         
         Offset offset = ScrollSafezone.OffsetOutOfBounds(cursor);
         Rectangle newViewport = Viewport.Shift(offset);
         Rectangle newScrollValidMask = ScrollValidMask.Intersect(newViewport);
 
-        BoardView newView = new(_scaleX, _scaleY, _scrollSafezoneDistance, newScrollValidMask, RenderMask, newViewport, Board);
+        BoardViewState newView = new(_scaleX, _scaleY, _scrollSafezoneDistance, newScrollValidMask, RenderMask, newViewport, Board);
 
         Rectangle oldCopyArea = this.MapToRender(newView.ScrollValidMask);
         Rectangle newCopyArea = newView.MapToRender(newView.ScrollValidMask);

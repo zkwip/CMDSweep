@@ -8,9 +8,9 @@ class HighscoreController : IViewController
     private HighscoreVisualizer _visualizer;
     internal Difficulty SelectedDifficulty;
 
-    public GameApp App { get; }
+    public MineApp App { get; }
 
-    public HighscoreController(GameApp app)
+    public HighscoreController(MineApp app)
     {
         App = app;
 
@@ -24,10 +24,10 @@ class HighscoreController : IViewController
         switch (ia)
         {
             case InputAction.Quit:
-                App.MControl.OpenMenu(App.MControl.MainMenu);
+                App.MenuController.OpenMenu(App.MenuController.MainMenu);
                 break;
             case InputAction.NewGame:
-                App.BControl.NewGame();
+                App.GameController.NewGame();
                 break;
         }
         return true;

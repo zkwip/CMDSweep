@@ -93,34 +93,39 @@ class TextRenderBox : IBounded
     internal List<string> GetLines()
     {
         List<string> lines = new(Text.Split('\n'));
+
+        if (Wrap)
+            return WrappedLines(lines);
+
+        return lines;
+    }
+
+    private List<string> WrappedLines(List<string> lines)
+    {
         List<string> res = new();
 
         // Wrapping
         foreach (string line in lines)
         {
             string linepart = line;
-            if (linepart.Length == 0 || !Wrap)
+
+            if (linepart.Length == 0 || Bounds.Width <= 0)
             {
                 res.Add(linepart);
                 continue;
             }
+
             while (linepart.Length > Bounds.Width)
             {
-                int splitpoint = FindLineSplitPoint(linepart);
+                int breakpoint = FindLineBreakingPoint(linepart);
 
-                if (splitpoint == 0)
-                {
-                    res.Add(linepart[..Bounds.Width]);
-                    linepart = linepart[Bounds.Width..];
-                }
-                else
-                {
-                    res.Add(linepart[..splitpoint]);
-                    linepart = linepart[(splitpoint + 1)..];
-                }
+                res.Add(linepart[..breakpoint]);
+                linepart = linepart[(breakpoint + 1)..].TrimStart();
             }
+
             if (linepart.Length > 0) res.Add(linepart);
         }
+
         return res;
     }
 
@@ -173,10 +178,19 @@ class TextRenderBox : IBounded
         }
     }
 
-    private int FindLineSplitPoint(string line)
+    private int FindLineBreakingPoint(string line)
     {
         int res = 0;
-        for (int i = 0; i < Bounds.Width; i++) if (line[i] == ' ') res = i;
+
+        for (int i = 0; i < Bounds.Width; i++)
+        {
+            if (line[i] == ' ') 
+                res = i;
+        }
+
+        if (res == 0) 
+            return Bounds.Width;
+
         return res;
     }
 

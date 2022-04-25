@@ -12,9 +12,9 @@ class HelpController : IViewController
     private HelpVisualizer _visualizer;
     private IRenderer _renderer;
 
-    public GameApp App { get; }
+    public MineApp App { get; }
 
-    internal HelpController(GameApp app)
+    internal HelpController(MineApp app)
     {
         App = app;
         _renderer = App.Renderer;
@@ -40,7 +40,7 @@ class HelpController : IViewController
             case InputAction.Quit: App.ShowMainMenu(); return true;
             case InputAction.Up: TryScrollUp(); return true;
             case InputAction.Down: TryScrollDown(); return true;
-            case InputAction.NewGame: App.BControl.NewGame(); return true;
+            case InputAction.NewGame: App.GameController.NewGame(); return true;
             default: break;
         }
         App.Refresh(RefreshMode.ChangesOnly);

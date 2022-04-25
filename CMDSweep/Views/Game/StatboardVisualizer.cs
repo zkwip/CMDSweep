@@ -2,11 +2,11 @@
 using CMDSweep.Geometry;
 using CMDSweep.Layout;
 using CMDSweep.Rendering;
-using CMDSweep.Views.Board.State;
+using CMDSweep.Views.Game.State;
 
-namespace CMDSweep.Views.Board;
+namespace CMDSweep.Views.Game;
 
-internal class StatboardVisualizer : ITypeVisualizer<BoardState>
+internal class StatboardVisualizer : ITypeVisualizer<GameState>
 {
     private readonly IRenderer _renderer;
     private readonly GameSettings _settings;
@@ -20,7 +20,7 @@ internal class StatboardVisualizer : ITypeVisualizer<BoardState>
         _tableGrid = new();
     }
 
-    public void Visualize(BoardState state)
+    public void Visualize(GameState state)
     {
         GenerateTableGrid();
 
@@ -59,17 +59,17 @@ internal class StatboardVisualizer : ITypeVisualizer<BoardState>
         _tableGrid.AddColumn(horpad, 0);
     }
 
-    private void RenderClock(BoardState state)
+    private void RenderClock(GameState state)
     {
         Point clockPosition = _tableGrid.GetPoint("clock", "bar");
         StyleData clockStyle = _settings.GetStyle("stat-mines");
         _renderer.PrintAtTile(clockPosition, clockStyle, state.Timing.Time.ToString(@"\ h\:mm\:ss\ "));
     }
 
-    private void RenderFace(BoardState state)
+    private void RenderFace(GameState state)
     {
         Point facePosition = _tableGrid.GetPoint("face", "bar");
-        string face = state.RoundState.Face switch
+        string face = state.ProgressState.Face switch
         {
             Face.Surprise => _settings.Texts["face-surprise"],
             Face.Win => _settings.Texts["face-win"],
@@ -81,14 +81,14 @@ internal class StatboardVisualizer : ITypeVisualizer<BoardState>
         _renderer.PrintAtTile(facePosition, faceStyle, face);
     }
 
-    private void RenderMineCounter(BoardState state)
+    private void RenderMineCounter(GameState state)
     {
         Point minePosition = _tableGrid.GetPoint("mine", "bar");
         StyleData minesLeftStyle = _settings.GetStyle("stat-mines");
         _renderer.PrintAtTile(minePosition, minesLeftStyle, string.Format(" {0:D3} ", state.MinesLeft));
     }
 
-    private void RenderLifeCounter(BoardState state)
+    private void RenderLifeCounter(GameState state)
     {
         Point minePosition = _tableGrid.GetPoint("life", "bar");
         string life = _settings.Texts["stat-life"];
@@ -97,11 +97,11 @@ internal class StatboardVisualizer : ITypeVisualizer<BoardState>
         StyleData livesGoneStyle = _settings.GetStyle("stat-lives-lost", "stat-mines-bg");
 
         string atext = " ";
-        for (int i = 0; i < state.Difficulty.Lives - state.RoundState.LivesLost; i++) 
+        for (int i = 0; i < state.Difficulty.Lives - state.ProgressState.LivesLost; i++) 
             atext += life + " ";
 
         string btext = "";
-        for (int i = 0; i < state.RoundState.LivesLost; i++) 
+        for (int i = 0; i < state.ProgressState.LivesLost; i++) 
             btext += life + " ";
 
         _renderer.PrintAtTile(minePosition, livesLeftStyle, atext);

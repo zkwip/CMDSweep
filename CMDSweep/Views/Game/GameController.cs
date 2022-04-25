@@ -1,36 +1,45 @@
 ﻿using CMDSweep.Data;
 using CMDSweep.Geometry;
 using CMDSweep.IO;
+using CMDSweep.Layout;
 using CMDSweep.Rendering;
-using CMDSweep.Views.Board.State;
+using CMDSweep.Views.Game.State;
 using System;
 using System.Collections.Generic;
 using System.Timers;
 
-namespace CMDSweep.Views.Board;
+namespace CMDSweep.Views.Game;
 
-class BoardController : IViewController
+class GameController : IViewController
 {
     private readonly Timer refreshTimer;
     private readonly IRenderer _renderer;
-    private BoardVisualizer _visualizer;
+    private GameVisualizer _visualizer;
+    private RenderSheduler<GameState> _renderSheduler;
 
-    public BoardState CurrentState { get; private set; }
-    public GameApp App { get; }
+    private TextEnterField _highscoreTextField;
 
-    public BoardController(GameApp app)
+    public GameState CurrentState { get; private set; }
+
+    public MineApp App { get; }
+
+    public GameController(MineApp app)
     {
         App = app;
         _renderer = App.Renderer;
-        if (SaveData.PlayerName == null) SaveData.PlayerName = "You";
 
-        CurrentState = BoardState.NewGame(SaveData.CurrentDifficulty, Settings);
+        if (SaveData.PlayerName == null) 
+            SaveData.PlayerName = "You";
+
+        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings);
 
         refreshTimer = new Timer(100);
         refreshTimer.Elapsed += RefreshTimerElapsed;
         refreshTimer.AutoReset = true;
 
-        _visualizer = new BoardVisualizer(_renderer, Settings, CurrentState);
+        _visualizer = new GameVisualizer(_renderer, Settings, CurrentState);
+
+        _renderSheduler = new RenderSheduler<GameState>(_visualizer, _renderer);
     }
 
     public GameSettings Settings => App.Settings;
@@ -89,7 +98,7 @@ class BoardController : IViewController
 
     private void AfterStepStateChanges()
     {
-        switch (CurrentState.RoundState.PlayerState)
+        switch (CurrentState.ProgressState.PlayerState)
         {
             case PlayerState.Playing:
                 if (!refreshTimer.Enabled) refreshTimer.Start();
@@ -99,7 +108,7 @@ class BoardController : IViewController
             case PlayerState.Dead:
             case PlayerState.Win:
                 refreshTimer.Stop();
-                if (CurrentState.RoundState.PlayerState == PlayerState.Win)
+                if (CurrentState.ProgressState.PlayerState == PlayerState.Win)
                     CheckHighscoreFlow(CurrentState);
 
                 App.AppState = ApplicationState.Done;
@@ -112,7 +121,7 @@ class BoardController : IViewController
         }
     }
 
-    private BoardState CheckHighscoreFlow(BoardState currentState)
+    private GameState CheckHighscoreFlow(GameState currentState)
     {
         TimeSpan time = currentState.Timing.Time;
         if (currentState.TimeMakesHighscore())
@@ -123,7 +132,7 @@ class BoardController : IViewController
             bool textActive = true;
             while (textActive)
             {
-                InputAction ia = App.ParseAction(HighscoreTextField.Activate());
+                InputAction ia = App.ParseAction(_highscoreTextField.HandleInput());
                 switch (ia)
                 {
                     case InputAction.Dig:
@@ -145,7 +154,7 @@ class BoardController : IViewController
 
     private void AddHighscore(TimeSpan time)
     {
-        SaveData.PlayerName = HighscoreTextField.Text;
+        SaveData.PlayerName = _highscoreTextField.Text;
         List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
         while (scores.Count >= HighscoreTable.highscoreEntries)
@@ -154,7 +163,7 @@ class BoardController : IViewController
         scores.Add(new()
         {
             Time = time,
-            Name = HighscoreTextField.Text,
+            Name = _highscoreTextField.Text,
             Date = DateTime.Now
         });
 
@@ -172,7 +181,7 @@ class BoardController : IViewController
     private void ResetGameState()
     {
         refreshTimer.Stop();
-        CurrentState = BoardState.NewGame(SaveData.CurrentDifficulty, Settings);
+        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings);
         Storage.WriteSave(SaveData);
     }
 
@@ -200,8 +209,6 @@ class BoardController : IViewController
         return newRenderMask;
     }
 
-    public void Refresh(RefreshMode mode)
-    {
-        throw new NotImplementedException();
-    }
+    public void Refresh(RefreshMode mode) => _renderSheduler.Visualize(CurrentState, mode);
+
 }

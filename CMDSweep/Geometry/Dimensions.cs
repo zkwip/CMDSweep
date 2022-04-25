@@ -10,4 +10,6 @@ public record struct Dimensions
         Width = width;
         Height = height;
     }
+
+    public static Dimensions Zero => new(0, 0);
 }

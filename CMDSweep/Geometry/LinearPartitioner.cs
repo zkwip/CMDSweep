@@ -22,7 +22,9 @@ class LinearPartitioner
     public Partition FindFirst(Predicate<Partition> match)
     {
         Partition? res = parts.Find(match);
-        if (res == null) throw new KeyNotFoundException();
+        if (res == null)
+            throw new KeyNotFoundException();
+
         return res;
     }
 

@@ -1,12 +1,13 @@
 ﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
 using CMDSweep.Layout;
 using CMDSweep.Layout.Popup;
 using CMDSweep.Rendering;
-using CMDSweep.Views.Board.State;
+using CMDSweep.Views.Game.State;
 
-namespace CMDSweep.Views.Board;
+namespace CMDSweep.Views.Game;
 
-internal class BoardPopupVisualizer : ITypeVisualizer<BoardState>
+internal class BoardPopupVisualizer : ITypeVisualizer<GameState>
 {
     private PopupVisualizer _popupVisualizer;
     private GameSettings _settings;
@@ -37,11 +38,11 @@ internal class BoardPopupVisualizer : ITypeVisualizer<BoardState>
         YouLosePopup = PrepareTextPopup("You died!\n\nYou can play again by pressing any key.");
     }
 
-    public void Visualize(BoardState state)
+    public void Visualize(GameState state)
     {
         _difficulty = state.Difficulty;
 
-        IPopup? popup = (state.RoundState.PlayerState) switch
+        IPopup? popup = (state.ProgressState.PlayerState) switch
         {
             PlayerState.Win => YouWinPopup,
             PlayerState.Dead => YouLosePopup,
@@ -54,7 +55,7 @@ internal class BoardPopupVisualizer : ITypeVisualizer<BoardState>
             _popupVisualizer.Visualize(popup);
     }
 
-    private IPopup PrepareTextPopup(string text) => new TextPopup(_settings, text, default);
+    private IPopup PrepareTextPopup(string text) => new TextPopup(_settings, text, Dimensions.Zero);
 
     private IPopup PrepareEnterHighscorePopup()
     {

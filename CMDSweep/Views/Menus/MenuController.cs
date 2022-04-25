@@ -9,14 +9,14 @@ class MenuController : IViewController
     private MenuList _currentMenuList;
     private MenuVisualizer _visualizer;
 
-    public GameApp App { get; }
+    public MineApp App { get; }
 
     public MenuList MainMenu;
     public MenuList SettingsMenu;
     public MenuList AdvancedSettingsMenu;
 
 
-    public MenuController(GameApp app)
+    public MenuController(MineApp app)
     {
         App = app;
         _visualizer = new MenuVisualizer(Settings, app.Renderer);
@@ -31,7 +31,7 @@ class MenuController : IViewController
         InputAction ia = App.ReadAction();
         if (ia == InputAction.NewGame)
         {
-            App.BControl.NewGame();
+            App.GameController.NewGame();
             return true;
         }
         bool res = _currentMenuList.HandleInput(ia);
@@ -49,8 +49,8 @@ class MenuController : IViewController
         AdvancedSettingsMenu = new("Advanced", this);
         AdvancedSettingsMenu.ParentMenu = SettingsMenu;
 
-        MainMenu.AddButton("New Game", () => App.BControl.NewGame());
-        MainMenu.AddButton("High Scores", () => App.HSControl.ShowHighscores());
+        MainMenu.AddButton("New Game", () => App.GameController.NewGame());
+        MainMenu.AddButton("High Scores", () => App.HighscoreController.ShowHighscores());
         MainMenu.AddButton("Help", () => App.ShowHelp());
         MainMenu.AddButton("Settings", () => OpenMenu(SettingsMenu));
         MainMenu.AddButton("Quit Game", () => App.QuitGame());

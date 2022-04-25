@@ -1,4 +1,4 @@
-﻿namespace CMDSweep.Views.Board;
+﻿namespace CMDSweep.Views.Game;
 
 enum Direction
 {
