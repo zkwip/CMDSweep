@@ -8,7 +8,7 @@ namespace CMDSweep.Views.Help;
 
 class HelpController : IViewController
 { 
-    private TextRenderBox _textBox;
+    private TextRenderBox _helpTextBox;
     private HelpVisualizer _visualizer;
     private IRenderer _renderer;
 
@@ -22,7 +22,7 @@ class HelpController : IViewController
 
         StyleData styleData = App.Settings.GetStyle("menu");
 
-        _textBox = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero, styleData)
+        _helpTextBox = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero, styleData)
         {
             Wrap = true,
             VerticalOverflow = false,
@@ -30,6 +30,8 @@ class HelpController : IViewController
             HorizontalAlign = HorzontalAlignment.Left,
             VerticalAlign = VerticalAlignment.Top,
         };
+
+        ResizeView();
     }
 
     public bool Step()
@@ -49,23 +51,24 @@ class HelpController : IViewController
 
     private void TryScrollDown()
     {
-        _textBox = _textBox.Clone();
-        _textBox.ScrollDown();
+        _helpTextBox = _helpTextBox.Clone();
+        _helpTextBox.ScrollDown();
     }
 
     private void TryScrollUp()
     {
-        _textBox = _textBox.Clone();
-        _textBox.ScrollUp();
+        _helpTextBox = _helpTextBox.Clone();
+        _helpTextBox.ScrollUp();
     }
 
     public void ResizeView()
     {
-        
+        _helpTextBox.Bounds = _renderer.Bounds.Shrink(4, 2, 4, 2);
+        _visualizer.Visualize(_helpTextBox);
     }
 
     public void Refresh(RefreshMode mode)
     {
-        _visualizer.Visualize(_textBox);
+        _visualizer.Visualize(_helpTextBox);
     }
 }

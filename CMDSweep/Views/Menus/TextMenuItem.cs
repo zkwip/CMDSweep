@@ -4,12 +4,12 @@ using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Menus;
 
-class MenuText : MenuItem
+class TextMenuItem : MenuItem
 {
     internal string Subtitle;
     private StyleData _menuTextStyle;
 
-    internal MenuText(GameSettings settings, string title, string sub = "") : base(title)
+    internal TextMenuItem(GameSettings settings, string title, string sub = "") : base(title)
     {
         Subtitle = sub;
         Focusable = false;

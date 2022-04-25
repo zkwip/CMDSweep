@@ -9,8 +9,8 @@ namespace CMDSweep.Views.Game;
 partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
 {
     private readonly IRenderer _renderer;
-    private BoardPopupVisualizer _boardPopups;
-    private StatboardVisualizer _statboardVisualizer;
+    private GamePopupVisualizer _gamePopupVisualizer;
+    private StatBarVisualizer _statBarVisualizer;
     private TileVisualizer _tileVisualizer;
     private StyleData _hideStyle;
 
@@ -19,8 +19,8 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
         _renderer = renderer;
         _hideStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
-        _statboardVisualizer = new StatboardVisualizer(_renderer, settings);
-        _boardPopups = new BoardPopupVisualizer(_renderer, settings);
+        _statBarVisualizer = new StatBarVisualizer(_renderer, settings);
+        _gamePopupVisualizer = new GamePopupVisualizer(_renderer, settings);
         _tileVisualizer = new TileVisualizer(_renderer, settings, initialState);
     }
 
@@ -33,8 +33,8 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
         state.View.VisibleBoardSection.ForAll(p => _tileVisualizer.Visualize(p));
 
         // Extras
-        _boardPopups.Visualize(state);
-        _statboardVisualizer.Visualize(state);
+        _gamePopupVisualizer.Visualize(state);
+        _statBarVisualizer.Visualize(state);
 
         _renderer.HideCursor(_hideStyle);
         state.View.ValidateViewPort();
@@ -47,6 +47,6 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
 
         foreach (Point p in changes) _tileVisualizer.Visualize(p);
 
-        _statboardVisualizer.Visualize(state);
+        _statBarVisualizer.Visualize(state);
     }
 }

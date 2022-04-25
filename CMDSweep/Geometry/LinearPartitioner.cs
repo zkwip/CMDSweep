@@ -16,22 +16,26 @@ class LinearPartitioner
     internal List<Partition> parts;
 
     public Partition this[int index] => parts[index];
-    public Partition this[string name] => FindFirst(x => x.Name == name);
-    public Partition this[string name, int index] => FindFirst(x => x.Name == name).Offset(index);
+    
+    public Partition this[string name] => FindFirst(name);
+    
+    public Partition this[string name, int index] => FindFirst(name).Offset(index);
 
-    public Partition FindFirst(Predicate<Partition> match)
+    public Partition FindFirst(string name)
     {
-        Partition? res = parts.Find(match);
+        Partition? res = parts.Find(x => x.Name == name);
         if (res == null)
-            throw new KeyNotFoundException();
+            throw new KeyNotFoundException($"Could not find a partition with the name \"{name}\".");
 
         return res;
     }
 
-    public Partition FindLast(Predicate<Partition> match)
+    public Partition FindLast(string name)
     {
-        Partition? res = parts.FindLast(match);
-        if (res == null) throw new KeyNotFoundException();
+        Partition? res = parts.FindLast(x => x.Name == name);
+        if (res == null) 
+            throw new KeyNotFoundException($"Could not find a partition with the name \"{name}\".");
+
         return res;
     }
 
@@ -74,5 +78,5 @@ class LinearPartitioner
             parts.Add(new(con, var, name, this));
     }
 
-    public LinearRange All(string name) => LinearRange.ToEnd(FindFirst(x => x.Name == name).Start, FindLast(x => x.Name == name).End);
+    public LinearRange All(string name) => LinearRange.ToEnd(FindFirst(name).Start, FindLast(name).End);
 }

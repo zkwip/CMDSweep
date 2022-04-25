@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace CMDSweep.Views.Menus;
 
-class MenuOptionItem<TOption> : MenuItem
+class OptionMenuItem<TOption> : MenuItem
 {
     private readonly List<TOption> Options;
     private int SelectedIndex = 0;
@@ -19,14 +19,14 @@ class MenuOptionItem<TOption> : MenuItem
 
     public bool Enabled = true;
 
-    internal MenuOptionItem(string title, List<TOption> options, Func<TOption, string> Display, GameSettings settings) : base(title)
+    internal OptionMenuItem(string title, List<TOption> options, Func<TOption, string> Display, GameSettings settings) : base(title)
     {
         Options = options;
         this.Display = Display;
         Title = title;
 
         _symbolLeft = settings.Texts["menu-choice-left"];
-        _symbolRight = settings.Texts["menu-choice-left"];
+        _symbolRight = settings.Texts["menu-choice-right"];
 
         _menuTextStyle = settings.GetStyle("menu");
         _focusBoxStyle = settings.GetStyle("menu-highlight-box");

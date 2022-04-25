@@ -7,7 +7,7 @@ using CMDSweep.Views.Game.State;
 
 namespace CMDSweep.Views.Game;
 
-internal class BoardPopupVisualizer : ITypeVisualizer<GameState>
+internal class GamePopupVisualizer : ITypeVisualizer<GameState>
 {
     private PopupVisualizer _popupVisualizer;
     private GameSettings _settings;
@@ -20,7 +20,7 @@ internal class BoardPopupVisualizer : ITypeVisualizer<GameState>
     public IPopup YouWinPopup;
     public IPopup YouLosePopup;
 
-    public BoardPopupVisualizer(IRenderer renderer, GameSettings settings)
+    public GamePopupVisualizer(IRenderer renderer, GameSettings settings)
     {
         _popupVisualizer = new PopupVisualizer(renderer, settings);
         _settings = settings;

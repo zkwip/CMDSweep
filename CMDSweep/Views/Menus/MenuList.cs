@@ -75,7 +75,7 @@ class MenuList
 
     internal void AddButton(string text, Action action)
     {
-        MenuButton mb = new(text);
+        ButtonMenuItem mb = new(text);
         mb.ValueChanged += (i, o) => action();
         Add(mb);
     }

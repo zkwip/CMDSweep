@@ -52,29 +52,41 @@ class TextRenderBox : IBounded
 
     public int ScrollUp()
     {
-        if (VerticalScroll == 0) VerticalScroll = LowestScroll;
-        else VerticalScroll--;
+        if (VerticalScroll == 0) 
+            VerticalScroll = LowestScroll;
+        else 
+            VerticalScroll--;
+
         return VerticalScroll;
     }
 
     public int ScrollDown()
     {
-        if (VerticalScroll >= LowestScroll) VerticalScroll = 0;
-        else VerticalScroll++;
+        if (VerticalScroll >= LowestScroll) 
+            VerticalScroll = 0;
+        else 
+            VerticalScroll++;
+
         return VerticalScroll;
     }
 
     public int ScrollLeft()
     {
-        if (HorizontalScroll == 0) HorizontalScroll = RightmostScroll;
-        else HorizontalScroll--;
+        if (HorizontalScroll == 0) 
+            HorizontalScroll = RightmostScroll;
+        else 
+            HorizontalScroll--;
+
         return HorizontalScroll;
     }
 
     public int ScrollRight()
     {
-        if (HorizontalScroll >= RightmostScroll) HorizontalScroll = 0;
-        else HorizontalScroll++;
+        if (HorizontalScroll >= RightmostScroll) 
+            HorizontalScroll = 0;
+        else 
+            HorizontalScroll++;
+
         return HorizontalScroll;
     }
 

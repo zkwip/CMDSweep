@@ -3,10 +3,10 @@ using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Menus;
 
-class MenuButton : MenuItem
+class ButtonMenuItem : MenuItem
 {
     internal string Subtitle;
-    internal MenuButton(string title, string sub = "") : base("[ " + title + " ]")
+    internal ButtonMenuItem(string title, string sub = "") : base("[ " + title + " ]")
     {
         Subtitle = sub;
     }
