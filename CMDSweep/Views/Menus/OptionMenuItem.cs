@@ -38,7 +38,7 @@ class OptionMenuItem<TOption> : MenuItem
             throw new NullReferenceException("Item is null");
 
         if (!Select(value, true)) 
-            throw new Exception("Selected item not in the list");
+            throw new Exception("The selected item not in the list");
     }
 
     internal TOption SelectedOption => Options[SelectedIndex];

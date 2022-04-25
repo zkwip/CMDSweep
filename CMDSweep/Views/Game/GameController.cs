@@ -31,7 +31,7 @@ class GameController : IViewController
         if (SaveData.PlayerName == null) 
             SaveData.PlayerName = "You";
 
-        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings);
+        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings, RenderMaskFromConsoleDimension());
 
         refreshTimer = new Timer(100);
         refreshTimer.Elapsed += RefreshTimerElapsed;
@@ -181,24 +181,14 @@ class GameController : IViewController
     private void ResetGameState()
     {
         refreshTimer.Stop();
-        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings);
+        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings, _renderer.Bounds);
         Storage.WriteSave(SaveData);
-    }
-
-    public bool CheckScroll() => !CurrentState!.ScrollIsNeeded;
-
-    public void Scroll() => CurrentState = CurrentState!.Scroll();
-
-    public bool CheckResize()
-    {
-        Rectangle newRenderMask = RenderMaskFromConsoleDimension();
-        return !newRenderMask.Equals(CurrentState!.View.RenderMask);
     }
 
     public void ResizeView()
     {
         Rectangle newRenderMask = RenderMaskFromConsoleDimension(); // Area that the board can be drawn into
-        CurrentState!.View.ChangeRenderMask(newRenderMask);
+        CurrentState.BoardState.View.ChangeRenderMask(newRenderMask);
     }
 
     private Rectangle RenderMaskFromConsoleDimension()

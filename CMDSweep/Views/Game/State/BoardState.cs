@@ -11,15 +11,24 @@ internal record class BoardState
     public readonly CellData[,] Cells;
     public readonly Difficulty Difficulty;
     public readonly Point Cursor;
+    public readonly BoardViewState View;
 
-    public BoardState(CellData[,] cells, Difficulty difficulty, Point cursor)
+    public BoardState(CellData[,] cells, Difficulty difficulty, Point cursor, BoardViewState view)
     {
         Cells = cells;
         Difficulty = difficulty;
         Cursor = cursor;
+        View = view;
     }
 
-    public static BoardState NewGame(Difficulty diff)
+    public BoardState Scroll()
+    {
+        BoardViewState newView = View.ScrollTo(Cursor);
+
+        return new(Cells, Difficulty, Cursor, newView);
+    }
+
+    public static BoardState NewGame(Difficulty diff, GameSettings settings, Rectangle renderMask)
     {
         int width = diff.Width;
         int height = diff.Height;
@@ -27,7 +36,10 @@ internal record class BoardState
         Point cursor = new Point(width / 2, height / 2);
 
         CellData[,] cells = new CellData[width, height];
-        return new BoardState(cells, diff, cursor);
+
+        BoardViewState view = new BoardViewState(settings, new Rectangle(0, 0, diff.Width, diff.Height), renderMask).ScrollTo(cursor);
+
+        return new BoardState(cells, diff, cursor, view);
     }
 
     private int CountCells(Predicate<CellData> p)
@@ -74,21 +86,21 @@ internal record class BoardState
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.Flagged;
-        return new(newCells, Difficulty, Cursor);
+        return new(newCells, Difficulty, Cursor, View);
     }
 
     public BoardState Unflag(Point cl)
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.Unflagged;
-        return new(newCells, Difficulty, Cursor);
+        return new(newCells, Difficulty, Cursor, View);
     }
 
     public BoardState QuestionMark(Point cl)
     {
         CellData[,] newCells = (CellData[,])(Cells.Clone());
         newCells[cl.X, cl.Y].Flagged = FlagMarking.QuestionMarked;
-        return new(newCells, Difficulty, Cursor);
+        return new(newCells, Difficulty, Cursor, View);
     }
 
     public Point Wrap(Point cl)
@@ -172,7 +184,7 @@ internal record class BoardState
             Cells[cell.X, cell.Y].Flagged = FlagMarking.Unflagged;
         }
 
-        return new BoardState(newCells, Difficulty, Cursor);
+        return new BoardState(newCells, Difficulty, Cursor, View);
     }
 
     public BoardState MoveCursor(Direction direction)
@@ -187,7 +199,7 @@ internal record class BoardState
         };
     }
 
-    private BoardState SetCursor(Point cursor) => new BoardState(Cells, Difficulty, cursor);
+    private BoardState SetCursor(Point cursor) => new BoardState(Cells, Difficulty, cursor, View);
 
     public BoardState ToggleFlag()
     {
@@ -220,15 +232,12 @@ internal record class BoardState
 
     public List<Point> CompareForVisibleChanges(BoardState other, Rectangle area)
     {
-        List<Point> hits = new();
-
         if (Difficulty.SubtractFlags)
             area.Grow(Difficulty.DetectionRadius);
 
         area = area.Intersect(Bounds);
 
-        hits = DiffersFrom(other, area);
-
+        List<Point> hits = DiffersFrom(other, area);
 
         if (Difficulty.SubtractFlags) hits = ExpandChangeHits(hits, Difficulty.DetectionRadius, Difficulty.WrapAround);
 
@@ -249,7 +258,7 @@ internal record class BoardState
         int maxMines = (int)Math.Floor(0.8 * detectZoneSize);
         Random rng = new();
 
-        BoardState bd = new(Cells, Difficulty, this.Cursor);
+        BoardState bd = new(Cells, Difficulty, Cursor, View);
 
         // Try to randomly place mines and check if the are valid;
         while (minesLeftToPlace > 0 && placementFailures < 1000)
@@ -280,5 +289,11 @@ internal record class BoardState
         if (minesLeftToPlace > 0) throw new Exception("Can't place mine after 1000 random tries");
 
         return bd;
+    }
+
+    public List<Point> FindChangedTiles(BoardState other)
+    {
+        Rectangle area = View.VisibleBoardSection;
+        return CompareForVisibleChanges(other, area);
     }
 }

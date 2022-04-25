@@ -10,50 +10,46 @@ internal record class GameState
 {
     // Properties
     public readonly BoardState BoardState;
-    public readonly BoardViewState View;
     public readonly GameProgressState ProgressState;
     public readonly TimingState Timing;
 
-    public GameState(BoardState boardData, GameProgressState roundStats, TimingState timing, BoardViewState view)
+    public GameState(BoardState boardData, GameProgressState roundStats, TimingState timing)
     {
         BoardState = boardData;
         ProgressState = roundStats;
         Timing = timing;
-        View = view;
     }
 
-    internal static GameState NewGame(Difficulty diff, GameSettings settings)
+    internal static GameState NewGame(Difficulty diff, GameSettings settings, Rectangle boardRenderMask)
     {
-        BoardState boardData = BoardState.NewGame(diff);
-        GameProgressState roundData = GameProgressState.NewGame(diff);
-
-        BoardViewState view = new BoardViewState(settings,boardData.Bounds);
+        BoardState boardState = BoardState.NewGame(diff, settings, boardRenderMask);
+        GameProgressState progressState = GameProgressState.NewGame(diff);
         TimingState timing = TimingState.NewGame(diff);
 
-        return new GameState(boardData, roundData, timing, view);
+        return new GameState(boardState, progressState, timing);
     }
 
     public Difficulty Difficulty => ProgressState.Difficulty;
 
     public int MinesLeft => ProgressState.Mines - BoardState.Flags - ProgressState.LivesLost;
 
-    public double MineRate => (double)(ProgressState.LivesLost + BoardState.Flags) / ProgressState.Mines;
+    public double MineProgressRatio => (double)(ProgressState.LivesLost + BoardState.Flags) / ProgressState.Mines;
 
-    public GameState Win() => new(BoardState, ProgressState.Win(), Timing.Stop(),View);
+    public GameState Win() => new(BoardState, ProgressState.Win(), Timing.Stop());
 
     public GameState LoseLife()
     {
         NotifyFailedAction();
 
         if (ProgressState.CanLoseLife)
-            return new GameState(BoardState, ProgressState.LoseLife(), Timing, View);
+            return new GameState(BoardState, ProgressState.LoseLife(), Timing);
 
-        return new GameState(BoardState, ProgressState.Die(), Timing.Stop(), View);
+        return new GameState(BoardState, ProgressState.Die(), Timing.Stop());
     }
 
-    public GameState ResumeGame() => new(BoardState, ProgressState, Timing.Resume(), View);
+    public GameState ResumeGame() => new(BoardState, ProgressState, Timing.Resume());
 
-    public GameState FreezeGame() => new(BoardState, ProgressState, Timing.Pause(), View);
+    public GameState FreezeGame() => new(BoardState, ProgressState, Timing.Pause());
 
     public GameState NotifyFailedAction()
     {
@@ -120,7 +116,7 @@ internal record class GameState
 
         if (mineHit) return LoseLife();
 
-        return new GameState(BoardState.Discover(discoveredCells), ProgressState, Timing, View);
+        return new GameState(BoardState.Discover(discoveredCells), ProgressState, Timing);
     }
 
     public GameState ToggleFlag()
@@ -128,20 +124,14 @@ internal record class GameState
         if (!Difficulty.FlagsAllowed) return NotifyFailedAction();
         if (BoardState.CellIsDiscovered(BoardState.Cursor)) return NotifyFailedAction();
 
-        return new(BoardState.ToggleFlag(),ProgressState, Timing, View);
+        return new(BoardState.ToggleFlag(),ProgressState, Timing);
     }
 
-    public GameState MoveCursor(Direction d) => new(BoardState.MoveCursor(d), ProgressState, Timing, View);
+    public GameState MoveCursor(Direction d) => new(BoardState.MoveCursor(d), ProgressState, Timing);
 
-    public List<Point> CompareForVisibleChanges(GameState other)
-    {
-        Rectangle area = View.VisibleBoardSection;
-        return BoardState.CompareForVisibleChanges(other.BoardState, area); 
-    }
+    private GameState PlaceMines() => new(BoardState.PlaceMines(), ProgressState.SetState(PlayerState.Playing), Timing.Resume());
 
-    private GameState PlaceMines() => new(BoardState.PlaceMines(), ProgressState.SetState(PlayerState.Playing), Timing.Resume(), View);
-
-    public GameState SetPlayerState(PlayerState state) => new(BoardState, ProgressState.SetState(state), Timing, View);
+    public GameState SetPlayerState(PlayerState state) => new(BoardState, ProgressState.SetState(state), Timing);
 
     public bool TimeMakesHighscore()
     {
@@ -156,14 +146,5 @@ internal record class GameState
                 return false;
         }
         return true;
-    }
-
-    public bool ScrollIsNeeded => View.ScrollSafezone.Contains(BoardState.Cursor);
-
-    public GameState Scroll()
-    {
-        BoardViewState newView = View.ScrollTo(BoardState.Cursor);
-
-        return new(BoardState, ProgressState, Timing, newView);
     }
 }

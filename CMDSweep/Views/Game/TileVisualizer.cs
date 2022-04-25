@@ -13,23 +13,21 @@ class TileVisualizer : ITypeVisualizer<Point>
     private GameSettings _settings;
     private IRenderer _renderer;
 
-    private BoardViewState _view;
-    private BoardState _boardData;
+    private BoardState _boardState;
     private bool _dead;
     private readonly int _gridSize;
     private readonly int _tileWidth;
     StyleData _borderStyle;
     private readonly StyledText _clearVisual;
 
-    public TileVisualizer(IRenderer renderer, GameSettings settings, GameState initialState)
+    public TileVisualizer(IRenderer renderer, GameSettings settings, BoardState initialState)
     {
         _difficulty = initialState.Difficulty;
         _settings = settings;
         _renderer = renderer;
 
-        _view = initialState.View;
-        _boardData = initialState.BoardState;
-        _dead = initialState.ProgressState.PlayerState == PlayerState.Dead;
+        _boardState = initialState;
+        _dead = false;
         _gridSize = settings.Dimensions["cell-grid-size"];
         _tileWidth = settings.Dimensions["cell-size-x"];
         _borderStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
@@ -38,12 +36,10 @@ class TileVisualizer : ITypeVisualizer<Point>
 
     public void UpdateBoardState(GameState state)
     {
-        _view = state.View;
-        _boardData = state.BoardState;
+        _boardState = state.BoardState;
         _dead = state.ProgressState.PlayerState == PlayerState.Dead;
     }
 
-    public void Visualize(Point p, RefreshMode _) => Visualize(p);
     public void Visualize(Point p)
     {
         StyledText visual;
@@ -54,49 +50,49 @@ class TileVisualizer : ITypeVisualizer<Point>
         else
             visual = _clearVisual;
 
-        _renderer.PrintAtTile(_view.MapToRender(p), visual);
+        _renderer.PrintAtTile(_boardState.View.MapToRender(p), visual);
     }
 
-    private bool IsBorder(Point p) => _boardData.Bounds.Grow(1).Contains(p) && !_boardData.Bounds.Contains(p);
+    private bool IsBorder(Point p) => _boardState.Bounds.Grow(1).Contains(p) && !_boardState.Bounds.Contains(p);
 
-    private bool IsOnBoard(Point p) => _boardData.Bounds.Contains(p);
+    private bool IsOnBoard(Point p) => _boardState.Bounds.Contains(p);
 
     public TileVisual GetTileStyle(Point cl)
     {
         if (_dead)
         {
-            if (_boardData.CellIsMine(cl))
+            if (_boardState.CellIsMine(cl))
             {
-                if (_boardData.CellIsFlagged(cl)) 
+                if (_boardState.CellIsFlagged(cl)) 
                     return TileVisual.DeadMineFlagged;
 
-                if (_boardData.CellIsDiscovered(cl)) 
+                if (_boardState.CellIsDiscovered(cl)) 
                     return TileVisual.DeadMineExploded;
 
                 return TileVisual.DeadMine;
             }
             else
             {
-                if (_boardData.CellIsFlagged(cl)) 
+                if (_boardState.CellIsFlagged(cl)) 
                     return TileVisual.DeadWrongFlag;
 
-                if (_boardData.CellIsDiscovered(cl)) 
+                if (_boardState.CellIsDiscovered(cl)) 
                     return TileVisual.DeadDiscovered;
 
                 return TileVisual.DeadUndiscovered;
             }
         }
         
-        if (_boardData.CellIsDiscovered(cl) && _boardData.CellIsMine(cl)) 
+        if (_boardState.CellIsDiscovered(cl) && _boardState.CellIsMine(cl)) 
             return TileVisual.DiscoveredMine;
 
-        if (_boardData.CellIsDiscovered(cl)) 
+        if (_boardState.CellIsDiscovered(cl)) 
             return TileVisual.Discovered;
 
-        if (_boardData.CellIsFlagged(cl)) 
+        if (_boardState.CellIsFlagged(cl)) 
             return TileVisual.Flagged;
 
-        if (_boardData.CellIsQuestionMarked(cl)) 
+        if (_boardState.CellIsQuestionMarked(cl)) 
             return TileVisual.QuestionMarked;
         
         if (cl.X % _gridSize == 0 || cl.Y % _gridSize == 0) 
@@ -116,7 +112,7 @@ class TileVisualizer : ITypeVisualizer<Point>
         // Cursor
         if (!_dead && IsCursor(cl))
         {
-            if (!_difficulty.OnlyShowAtCursor || tileVisual != TileVisual.Discovered || _boardData.CellMineNumber(cl) <= 0)
+            if (!_difficulty.OnlyShowAtCursor || tileVisual != TileVisual.Discovered || _boardState.CellMineNumber(cl) <= 0)
                 fg = _settings.Colors["cell-selected"];
 
             if (text == _settings.Texts["cell-undiscovered"] || text == _settings.Texts["cell-empty"])
@@ -136,20 +132,20 @@ class TileVisualizer : ITypeVisualizer<Point>
         if (p.Equals(new Point(-1, -1)))
             return new(_settings.Texts["border-corner-tl"], _borderStyle);
 
-        if (p.Equals(new Point(_boardData.BoardWidth, -1)))
+        if (p.Equals(new Point(_boardState.BoardWidth, -1)))
             return new(_settings.Texts["border-corner-tr"], _borderStyle);
 
-        if (p.Equals(new Point(-1, _boardData.BoardHeight)))
+        if (p.Equals(new Point(-1, _boardState.BoardHeight)))
             return new(_settings.Texts["border-corner-bl"], _borderStyle);
 
-        if (p.Equals(new Point(_boardData.BoardWidth, _boardData.BoardHeight)))
+        if (p.Equals(new Point(_boardState.BoardWidth, _boardState.BoardHeight)))
             return new(_settings.Texts["border-corner-br"], _borderStyle);
 
         // Edges
-        if (p.Y == -1 || p.Y == _boardData.BoardHeight)
+        if (p.Y == -1 || p.Y == _boardState.BoardHeight)
             return new(_settings.Texts["border-horizontal"], _borderStyle);
 
-        if (p.X == -1 || p.X == _boardData.BoardWidth)
+        if (p.X == -1 || p.X == _boardState.BoardWidth)
             return new(_settings.Texts["border-vertical"], _borderStyle);
 
         throw new ArgumentOutOfRangeException();
@@ -211,10 +207,10 @@ class TileVisualizer : ITypeVisualizer<Point>
     private string DiscoveredTileText(Point cl, ref ConsoleColor fg)
     {
         string text;
-        int num = _boardData.CellMineNumber(cl);
+        int num = _boardState.CellMineNumber(cl);
 
         if (_difficulty.SubtractFlags) 
-            num = _boardData.CellSubtractedMineNumber(cl);
+            num = _boardState.CellSubtractedMineNumber(cl);
 
         if (num > 0 && (IsCursor(cl) || _difficulty.OnlyShowAtCursor))
         {
@@ -226,7 +222,7 @@ class TileVisualizer : ITypeVisualizer<Point>
         return _settings.Texts["cell-empty"];
     }
 
-    private bool IsCursor(Point cl) => _boardData.Cursor == cl;
+    private bool IsCursor(Point cl) => _boardState.Cursor == cl;
 
     private ConsoleColor GetTileForeground(TileVisual tileVisual)
     {

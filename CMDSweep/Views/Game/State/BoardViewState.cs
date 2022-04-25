@@ -1,6 +1,5 @@
 ﻿using CMDSweep.Geometry;
 using CMDSweep.Data;
-using System;
 using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Game.State;
@@ -23,14 +22,14 @@ internal class BoardViewState
 
     public RenderBufferCopyTask RenderTask { get; private set; }
 
-    public BoardViewState(GameSettings settings, Rectangle board)
+    public BoardViewState(GameSettings settings, Rectangle board, Rectangle renderMask)
     {
         _scrollSafezoneDistance = settings.Dimensions["scroll-safezone"];
         _scaleX = settings.Dimensions["cell-size-x"];
         _scaleY = settings.Dimensions["cell-size-y"];
 
-        RenderMask = Rectangle.Zero;
-        Viewport = Rectangle.Zero;
+        RenderMask = renderMask;
+        Viewport = new(0, 0, RenderMask.Width / _scaleX, RenderMask.Height / _scaleY);
         ScrollValidMask = Rectangle.Zero;
         Board = board;
 
@@ -110,7 +109,7 @@ internal class BoardViewState
     {
         if (Board.Width < ScrollSafezone.Width && Board.Height < ScrollSafezone.Height)
         {
-            Viewport.CenterOn(Board.Center);
+            Viewport = Viewport.CenterOn(Board.Center);
         }
     }
 }
