@@ -9,8 +9,8 @@ namespace CMDSweep.Views.Help;
 class HelpController : IViewController
 { 
     private TextRenderBox _helpTextBox;
-    private HelpVisualizer _visualizer;
-    private IRenderer _renderer;
+    private readonly HelpVisualizer _visualizer;
+    private readonly IRenderer _renderer;
 
     public MineApp App { get; }
 

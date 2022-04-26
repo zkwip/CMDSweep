@@ -33,11 +33,11 @@ internal record class BoardState
         int width = diff.Width;
         int height = diff.Height;
 
-        Point cursor = new Point(width / 2, height / 2);
-
         CellData[,] cells = new CellData[width, height];
+        Rectangle board = new Rectangle(0, 0, width, height);
+        Point cursor = board.Center;
 
-        BoardViewState view = new BoardViewState(settings, new Rectangle(0, 0, diff.Width, diff.Height), renderMask).ScrollTo(cursor);
+        BoardViewState view = BoardViewState.NewGame(settings, board, renderMask);
 
         return new BoardState(cells, diff, cursor, view);
     }
@@ -164,6 +164,8 @@ internal record class BoardState
         return li;
     }
 
+    public BoardState ChangeRenderMask(Rectangle newRenderMask) => new BoardState(Cells, Difficulty, Cursor, View.ChangeRenderMask(newRenderMask));
+
     public int CellMineNumber(Point cl) => CountSurroundingCells(cl, c => c.Mine, Difficulty.WrapAround);
 
     public int CellSubtractedMineNumber(Point cl) => CellMineNumber(cl) - CountSurroundingCells(cl, c => c.Flagged == FlagMarking.Flagged, Difficulty.WrapAround);
@@ -180,8 +182,8 @@ internal record class BoardState
 
         foreach (Point cell in discoveredCells)
         {
-            Cells[cell.X, cell.Y].Discovered = true;
-            Cells[cell.X, cell.Y].Flagged = FlagMarking.Unflagged;
+            newCells[cell.X, cell.Y].Discovered = true;
+            newCells[cell.X, cell.Y].Flagged = FlagMarking.Unflagged;
         }
 
         return new BoardState(newCells, Difficulty, Cursor, View);
@@ -199,7 +201,7 @@ internal record class BoardState
         };
     }
 
-    private BoardState SetCursor(Point cursor) => new BoardState(Cells, Difficulty, cursor, View);
+    private BoardState SetCursor(Point cursor) => new(Cells, Difficulty, cursor, View);
 
     public BoardState ToggleFlag()
     {
@@ -221,7 +223,7 @@ internal record class BoardState
 
     public List<Point> DiffersFrom(BoardState other, Rectangle area)
     {
-        List<Point> hits = new List<Point>();
+        List<Point> hits = new();
         area.ForAll((Point p) =>
         {
             if (Cell(p) != other.Cell(p)) hits.Add(p);
@@ -258,37 +260,38 @@ internal record class BoardState
         int maxMines = (int)Math.Floor(0.8 * detectZoneSize);
         Random rng = new();
 
-        BoardState bd = new(Cells, Difficulty, Cursor, View);
+        BoardState state = new(Cells, Difficulty, Cursor, View);
 
         // Try to randomly place mines and check if the are valid;
         while (minesLeftToPlace > 0 && placementFailures < 1000)
         {
             placementFailures++;
-            int px = rng.Next() % BoardWidth;
-            int py = rng.Next() % BoardHeight;
+            int px = rng.Next() % state.BoardWidth;
+            int py = rng.Next() % state.BoardHeight;
 
             Point pos = new(px, py);
 
-            if (bd.Distance(Cursor, pos) <= Difficulty.Safezone)
+            if (state.Distance(Cursor, pos) <= state.Difficulty.Safezone)
                 continue; // No mines at start
 
-            if (bd.CellIsMine(pos))
+            if (state.CellIsMine(pos))
                 continue; // No duplicate mines
 
-            int mc = bd.CellMineNumber(pos);
+            int mc = state.CellMineNumber(pos);
             if (mc > maxMines)
                 continue; // Not too many mines around eachoter
 
             // Succes
-            bd.Cells[px, py].Mine = true;
+            state.Cells[px, py].Mine = true;
 
             placementFailures = 0;
             minesLeftToPlace--;
         }
 
-        if (minesLeftToPlace > 0) throw new Exception("Can't place mine after 1000 random tries");
+        if (minesLeftToPlace > 0) 
+            throw new Exception("Can't place mine after 1000 random tries");
 
-        return bd;
+        return state;
     }
 
     public List<Point> FindChangedTiles(BoardState other)

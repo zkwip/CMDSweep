@@ -6,8 +6,8 @@ namespace CMDSweep.Views.Help;
 
 class HelpVisualizer : IChangeableTypeVisualizer<TextRenderBox>
 {
-    IRenderer _renderer;
-    StyleData _styleData;
+    private readonly IRenderer _renderer;
+    private readonly StyleData _styleData;
 
     public HelpVisualizer(IRenderer renderer, GameSettings settings)
     {

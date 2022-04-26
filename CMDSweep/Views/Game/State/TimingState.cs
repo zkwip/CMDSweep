@@ -15,14 +15,9 @@ internal record struct TimingState
         PreTime = preTime;
     }
 
-    public static TimingState NewGame(Difficulty diff) => new(false, DateTime.Now, TimeSpan.Zero);
+    public static TimingState NewGame() => new(false, DateTime.Now, TimeSpan.Zero);
 
     public TimeSpan Time => Paused ? PreTime : PreTime + (DateTime.Now - StartTime);
-
-    internal TimingState Stop()
-    {
-        throw new NotImplementedException();
-    }
 
     public TimingState Resume() => new(false, DateTime.Now, PreTime);
 

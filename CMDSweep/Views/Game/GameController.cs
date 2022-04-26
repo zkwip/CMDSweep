@@ -14,9 +14,8 @@ class GameController : IViewController
 {
     private readonly Timer refreshTimer;
     private readonly IRenderer _renderer;
-    private GameVisualizer _visualizer;
-    private RenderSheduler<GameState> _renderSheduler;
-
+    private readonly GameVisualizer _visualizer;
+    private readonly RenderSheduler<GameState> _renderSheduler;
     private TextEnterField _highscoreTextField;
 
     public GameState CurrentState { get; private set; }
@@ -31,14 +30,12 @@ class GameController : IViewController
         if (SaveData.PlayerName == null) 
             SaveData.PlayerName = "You";
 
-        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings, RenderMaskFromConsoleDimension());
-
         refreshTimer = new Timer(100);
         refreshTimer.Elapsed += RefreshTimerElapsed;
         refreshTimer.AutoReset = true;
 
+        StartGameState();
         _visualizer = new GameVisualizer(_renderer, Settings, CurrentState);
-
         _renderSheduler = new RenderSheduler<GameState>(_visualizer, _renderer);
     }
 
@@ -148,6 +145,7 @@ class GameController : IViewController
 
             currentState = currentState.SetPlayerState(PlayerState.ShowingHighscores);
             AddHighscore(time);
+
             App.Refresh(RefreshMode.Full);
         }
         return currentState;
@@ -174,30 +172,28 @@ class GameController : IViewController
 
     internal void NewGame()
     {
-        ResetGameState();
-
+        StartGameState();
         App.ChangeMode(ApplicationState.Playing);
     }
 
-    private void ResetGameState()
+    private void StartGameState()
     {
         refreshTimer.Stop();
-        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings, _renderer.Bounds);
+        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings, RenderMaskFromConsoleDimension());
         Storage.WriteSave(SaveData);
     }
 
     public void ResizeView()
     {
-        Rectangle newRenderMask = RenderMaskFromConsoleDimension(); // Area that the board can be drawn into
-        CurrentState.BoardState.View.ChangeRenderMask(newRenderMask);
+        Rectangle newRenderMask = RenderMaskFromConsoleDimension();
+        CurrentState = CurrentState.ChangeRenderMask(newRenderMask);
     }
 
     private Rectangle RenderMaskFromConsoleDimension()
     {
         int barheight = 1 + 2 * Settings.Dimensions["stat-padding-y"];
 
-        Rectangle newRenderMask = _renderer.Bounds.Shrink(0, barheight, 0, 0);
-        return newRenderMask;
+        return _renderer.Bounds.Shrink(0, barheight, 0, 0);
     }
 
     public void Refresh(RefreshMode mode) => _renderSheduler.Visualize(CurrentState, mode);

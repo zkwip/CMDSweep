@@ -1,6 +1,6 @@
 ﻿namespace CMDSweep.Geometry;
 
-public record struct Dimensions
+internal record struct Dimensions
 {
     public int Width;
     public int Height;
@@ -12,4 +12,7 @@ public record struct Dimensions
     }
 
     public static Dimensions Zero => new(0, 0);
+
+    internal Dimensions ScaleBack(Scale scale) => new(Width / scale.Width, Height / scale.Height);
+    internal Dimensions Scale(Scale scale) => new(Width * scale.Width, Height * scale.Height);
 }

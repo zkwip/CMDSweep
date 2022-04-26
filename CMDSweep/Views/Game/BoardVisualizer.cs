@@ -16,7 +16,7 @@ internal class BoardVisualizer : IChangeableTypeVisualizer<BoardState>
 
     public void Visualize(BoardState state)
     {
-        foreach (Point p in state.View.Viewport)
+        foreach (Point p in state.View.ViewPort)
         {
             _tileVisualizer.Visualize(p);
         }

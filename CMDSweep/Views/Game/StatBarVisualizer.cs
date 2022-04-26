@@ -107,6 +107,6 @@ internal class StatBarVisualizer : ITypeVisualizer<GameState>
             btext += life + " ";
 
         _renderer.PrintAtTile(minePosition, livesLeftStyle, atext);
-        _renderer.PrintAtTile(minePosition.Shifted(atext.Length, 0), livesGoneStyle, btext);
+        _renderer.PrintAtTile(minePosition.Shift(atext.Length, 0), livesGoneStyle, btext);
     }
 }

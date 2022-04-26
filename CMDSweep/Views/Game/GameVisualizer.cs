@@ -34,7 +34,6 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
         _statBarVisualizer.Visualize(state);
 
         _renderer.HideCursor(_hideStyle);
-        state.BoardState.View.ValidateViewPort();
     }
 
     public void VisualizeChanges(GameState state, GameState previousState)

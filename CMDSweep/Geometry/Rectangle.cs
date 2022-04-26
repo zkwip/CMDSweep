@@ -55,6 +55,10 @@ record struct Rectangle : IEnumerable<Point>
 
     public int MidLine => Top + Height / 2;
 
+    public Rectangle ScaleBack(Scale scale) => new Rectangle(TopLeft.ScaleBack(scale),BottomRight.ScaleBack(scale));
+
+    public Rectangle Scale(Scale scale) => new Rectangle(TopLeft.Scale(scale), BottomRight.Scale(scale));
+
     public Point TopLeft => new(Left, Top);
 
     public Point BottomRight => new(Right, Bottom);
@@ -87,7 +91,7 @@ record struct Rectangle : IEnumerable<Point>
     
     public bool Contains(int x, int y) => x >= Left && y >= Top && x < Right && y < Bottom;
 
-    public bool Contains(Rectangle r) => Contains(r.TopLeft) && Contains(r.BottomRight.Shifted(-1, -1));
+    public bool Contains(Rectangle r) => Contains(r.TopLeft) && Contains(r.BottomRight.Shift(-1, -1));
     
     public Rectangle Intersect(Rectangle other)
     {
@@ -119,7 +123,7 @@ record struct Rectangle : IEnumerable<Point>
         return new Rectangle(HorizontalRange.Shift(x), VerticalRange.Shift(y));
     }
 
-    public Offset OffsetOutOfBounds(Point p) => new Offset(HorizontalRange.OffsetOutOfBounds(p.X), VerticalRange.OffsetOutOfBounds(p.Y));
+    public Offset OffsetOutOfBounds(Point p) => new(HorizontalRange.OffsetOutOfBounds(p.X), VerticalRange.OffsetOutOfBounds(p.Y));
 
     public IEnumerator<Point> GetEnumerator()
     {
@@ -131,8 +135,8 @@ record struct Rectangle : IEnumerable<Point>
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    public Rectangle ClampVertical(int start, int end) => new Rectangle(HorizontalRange, VerticalRange.Intersect(new LinearRange(start, end - start)));
-    public Rectangle ClampVertical(LinearRange range) => new Rectangle(HorizontalRange, VerticalRange.Intersect(range));
-    public Rectangle ClampHorizontal(int start, int end) => new Rectangle(HorizontalRange.Intersect(new LinearRange(start, end - start)), VerticalRange);
-    public Rectangle ClampHorizontal(LinearRange range) => new Rectangle(HorizontalRange.Intersect(range), VerticalRange);
+    public Rectangle ClampVertical(int start, int end) => new(HorizontalRange, VerticalRange.Intersect(new LinearRange(start, end - start)));
+    public Rectangle ClampVertical(LinearRange range) => new(HorizontalRange, VerticalRange.Intersect(range));
+    public Rectangle ClampHorizontal(int start, int end) => new(HorizontalRange.Intersect(new LinearRange(start, end - start)), VerticalRange);
+    public Rectangle ClampHorizontal(LinearRange range) => new(HorizontalRange.Intersect(range), VerticalRange);
 }

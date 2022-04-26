@@ -1,111 +1,61 @@
 ﻿using CMDSweep.Geometry;
 using CMDSweep.Data;
-using CMDSweep.Rendering;
+using System;
 
 namespace CMDSweep.Views.Game.State;
 
 internal class BoardViewState
 {
-    private readonly int _scaleX;
-
-    private readonly int _scaleY;
-
+    private readonly Scale _scale;
+    private readonly Offset _offset;
     private readonly int _scrollSafezoneDistance;
 
-    public Rectangle ScrollValidMask { get; private set; } // the area that is still valid (board space)
+    private readonly Rectangle _renderMask;
+    private readonly Rectangle _board;
 
-    public Rectangle RenderMask { get; private set; } // the area the board can be drawn into (screen space)
-
-    public Rectangle Viewport { get; private set; } // rendermask mapped to (board space)
-
-    public Rectangle Board { get; private set; }
-
-    public RenderBufferCopyTask RenderTask { get; private set; }
-
-    public BoardViewState(GameSettings settings, Rectangle board, Rectangle renderMask)
+    public static BoardViewState NewGame(GameSettings settings, Rectangle board, Rectangle renderMask)
     {
-        _scrollSafezoneDistance = settings.Dimensions["scroll-safezone"];
-        _scaleX = settings.Dimensions["cell-size-x"];
-        _scaleY = settings.Dimensions["cell-size-y"];
+        int scrollSafezoneDistance = settings.Dimensions["scroll-safezone"];
 
-        RenderMask = renderMask;
-        Board = board;
+        int scaleX = settings.Dimensions["cell-size-x"];
+        int scaleY = settings.Dimensions["cell-size-y"];
 
-        Viewport = Rectangle.Centered(Board.Center, new Dimensions(RenderMask.Width / _scaleX, RenderMask.Height / _scaleY));
-        ScrollValidMask = Rectangle.Zero;
+        Scale scale = new(scaleX, scaleY);
 
-        RenderTask = RenderBufferCopyTask.None;
+        Offset offset = Offset.FromChange(board.Center, renderMask.Center.ScaleBack(scale));
+        
+
+        return new BoardViewState(scale, offset, scrollSafezoneDistance, renderMask, board);
     }
 
-    public BoardViewState(int scaleX, int scaleY, int scrollSafezoneDistance, Rectangle scrollValidMask, Rectangle renderMask, Rectangle viewport, Rectangle board)
+    public BoardViewState(Scale scale, Offset offset, int scrollSafezoneDistance, Rectangle renderMask, Rectangle board)
     {
-        _scaleX = scaleX;
-        _scaleY = scaleY;
+        _scale = scale;
         _scrollSafezoneDistance = scrollSafezoneDistance;
-        ScrollValidMask = scrollValidMask;
-        RenderMask = renderMask;
-        Viewport = viewport;
-        Board = board;
-        RenderTask = RenderBufferCopyTask.None;
+        _renderMask = renderMask;
+        _board = board;
+        _offset = offset;
     }
 
-    private int _offsetX => RenderMask.Left - Viewport.Left * _scaleX;
+    public Rectangle ScrollSafezone => ViewPort.Shrink(_scrollSafezoneDistance);
 
-    private int _offsetY => RenderMask.Top - Viewport.Top * _scaleY;
+    public Rectangle ViewPort => _renderMask.ScaleBack(_scale).Shift(_offset.Reverse);
 
-    public int CellWidth => _scaleX;
+    public Point MapScreenToBoard(Point p) => p.ScaleBack(_scale).Shift(_offset.Reverse);
 
-    public int CellHeight => _scaleY;
-
-    public Rectangle ScrollSafezone => Viewport.Shrink(_scrollSafezoneDistance);
+    public Point MapToRender(Point p) => p.Shift(_offset).Scale(_scale);
 
     public BoardViewState ScrollTo(Point cursor)
     {
-        
-        Offset offset = ScrollSafezone.OffsetOutOfBounds(cursor);
-        Rectangle newViewport = Viewport.Shift(offset);
-        Rectangle newScrollValidMask = ScrollValidMask.Intersect(newViewport);
-
-        BoardViewState newView = new(_scaleX, _scaleY, _scrollSafezoneDistance, newScrollValidMask, RenderMask, newViewport, Board);
-
-        Rectangle oldCopyArea = this.MapToRender(newView.ScrollValidMask);
-        Rectangle newCopyArea = newView.MapToRender(newView.ScrollValidMask);
-
-        newView.RenderTask = new(oldCopyArea, newCopyArea);
+        Offset offset = _offset.Shift(ScrollSafezone.OffsetOutOfBounds(cursor));
+        BoardViewState newView = new(_scale, offset, _scrollSafezoneDistance, _renderMask, _board);
         return newView;
     }
 
-    public Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
-
-    public Point MapToRender(Point p) => new(_offsetX + p.X * _scaleX, _offsetY + p.Y * _scaleY);
-
-    public bool IsVisible(Point p) => Viewport.Contains(p);
-
-    public bool IsScrollValid(Point p) => ScrollValidMask.Contains(p);
-
-    public void ChangeRenderMask(Rectangle newMask)
+    public BoardViewState ChangeRenderMask(Rectangle newMask)
     {
-        RenderMask = newMask;
-        ScrollValidMask = Rectangle.Zero;
-
-        Rectangle newVP = Rectangle.Centered(Viewport.Center, new Dimensions(RenderMask.Width / _scaleX, RenderMask.Height / _scaleY));
-
-        if (Viewport.Equals(Rectangle.Zero))
-            Viewport = newVP.CenterOn(Board.Center);
+        return new BoardViewState(_scale, _offset, _scrollSafezoneDistance, newMask, _board);
     }
 
-    public Rectangle VisibleBoardSection => Viewport.Intersect(Board);
-
-    public void ValidateViewPort()
-    {
-        ScrollValidMask = Viewport;
-    }
-
-    public void TryCenterViewPort()
-    {
-        if (Board.Width < ScrollSafezone.Width && Board.Height < ScrollSafezone.Height)
-        {
-            Viewport = Viewport.CenterOn(Board.Center);
-        }
-    }
+    public Rectangle VisibleBoardSection => ViewPort.Intersect(_board);
 }

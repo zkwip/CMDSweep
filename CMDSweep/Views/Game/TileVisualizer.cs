@@ -9,15 +9,15 @@ namespace CMDSweep.Views.Game;
 
 class TileVisualizer : ITypeVisualizer<Point>
 {
-    private Difficulty _difficulty;
-    private GameSettings _settings;
-    private IRenderer _renderer;
+    private readonly Difficulty _difficulty;
+    private readonly GameSettings _settings;
+    private readonly IRenderer _renderer;
 
     private BoardState _boardState;
     private bool _dead;
     private readonly int _gridSize;
     private readonly int _tileWidth;
-    StyleData _borderStyle;
+    private readonly StyleData _borderStyle;
     private readonly StyledText _clearVisual;
 
     public TileVisualizer(IRenderer renderer, GameSettings settings, BoardState initialState)
@@ -34,10 +34,9 @@ class TileVisualizer : ITypeVisualizer<Point>
         _clearVisual = new ("  ", _borderStyle);
     }
 
-    public void UpdateBoardState(BoardState state)
-    {
-        _boardState = state;
-    }
+    public void UpdateBoardState(BoardState state) => _boardState = state;
+
+    public void UpdateDead(bool dead) => _dead = dead;
 
     public void Visualize(Point p)
     {
@@ -148,7 +147,7 @@ class TileVisualizer : ITypeVisualizer<Point>
         if (p.X == -1 || p.X == _boardState.BoardWidth)
             return new(_settings.Texts["border-vertical"], _borderStyle);
 
-        throw new ArgumentOutOfRangeException();
+        throw new ArgumentOutOfRangeException(nameof(p), $"The point {p} is not part of the board");
     }
 
 
@@ -212,7 +211,7 @@ class TileVisualizer : ITypeVisualizer<Point>
         if (_difficulty.SubtractFlags) 
             num = _boardState.CellSubtractedMineNumber(cl);
 
-        if (num > 0 && (IsCursor(cl) || _difficulty.OnlyShowAtCursor))
+        if (num > 0 && (IsCursor(cl) || !_difficulty.OnlyShowAtCursor))
         {
             text = num.ToString();
             fg = _settings.Colors[string.Format("cell-{0}-discovered", num % 10)];

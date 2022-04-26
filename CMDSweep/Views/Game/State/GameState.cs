@@ -20,11 +20,11 @@ internal record class GameState
         Timing = timing;
     }
 
-    internal static GameState NewGame(Difficulty diff, GameSettings settings, Rectangle boardRenderMask)
+    public static GameState NewGame(Difficulty diff, GameSettings settings, Rectangle boardRenderMask)
     {
         BoardState boardState = BoardState.NewGame(diff, settings, boardRenderMask);
         GameProgressState progressState = GameProgressState.NewGame(diff);
-        TimingState timing = TimingState.NewGame(diff);
+        TimingState timing = TimingState.NewGame();
 
         return new GameState(boardState, progressState, timing);
     }
@@ -35,7 +35,7 @@ internal record class GameState
 
     public double MineProgressRatio => (double)(ProgressState.LivesLost + BoardState.Flags) / ProgressState.Mines;
 
-    public GameState Win() => new(BoardState, ProgressState.Win(), Timing.Stop());
+    public GameState Win() => new(BoardState, ProgressState.Win(), Timing.Pause());
 
     public GameState LoseLife()
     {
@@ -44,7 +44,7 @@ internal record class GameState
         if (ProgressState.CanLoseLife)
             return new GameState(BoardState, ProgressState.LoseLife(), Timing);
 
-        return new GameState(BoardState, ProgressState.Die(), Timing.Stop());
+        return new GameState(BoardState, ProgressState.Die(), Timing.Pause());
     }
 
     public GameState ResumeGame() => new(BoardState, ProgressState, Timing.Resume());
@@ -65,10 +65,17 @@ internal record class GameState
         if (BoardState.CellIsFlagged(BoardState.Cursor)) 
             return NotifyFailedAction();
 
-        if (ProgressState.PlayerState == PlayerState.NewGame) 
-            return PlaceMines().Discover(BoardState.Cursor).CheckForWin();
 
-        return Discover(BoardState.Cursor).CheckForWin();
+        GameState res = this; 
+
+        if (ProgressState.PlayerState == PlayerState.NewGame)
+            res = PlaceMines();
+
+        res = res.Discover(BoardState.Cursor);
+
+        res = res.CheckForWin();
+
+        return res;
     }
 
     private GameState CheckForWin()
@@ -80,22 +87,25 @@ internal record class GameState
 
     public GameState Discover(Point cl)
     {
-        List<Point> points = new();
+        List<Point> frontierQueue = new();
         List<Point> discoveredCells = new();
-        points.Add(cl);
+
+        frontierQueue.Add(cl);
 
         int sum = 0;
         bool mineHit = false;
 
-        while (points.Count > 0)
+        while (frontierQueue.Count > 0)
         {
-            cl = points[0];
-            points.RemoveAt(0);
+            // Pop
+            cl = frontierQueue[0];
+            frontierQueue.RemoveAt(0);
 
             // Check discoverable
             if (BoardState.CellOutsideBounds(cl)) continue;
             if (BoardState.CellIsDiscovered(cl)) continue;
             if (BoardState.CellIsFlagged(cl)) continue;
+            if (discoveredCells.Contains(cl)) continue;
 
             discoveredCells.Add(cl);
 
@@ -109,12 +119,13 @@ internal record class GameState
             // Continue discovering if encountering an empty cell
             if (BoardState.CellMineNumber(cl) == 0 && Difficulty.AutomaticDiscovery)
             {
-                BoardState.ForAllSurroundingCells(cl, (p) => points.Add(p), Difficulty.WrapAround);
+                BoardState.ForAllSurroundingCells(cl, (p) => frontierQueue.Add(p), Difficulty.WrapAround);
             }
             sum += 1;
         }
 
-        if (mineHit) return LoseLife();
+        if (mineHit) 
+            return LoseLife();
 
         return new GameState(BoardState.Discover(discoveredCells), ProgressState, Timing);
     }
@@ -142,9 +153,10 @@ internal record class GameState
         {
             if (time < scores[HighscoreTable.highscoreEntries - 1].Time)
                 return true;
-            else
-                return false;
+            return false;
         }
         return true;
     }
+
+    public GameState ChangeRenderMask(Rectangle newRenderMask) => new(BoardState.ChangeRenderMask(newRenderMask), ProgressState, Timing);
 }

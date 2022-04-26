@@ -16,6 +16,11 @@ record struct Point
 
     public override string ToString() => String.Format("({0}, {1})", X, Y);
 
-    public Point Shifted(int dx, int dy) => new Point(X + dx, Y + dy);
-    public Point Shifted(Offset offset) => new Point(X + offset.X, Y + offset.Y);
+    public Point Shift(int dx, int dy) => new (X + dx, Y + dy);
+
+    public Point Shift(Offset offset) => new (X + offset.X, Y + offset.Y);
+
+    public Point Scale(Scale dimensions) => new(X * dimensions.Width, Y * dimensions.Height);
+
+    public Point ScaleBack(Scale dimensions) => new(X / dimensions.Width, Y / dimensions.Height);
 }

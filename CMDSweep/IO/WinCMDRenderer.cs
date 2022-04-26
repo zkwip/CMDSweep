@@ -31,6 +31,7 @@ class WinCMDRenderer : IRenderer
     }
 
     public Rectangle Bounds => new(0, 0, Console.WindowWidth, Console.WindowHeight);
+
     private Rectangle lastBounds;
 
     public event EventHandler BoundsChanged;
