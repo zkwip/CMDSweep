@@ -27,9 +27,8 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
 
     public void Visualize(GameState state)
     {
-        state.BoardState.View.TryCenterViewPort();
         _renderer.ClearScreen(_hideStyle);
-
+        _boardVisualizer.Visualize(state.BoardState);
         // Extras
         _gamePopupVisualizer.Visualize(state);
         _statBarVisualizer.Visualize(state);
@@ -40,7 +39,7 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
 
     public void VisualizeChanges(GameState state, GameState previousState)
     {
-        _boardVisualizer.Visualize(state.BoardState);
+        _boardVisualizer.VisualizeChanges(state.BoardState, previousState.BoardState);
         _statBarVisualizer.Visualize(state);
     }
 }

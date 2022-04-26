@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace CMDSweep.Geometry;
 
-record struct Rectangle
+record struct Rectangle : IEnumerable<Point>
 {
     public readonly LinearRange HorizontalRange;
     public readonly LinearRange VerticalRange;
@@ -98,19 +100,11 @@ record struct Rectangle
         return new Rectangle(l, t, r - l, b - t);
     }
 
-    public void ForAll(Action<int, int> callback)
-    {
-        for (int x = Left; x < Right; x++)
-        {
-            for (int y = Top; y < Bottom; y++) callback(x, y);
-        }
-    }
-
     public void ForAll(Action<Point> callback)
     {
-        for (int x = Left; x < Right; x++)
+        foreach (Point p in this)
         {
-            for (int y = Top; y < Bottom; y++) callback(new(x, y));
+            callback(p);
         }
     }
     
@@ -126,4 +120,19 @@ record struct Rectangle
     }
 
     public Offset OffsetOutOfBounds(Point p) => new Offset(HorizontalRange.OffsetOutOfBounds(p.X), VerticalRange.OffsetOutOfBounds(p.Y));
+
+    public IEnumerator<Point> GetEnumerator()
+    {
+        for (int x = Left; x < Right; x++)
+        {
+            for (int y = Top; y < Bottom; y++) yield return new Point(x, y);
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public Rectangle ClampVertical(int start, int end) => new Rectangle(HorizontalRange, VerticalRange.Intersect(new LinearRange(start, end - start)));
+    public Rectangle ClampVertical(LinearRange range) => new Rectangle(HorizontalRange, VerticalRange.Intersect(range));
+    public Rectangle ClampHorizontal(int start, int end) => new Rectangle(HorizontalRange.Intersect(new LinearRange(start, end - start)), VerticalRange);
+    public Rectangle ClampHorizontal(LinearRange range) => new Rectangle(HorizontalRange.Intersect(range), VerticalRange);
 }

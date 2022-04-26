@@ -1,4 +1,6 @@
-﻿namespace CMDSweep.Rendering;
+﻿using System;
+
+namespace CMDSweep.Rendering;
 
 internal class RenderSheduler<TState>
 {
@@ -30,19 +32,26 @@ internal class RenderSheduler<TState>
         {
             lock (_renderer)
             {
-                // Reset queue
                 mode = ModeWaiting;
                 ModeWaiting = RefreshMode.None;
 
-                // Decide what to render.
                 if (_lastState == null)
                     mode = RefreshMode.Full;
 
-                //Render
-                if (mode == RefreshMode.Full)
-                    Visualizer.Visualize(state);
-                else
-                    Visualizer.VisualizeChanges(state, _lastState!);
+                try
+                {
+                    switch (mode)
+                    {
+                        case RefreshMode.Full:
+                            Visualizer.Visualize(state);
+                            break;
+
+                        default:
+                            Visualizer.VisualizeChanges(state, _lastState!);
+                            break;
+                    }
+                }
+                catch (Exception) { }
 
                 _lastState = state;
             }

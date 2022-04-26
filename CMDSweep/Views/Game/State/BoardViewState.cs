@@ -29,9 +29,10 @@ internal class BoardViewState
         _scaleY = settings.Dimensions["cell-size-y"];
 
         RenderMask = renderMask;
-        Viewport = new(0, 0, RenderMask.Width / _scaleX, RenderMask.Height / _scaleY);
-        ScrollValidMask = Rectangle.Zero;
         Board = board;
+
+        Viewport = Rectangle.Centered(Board.Center, new Dimensions(RenderMask.Width / _scaleX, RenderMask.Height / _scaleY));
+        ScrollValidMask = Rectangle.Zero;
 
         RenderTask = RenderBufferCopyTask.None;
     }
@@ -72,9 +73,8 @@ internal class BoardViewState
 
         newView.RenderTask = new(oldCopyArea, newCopyArea);
         return newView;
-
-
     }
+
     public Rectangle MapToRender(Rectangle r) => new(MapToRender(r.TopLeft), MapToRender(r.BottomRight));
 
     public Point MapToRender(Point p) => new(_offsetX + p.X * _scaleX, _offsetY + p.Y * _scaleY);
@@ -88,14 +88,10 @@ internal class BoardViewState
         RenderMask = newMask;
         ScrollValidMask = Rectangle.Zero;
 
-        Rectangle newVP = new(Viewport.Left, Viewport.Top, RenderMask.Width / _scaleX, RenderMask.Height / _scaleY);
+        Rectangle newVP = Rectangle.Centered(Viewport.Center, new Dimensions(RenderMask.Width / _scaleX, RenderMask.Height / _scaleY));
 
         if (Viewport.Equals(Rectangle.Zero))
-            newVP.CenterOn(Board.Center);
-        else
-            newVP.CenterOn(Viewport.Center);
-
-        Viewport = newVP;
+            Viewport = newVP.CenterOn(Board.Center);
     }
 
     public Rectangle VisibleBoardSection => Viewport.Intersect(Board);

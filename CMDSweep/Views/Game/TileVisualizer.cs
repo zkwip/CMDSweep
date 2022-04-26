@@ -34,19 +34,19 @@ class TileVisualizer : ITypeVisualizer<Point>
         _clearVisual = new ("  ", _borderStyle);
     }
 
-    public void UpdateBoardState(GameState state)
+    public void UpdateBoardState(BoardState state)
     {
-        _boardState = state.BoardState;
-        _dead = state.ProgressState.PlayerState == PlayerState.Dead;
+        _boardState = state;
     }
 
     public void Visualize(Point p)
     {
         StyledText visual;
+
         if (IsOnBoard(p))
             visual = CellVisual(p);
         else if (IsBorder(p))
-            visual = CellVisual(p);
+            visual = BorderVisual(p);
         else
             visual = _clearVisual;
 

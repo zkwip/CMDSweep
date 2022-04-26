@@ -39,10 +39,10 @@ class HelpController : IViewController
         InputAction ia = App.ReadAction();
         switch (ia)
         {
-            case InputAction.Quit: App.ShowMainMenu(); return true;
-            case InputAction.Up: TryScrollUp(); return true;
-            case InputAction.Down: TryScrollDown(); return true;
-            case InputAction.NewGame: App.GameController.NewGame(); return true;
+            case InputAction.Quit: App.ShowMainMenu(); break;
+            case InputAction.Up: TryScrollUp(); break;
+            case InputAction.Down: TryScrollDown(); break;
+            case InputAction.NewGame: App.GameController.NewGame(); break;
             default: break;
         }
         App.Refresh(RefreshMode.ChangesOnly);
@@ -64,7 +64,6 @@ class HelpController : IViewController
     public void ResizeView()
     {
         _helpTextBox.Bounds = _renderer.Bounds.Shrink(4, 2, 4, 2);
-        _visualizer.Visualize(_helpTextBox);
     }
 
     public void Refresh(RefreshMode mode)

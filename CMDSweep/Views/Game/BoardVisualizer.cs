@@ -16,14 +16,17 @@ internal class BoardVisualizer : IChangeableTypeVisualizer<BoardState>
 
     public void Visualize(BoardState state)
     {
-        Rectangle area = state.View.VisibleBoardSection;
-        area.ForAll(p => _tileVisualizer.Visualize(p));
+        foreach (Point p in state.View.Viewport)
+        {
+            _tileVisualizer.Visualize(p);
+        }
     }
 
     public void VisualizeChanges(BoardState state, BoardState previousState)
     {
         List<Point> changes;
         changes = state.FindChangedTiles(previousState);
+        _tileVisualizer.UpdateBoardState(state);
 
         foreach (Point p in changes)
         {

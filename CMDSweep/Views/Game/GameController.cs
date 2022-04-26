@@ -93,6 +93,7 @@ class GameController : IViewController
         };
 
         AfterStepStateChanges();
+        App.Refresh(RefreshMode.ChangesOnly);
         return true;
     }
 

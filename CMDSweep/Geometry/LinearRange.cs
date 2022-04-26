@@ -42,4 +42,6 @@ record struct LinearRange
     }
 
     internal LinearRange Shift(int offset) => new(Start + offset, Length);
+
+    internal LinearRange Intersect(LinearRange range) => ToEnd(Math.Max(range.Start, this.Start), Math.Min(range.End, this.End));
 }

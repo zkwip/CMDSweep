@@ -17,7 +17,7 @@ class HelpVisualizer : IChangeableTypeVisualizer<TextRenderBox>
 
     public void VisualizeChanges(TextRenderBox state, TextRenderBox old)
     {
-        state.Render(_renderer, true);
+        state.RenderScroll(_renderer, state.VerticalScroll - old.VerticalScroll);
     }
     
     public void Visualize(TextRenderBox state)
