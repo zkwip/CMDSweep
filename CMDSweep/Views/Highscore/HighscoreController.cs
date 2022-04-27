@@ -1,5 +1,5 @@
 ﻿using CMDSweep.Data;
-using System;
+using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Highscore;
 

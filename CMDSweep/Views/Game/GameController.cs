@@ -34,9 +34,11 @@ class GameController : IViewController
         refreshTimer.Elapsed += RefreshTimerElapsed;
         refreshTimer.AutoReset = true;
 
-        StartGameState();
+        CurrentState = PrepareNewGameState();
+
         _visualizer = new GameVisualizer(_renderer, Settings, CurrentState);
         _renderSheduler = new RenderSheduler<GameState>(_visualizer, _renderer);
+        _highscoreTextField = new TextEnterField(Rectangle.Zero, Settings.GetStyle("popup"));
     }
 
     public GameSettings Settings => App.Settings;
@@ -66,11 +68,11 @@ class GameController : IViewController
                 return true;
 
             default:
-                return ProcessBoardChangeInput(ia);
+                return HandleBoardTransitionInput(ia);
         }
     }
 
-    private bool ProcessBoardChangeInput(InputAction ia)
+    private bool HandleBoardTransitionInput(InputAction ia)
     {
         if (App.AppState == ApplicationState.Done)
         {
@@ -125,7 +127,6 @@ class GameController : IViewController
         if (currentState.TimeMakesHighscore())
         {
             currentState = currentState.SetPlayerState(PlayerState.EnteringHighscore);
-            App.Refresh(RefreshMode.Full);
 
             bool textActive = true;
             while (textActive)
@@ -145,8 +146,6 @@ class GameController : IViewController
 
             currentState = currentState.SetPlayerState(PlayerState.ShowingHighscores);
             AddHighscore(time);
-
-            App.Refresh(RefreshMode.Full);
         }
         return currentState;
     }
@@ -172,15 +171,13 @@ class GameController : IViewController
 
     internal void NewGame()
     {
-        StartGameState();
+        CurrentState = PrepareNewGameState();
         App.ChangeMode(ApplicationState.Playing);
     }
 
-    private void StartGameState()
+    private GameState PrepareNewGameState()
     {
-        refreshTimer.Stop();
-        CurrentState = GameState.NewGame(SaveData.CurrentDifficulty, Settings, RenderMaskFromConsoleDimension());
-        Storage.WriteSave(SaveData);
+        return GameState.NewGame(SaveData.CurrentDifficulty, Settings, RenderMaskFromConsoleDimension());
     }
 
     public void ResizeView()

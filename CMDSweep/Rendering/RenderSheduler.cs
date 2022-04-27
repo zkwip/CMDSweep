@@ -8,6 +8,8 @@ internal class RenderSheduler<TState>
     private RefreshMode ModeWaiting;
     private bool IsRendering;
     private readonly IRenderer _renderer;
+    private int _counter;
+    private int _fullCounter;
 
     public IChangeableTypeVisualizer<TState> Visualizer { get; }
 
@@ -16,6 +18,8 @@ internal class RenderSheduler<TState>
         Visualizer = visualizer;
         _renderer = renderer;
         ModeWaiting = RefreshMode.None;
+        _counter = 0;
+        _fullCounter = 0;
     }
 
     public bool Visualize(TState state, RefreshMode mode)
@@ -32,6 +36,7 @@ internal class RenderSheduler<TState>
         {
             lock (_renderer)
             {
+                _counter++;
                 mode = ModeWaiting;
                 ModeWaiting = RefreshMode.None;
 
@@ -43,10 +48,14 @@ internal class RenderSheduler<TState>
                     switch (mode)
                     {
                         case RefreshMode.Full:
+                            _fullCounter++;
+                            _counter = 1;
+                            Console.Title = $"Render #{_fullCounter}.{_counter}: full ";
                             Visualizer.Visualize(state);
                             break;
 
                         default:
+                            Console.Title = $"Render #{_fullCounter}.{_counter}: changes";
                             Visualizer.VisualizeChanges(state, _lastState!);
                             break;
                     }

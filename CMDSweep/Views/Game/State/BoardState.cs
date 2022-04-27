@@ -191,14 +191,17 @@ internal record class BoardState
 
     public BoardState MoveCursor(Direction direction)
     {
-        return direction switch
+        Point p = direction switch
         {
-            Direction.Down => SetCursor(new Point(Cursor.X, Cursor.Y + 1)),
-            Direction.Up => SetCursor(new Point(Cursor.X, Cursor.Y - 1)),
-            Direction.Left => SetCursor(new Point(Cursor.X - 1, Cursor.Y)),
-            Direction.Right => SetCursor(new Point(Cursor.X + 1, Cursor.Y)),
-            _ => this,
+            Direction.Down => new (Cursor.X, Cursor.Y + 1),
+            Direction.Up => new (Cursor.X, Cursor.Y - 1),
+            Direction.Left => new (Cursor.X - 1, Cursor.Y),
+            Direction.Right => new (Cursor.X + 1, Cursor.Y),
+            _ => Cursor,
         };
+
+        return SetCursor(this.Wrap(p));
+
     }
 
     private BoardState SetCursor(Point cursor) => new(Cells, Difficulty, cursor, View);

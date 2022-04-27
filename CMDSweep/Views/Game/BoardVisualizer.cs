@@ -16,10 +16,14 @@ internal class BoardVisualizer : IChangeableTypeVisualizer<BoardState>
 
     public void Visualize(BoardState state)
     {
-        foreach (Point p in state.View.ViewPort)
-        {
+        Rectangle viewport = state.View.ViewPort;
+        _tileVisualizer.UpdateBoardState(state);
+
+        if (viewport.Area == 0) 
+            throw new System.Exception("The visualized area is empty.");
+
+        foreach (Point p in viewport)
             _tileVisualizer.Visualize(p);
-        }
     }
 
     public void VisualizeChanges(BoardState state, BoardState previousState)

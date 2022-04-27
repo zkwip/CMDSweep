@@ -1,4 +1,6 @@
-﻿namespace CMDSweep.Views;
+﻿using CMDSweep.Rendering;
+
+namespace CMDSweep.Views;
 
 interface IViewController
 {
