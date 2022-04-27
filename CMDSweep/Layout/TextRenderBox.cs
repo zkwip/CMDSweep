@@ -5,9 +5,11 @@ using System.Collections.Generic;
 
 namespace CMDSweep.Layout;
 
-class TextRenderBox : IBounded
+class TextRenderBox : IBounded, IRenderState
 {
     internal string Text;
+    private int _id;
+
     public Rectangle Bounds { get; set; }
     public int LineSpacing = 1;
 
@@ -26,21 +28,25 @@ class TextRenderBox : IBounded
 
     public Rectangle Used => new(Bounds.Left, Bounds.Top, LongestLineWidth, RenderLineCount);
 
-    public TextRenderBox(StyleData styleData)
+    public TextRenderBox(StyleData styleData, int id=0)
     {
         Text = "";
         Bounds = Rectangle.Zero;
         StyleData = styleData;
+        _id = id; 
     }
 
-    public TextRenderBox(string text, Rectangle bounds, StyleData styleData)
+    public TextRenderBox(string text, Rectangle bounds, StyleData styleData, int id=0)
     {
         Text = text;
         Bounds = bounds;
         StyleData = styleData;
+        _id = id;
     }
 
-    public TextRenderBox Clone() => new(Text, Bounds, StyleData)
+    public int Id => _id;
+
+    public TextRenderBox Clone() => new(Text, Bounds, StyleData, _id + 1)
     {
         LineSpacing = LineSpacing,
         VerticalScroll = VerticalScroll,

@@ -1,10 +1,13 @@
-﻿using System;
+﻿using CMDSweep.Rendering;
+using System;
 using System.Collections.Generic;
 
 namespace CMDSweep.Views.Menus;
 
 class MenuList
 {
+    private int _id = 0;
+
     public MenuList ParentMenu;
     public MenuController Controller;
 
@@ -60,7 +63,8 @@ class MenuList
             else Controller.OpenMenu(ParentMenu);
         }
 
-        if (FocusedItem != null) FocusedItem.HandleMenuAction(ia);
+        if (FocusedItem != null) 
+            FocusedItem.HandleMenuAction(ia);
         return true;
     }
 

@@ -36,7 +36,7 @@ class GameController : IViewController
 
         CurrentState = PrepareNewGameState();
 
-        _visualizer = new GameVisualizer(_renderer, Settings, CurrentState);
+        _visualizer = new GameVisualizer(_renderer, Settings);
         _renderSheduler = new RenderSheduler<GameState>(_visualizer, _renderer);
         _highscoreTextField = new TextEnterField(Rectangle.Zero, Settings.GetStyle("popup"));
     }
@@ -47,7 +47,7 @@ class GameController : IViewController
 
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
     
-    public bool Step()
+    public void Step()
     {
         InputAction ia = App.ReadAction();
 
@@ -55,31 +55,26 @@ class GameController : IViewController
         {
             case InputAction.NewGame:
                 NewGame();
-                return true;
+                return;
 
             case InputAction.Help:
                 refreshTimer.Stop();
                 App.ShowHelp();
-                return true;
+                return;
 
             case InputAction.Quit:
                 refreshTimer.Stop();
                 App.ShowMainMenu();
-                return true;
+                return;
 
             default:
-                return HandleBoardTransitionInput(ia);
+                HandleBoardTransitionInput(ia);
+                return;
         }
     }
 
     private bool HandleBoardTransitionInput(InputAction ia)
     {
-        if (App.AppState == ApplicationState.Done)
-        {
-            NewGame(); // Todo: check if this flow still makes sense
-            return true;
-        }
-
         CurrentState = ia switch
         {
             InputAction.Up => CurrentState.MoveCursor(Direction.Up),
@@ -92,7 +87,6 @@ class GameController : IViewController
         };
 
         AfterStepStateChanges();
-        App.Refresh(RefreshMode.ChangesOnly);
         return true;
     }
 
@@ -101,8 +95,8 @@ class GameController : IViewController
         switch (CurrentState.ProgressState.PlayerState)
         {
             case PlayerState.Playing:
-                if (!refreshTimer.Enabled) refreshTimer.Start();
-                App.Refresh(RefreshMode.ChangesOnly);
+                if (!refreshTimer.Enabled)
+                    refreshTimer.Start();
                 break;
 
             case PlayerState.Dead:
@@ -111,12 +105,10 @@ class GameController : IViewController
                 if (CurrentState.ProgressState.PlayerState == PlayerState.Win)
                     CheckHighscoreFlow(CurrentState);
 
-                App.AppState = ApplicationState.Done;
-                App.Refresh(RefreshMode.Full);
+                App.ChangeMode(ApplicationState.Done);
                 break;
 
             default:
-                App.Refresh(RefreshMode.ChangesOnly);
                 break;
         }
     }
@@ -193,6 +185,6 @@ class GameController : IViewController
         return _renderer.Bounds.Shrink(0, barheight, 0, 0);
     }
 
-    public void Refresh(RefreshMode mode) => _renderSheduler.Visualize(CurrentState, mode);
+    public void Refresh(RefreshMode mode) => _renderSheduler.Refresh(CurrentState, mode);
 
 }

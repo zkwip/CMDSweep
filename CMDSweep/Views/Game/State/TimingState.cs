@@ -1,8 +1,8 @@
-﻿using CMDSweep.Data;
+﻿using CMDSweep.Rendering;
 using System;
 
 namespace CMDSweep.Views.Game.State;
-internal record struct TimingState
+internal record struct TimingState : IRenderState
 {
     public readonly bool Paused;
     public readonly DateTime StartTime;
@@ -15,7 +15,9 @@ internal record struct TimingState
         PreTime = preTime;
     }
 
-    public static TimingState NewGame() => new(false, DateTime.Now, TimeSpan.Zero);
+    public int Id => 0;
+
+    public static TimingState NewGame() => new(true, DateTime.Now, TimeSpan.Zero);
 
     public TimeSpan Time => Paused ? PreTime : PreTime + (DateTime.Now - StartTime);
 

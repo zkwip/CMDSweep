@@ -24,6 +24,8 @@ internal class TextPopup : IPopup
         _textStyle = _textRenderBox.StyleData;
     }
 
+    public int Id => 0;
+
     public Dimensions ContentDimensions => _textRenderBox.Bounds.Dimensions;
 
     public void RenderContent(Rectangle bounds, IRenderer renderer)

@@ -6,18 +6,20 @@ using System.Collections.Generic;
 
 namespace CMDSweep.Views.Game.State;
 
-internal record class GameState
+internal record class GameState : IRenderState
 {
     // Properties
     public readonly BoardState BoardState;
     public readonly GameProgressState ProgressState;
     public readonly TimingState Timing;
+    private readonly int _id;
 
-    public GameState(BoardState boardData, GameProgressState roundStats, TimingState timing)
+    public GameState(BoardState boardData, GameProgressState roundStats, TimingState timing, int id)
     {
         BoardState = boardData;
         ProgressState = roundStats;
         Timing = timing;
+        _id = id;
     }
 
     public static GameState NewGame(Difficulty diff, GameSettings settings, Rectangle boardRenderMask)
@@ -26,8 +28,10 @@ internal record class GameState
         GameProgressState progressState = GameProgressState.NewGame(diff);
         TimingState timing = TimingState.NewGame();
 
-        return new GameState(boardState, progressState, timing);
+        return new GameState(boardState, progressState, timing, 0);
     }
+
+    public int Id => _id;
 
     public Difficulty Difficulty => ProgressState.Difficulty;
 
@@ -35,21 +39,21 @@ internal record class GameState
 
     public double MineProgressRatio => (double)(ProgressState.LivesLost + BoardState.Flags) / ProgressState.Mines;
 
-    public GameState Win() => new(BoardState, ProgressState.Win(), Timing.Pause());
+    public GameState Win() => new(BoardState, ProgressState.Win(), Timing.Pause(), _id+1);
 
     public GameState LoseLife()
     {
         NotifyFailedAction();
 
         if (ProgressState.CanLoseLife)
-            return new GameState(BoardState, ProgressState.LoseLife(), Timing);
+            return new GameState(BoardState, ProgressState.LoseLife(), Timing, _id + 1);
 
-        return new GameState(BoardState, ProgressState.Die(), Timing.Pause());
+        return new GameState(BoardState, ProgressState.Die(), Timing.Pause(), _id + 1);
     }
 
-    public GameState ResumeGame() => new(BoardState, ProgressState, Timing.Resume());
+    public GameState ResumeGame() => new(BoardState, ProgressState, Timing.Resume(), _id + 1);
 
-    public GameState FreezeGame() => new(BoardState, ProgressState, Timing.Pause());
+    public GameState FreezeGame() => new(BoardState, ProgressState, Timing.Pause(), _id + 1);
 
     public GameState NotifyFailedAction()
     {
@@ -127,7 +131,7 @@ internal record class GameState
         if (mineHit) 
             return LoseLife();
 
-        return new GameState(BoardState.Discover(discoveredCells), ProgressState, Timing);
+        return new GameState(BoardState.Discover(discoveredCells), ProgressState, Timing, _id + 1);
     }
 
     public GameState ToggleFlag()
@@ -135,14 +139,14 @@ internal record class GameState
         if (!Difficulty.FlagsAllowed) return NotifyFailedAction();
         if (BoardState.CellIsDiscovered(BoardState.Cursor)) return NotifyFailedAction();
 
-        return new(BoardState.ToggleFlag(),ProgressState, Timing);
+        return new(BoardState.ToggleFlag(),ProgressState, Timing, _id + 1);
     }
 
-    public GameState MoveCursor(Direction d) => new(BoardState.MoveCursor(d), ProgressState, Timing);
+    public GameState MoveCursor(Direction d) => new(BoardState.MoveCursor(d), ProgressState, Timing, _id + 1);
 
-    private GameState PlaceMines() => new(BoardState.PlaceMines(), ProgressState.SetState(PlayerState.Playing), Timing.Resume());
+    private GameState PlaceMines() => new(BoardState.PlaceMines(), ProgressState.SetState(PlayerState.Playing), Timing.Resume(), _id + 1);
 
-    public GameState SetPlayerState(PlayerState state) => new(BoardState, ProgressState.SetState(state), Timing);
+    public GameState SetPlayerState(PlayerState state) => new(BoardState, ProgressState.SetState(state), Timing, _id + 1);
 
     public bool TimeMakesHighscore()
     {
@@ -158,5 +162,5 @@ internal record class GameState
         return true;
     }
 
-    public GameState ChangeRenderMask(Rectangle newRenderMask) => new(BoardState.ChangeRenderMask(newRenderMask), ProgressState, Timing);
+    public GameState ChangeRenderMask(Rectangle newRenderMask) => new(BoardState.ChangeRenderMask(newRenderMask), ProgressState, Timing, _id + 1);
 }

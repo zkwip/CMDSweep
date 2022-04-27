@@ -27,17 +27,15 @@ class MenuController : IViewController
     public GameSettings Settings => App.Settings;
     public SaveData SaveData => App.SaveData;
 
-    public bool Step()
+    public void Step()
     {
         InputAction ia = App.ReadAction();
         if (ia == InputAction.NewGame)
         {
             App.GameController.NewGame();
-            return true;
+            return;
         }
-        bool res = _currentMenuList.HandleInput(ia);
-        App.Refresh(RefreshMode.ChangesOnly);
-        return res;
+        _currentMenuList.HandleInput(ia);
     }
 
     internal void BuildMenus()

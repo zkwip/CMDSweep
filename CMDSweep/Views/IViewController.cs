@@ -6,7 +6,7 @@ interface IViewController
 {
     public MineApp App { get; }
 
-    public bool Step();
+    public void Step();
     void ResizeView();
     void Refresh(RefreshMode mode);
 }

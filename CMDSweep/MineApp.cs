@@ -63,16 +63,20 @@ class MineApp
 
     private bool Step()
     {
-        if (AppState == ApplicationState.Quit) return false;
-        if (CurrentController == null) return false;
-        return CurrentController.Step();
+        CurrentController.Step();
+        return Refresh(RefreshMode.ChangesOnly);
     }
 
-    internal void Refresh(RefreshMode mode)
+    internal bool Refresh(RefreshMode mode)
     {
-        if (AppState == ApplicationState.Quit) return;
-        if (CurrentController == null) return;
+        if (AppState == ApplicationState.Quit) 
+            return false;
+
+        if (CurrentController == null) 
+            return false;
+
         CurrentController.Refresh(mode);
+        return true;
     }
 
     internal InputAction ReadAction() => ParseAction(Console.ReadKey(true));

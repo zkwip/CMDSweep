@@ -34,19 +34,29 @@ class HelpController : IViewController
         ResizeView();
     }
 
-    public bool Step()
+    public void Step()
     {
         InputAction ia = App.ReadAction();
         switch (ia)
         {
-            case InputAction.Quit: App.ShowMainMenu(); break;
-            case InputAction.Up: TryScrollUp(); break;
-            case InputAction.Down: TryScrollDown(); break;
-            case InputAction.NewGame: App.GameController.NewGame(); break;
+            case InputAction.Quit: 
+                App.ShowMainMenu(); 
+                break;
+
+            case InputAction.Up: 
+                TryScrollUp(); 
+                break;
+
+            case InputAction.Down: 
+                TryScrollDown(); 
+                break;
+
+            case InputAction.NewGame: 
+                App.GameController.NewGame(); 
+                break;
+
             default: break;
         }
-        App.Refresh(RefreshMode.ChangesOnly);
-        return true;
     }
 
     private void TryScrollDown()

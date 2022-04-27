@@ -2,31 +2,35 @@
 using CMDSweep.Data;
 using System;
 using System.Collections.Generic;
-using CMDSweep.Views.Game.State;
+using CMDSweep.Rendering;
 
-namespace CMDSweep.Views.Game;
+namespace CMDSweep.Views.Game.State;
 
-internal record class BoardState
+internal record class BoardState : IRenderState
 {
     public readonly CellData[,] Cells;
     public readonly Difficulty Difficulty;
     public readonly Point Cursor;
     public readonly BoardViewState View;
+    private readonly int _id;
 
-    public BoardState(CellData[,] cells, Difficulty difficulty, Point cursor, BoardViewState view)
+    public BoardState(CellData[,] cells, Difficulty difficulty, Point cursor, BoardViewState view, int id)
     {
         Cells = cells;
         Difficulty = difficulty;
         Cursor = cursor;
         View = view;
+        _id = id;
     }
 
     public BoardState Scroll()
     {
         BoardViewState newView = View.ScrollTo(Cursor);
 
-        return new(Cells, Difficulty, Cursor, newView);
+        return new(Cells, Difficulty, Cursor, newView, _id + 1);
     }
+
+    public int Id => _id;
 
     public static BoardState NewGame(Difficulty diff, GameSettings settings, Rectangle renderMask)
     {
@@ -39,7 +43,7 @@ internal record class BoardState
 
         BoardViewState view = BoardViewState.NewGame(settings, board, renderMask);
 
-        return new BoardState(cells, diff, cursor, view);
+        return new BoardState(cells, diff, cursor, view, 0);
     }
 
     private int CountCells(Predicate<CellData> p)
@@ -84,23 +88,23 @@ internal record class BoardState
 
     public BoardState Flag(Point cl)
     {
-        CellData[,] newCells = (CellData[,])(Cells.Clone());
+        CellData[,] newCells = (CellData[,])Cells.Clone();
         newCells[cl.X, cl.Y].Flagged = FlagMarking.Flagged;
-        return new(newCells, Difficulty, Cursor, View);
+        return new(newCells, Difficulty, Cursor, View, _id + 1);
     }
 
     public BoardState Unflag(Point cl)
     {
-        CellData[,] newCells = (CellData[,])(Cells.Clone());
+        CellData[,] newCells = (CellData[,])Cells.Clone();
         newCells[cl.X, cl.Y].Flagged = FlagMarking.Unflagged;
-        return new(newCells, Difficulty, Cursor, View);
+        return new(newCells, Difficulty, Cursor, View, _id + 1);
     }
 
     public BoardState QuestionMark(Point cl)
     {
-        CellData[,] newCells = (CellData[,])(Cells.Clone());
+        CellData[,] newCells = (CellData[,])Cells.Clone();
         newCells[cl.X, cl.Y].Flagged = FlagMarking.QuestionMarked;
-        return new(newCells, Difficulty, Cursor, View);
+        return new(newCells, Difficulty, Cursor, View, _id + 1);
     }
 
     public Point Wrap(Point cl)
@@ -164,7 +168,7 @@ internal record class BoardState
         return li;
     }
 
-    public BoardState ChangeRenderMask(Rectangle newRenderMask) => new BoardState(Cells, Difficulty, Cursor, View.ChangeRenderMask(newRenderMask));
+    public BoardState ChangeRenderMask(Rectangle newRenderMask) => new BoardState(Cells, Difficulty, Cursor, View.ChangeRenderMask(newRenderMask), _id + 1);
 
     public int CellMineNumber(Point cl) => CountSurroundingCells(cl, c => c.Mine, Difficulty.WrapAround);
 
@@ -186,25 +190,25 @@ internal record class BoardState
             newCells[cell.X, cell.Y].Flagged = FlagMarking.Unflagged;
         }
 
-        return new BoardState(newCells, Difficulty, Cursor, View);
+        return new BoardState(newCells, Difficulty, Cursor, View, _id + 1);
     }
 
     public BoardState MoveCursor(Direction direction)
     {
         Point p = direction switch
         {
-            Direction.Down => new (Cursor.X, Cursor.Y + 1),
-            Direction.Up => new (Cursor.X, Cursor.Y - 1),
-            Direction.Left => new (Cursor.X - 1, Cursor.Y),
-            Direction.Right => new (Cursor.X + 1, Cursor.Y),
+            Direction.Down => new(Cursor.X, Cursor.Y + 1),
+            Direction.Up => new(Cursor.X, Cursor.Y - 1),
+            Direction.Left => new(Cursor.X - 1, Cursor.Y),
+            Direction.Right => new(Cursor.X + 1, Cursor.Y),
             _ => Cursor,
         };
 
-        return SetCursor(this.Wrap(p));
+        return SetCursor(Wrap(p));
 
     }
 
-    private BoardState SetCursor(Point cursor) => new(Cells, Difficulty, cursor, View);
+    private BoardState SetCursor(Point cursor) => new(Cells, Difficulty, cursor, View, _id + 1);
 
     public BoardState ToggleFlag()
     {
@@ -227,7 +231,7 @@ internal record class BoardState
     public List<Point> DiffersFrom(BoardState other, Rectangle area)
     {
         List<Point> hits = new();
-        area.ForAll((Point p) =>
+        area.ForAll((p) =>
         {
             if (Cell(p) != other.Cell(p)) hits.Add(p);
         });
@@ -263,7 +267,7 @@ internal record class BoardState
         int maxMines = (int)Math.Floor(0.8 * detectZoneSize);
         Random rng = new();
 
-        BoardState state = new(Cells, Difficulty, Cursor, View);
+        BoardState state = new(Cells, Difficulty, Cursor, View, _id + 1);
 
         // Try to randomly place mines and check if the are valid;
         while (minesLeftToPlace > 0 && placementFailures < 1000)
@@ -291,7 +295,7 @@ internal record class BoardState
             minesLeftToPlace--;
         }
 
-        if (minesLeftToPlace > 0) 
+        if (minesLeftToPlace > 0)
             throw new Exception("Can't place mine after 1000 random tries");
 
         return state;

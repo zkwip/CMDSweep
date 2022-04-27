@@ -7,111 +7,111 @@ using CMDSweep.Views.Game.State;
 
 namespace CMDSweep.Views.Game;
 
-class TileVisualizer : ITypeVisualizer<Point>
+class TileVisualizer : ITypeVisualizer<Point, GameState>
 {
-    private readonly Difficulty _difficulty;
     private readonly GameSettings _settings;
     private readonly IRenderer _renderer;
 
-    private BoardState _boardState;
-    private bool _dead;
     private readonly int _gridSize;
     private readonly int _tileWidth;
+
     private readonly StyleData _borderStyle;
     private readonly StyledText _clearVisual;
 
-    public TileVisualizer(IRenderer renderer, GameSettings settings, BoardState initialState)
+    public TileVisualizer(IRenderer renderer, GameSettings settings)
     {
-        _difficulty = initialState.Difficulty;
         _settings = settings;
         _renderer = renderer;
 
-        _boardState = initialState;
-        _dead = false;
         _gridSize = settings.Dimensions["cell-grid-size"];
         _tileWidth = settings.Dimensions["cell-size-x"];
         _borderStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
         _clearVisual = new ("  ", _borderStyle);
     }
 
-    public void UpdateBoardState(BoardState state) => _boardState = state;
-
-    public void UpdateDead(bool dead) => _dead = dead;
-
-    public void Visualize(Point p)
+    public void Visualize(Point p, GameState gameState)
     {
-        StyledText visual;
+        bool dead = gameState.ProgressState.PlayerState == PlayerState.Dead;
+        BoardState boardState = gameState.BoardState;
+        Difficulty difficulty = boardState.Difficulty;
 
-        if (IsOnBoard(p))
-            visual = CellVisual(p);
-        else if (IsBorder(p))
-            visual = BorderVisual(p);
-        else
-            visual = _clearVisual;
+        StyledText visual = GetVisual(p, boardState, difficulty, dead);
 
-        _renderer.PrintAtTile(_boardState.View.MapToRender(p), visual);
+        _renderer.PrintAtTile(boardState.View.MapToRender(p), visual);
     }
 
-    private bool IsBorder(Point p) => _boardState.Bounds.Grow(1).Contains(p) && !_boardState.Bounds.Contains(p);
-
-    private bool IsOnBoard(Point p) => _boardState.Bounds.Contains(p);
-
-    public TileVisual GetTileStyle(Point cl)
+    private StyledText GetVisual(Point p, BoardState boardState, Difficulty difficulty, bool dead)
     {
-        if (_dead)
+        if (IsOnBoard(p, boardState))
+            return CellVisual(p, boardState, difficulty, dead);
+
+        if (IsBorder(p, boardState))
+            return BorderVisual(p, boardState);
+
+        return _clearVisual;
+    }
+
+    private bool IsBorder(Point p, BoardState boardState) => boardState.Bounds.Grow(1).Contains(p) && !boardState.Bounds.Contains(p);
+
+    private bool IsOnBoard(Point p, BoardState boardState) => boardState.Bounds.Contains(p);
+
+    public TileVisual GetTileStyle(Point p, BoardState boardState, bool dead)
+    {
+        if (dead)
         {
-            if (_boardState.CellIsMine(cl))
+            if (boardState.CellIsMine(p))
             {
-                if (_boardState.CellIsFlagged(cl)) 
+                if (boardState.CellIsFlagged(p)) 
                     return TileVisual.DeadMineFlagged;
 
-                if (_boardState.CellIsDiscovered(cl)) 
+                if (boardState.CellIsDiscovered(p)) 
                     return TileVisual.DeadMineExploded;
 
                 return TileVisual.DeadMine;
             }
             else
             {
-                if (_boardState.CellIsFlagged(cl)) 
+                if (boardState.CellIsFlagged(p)) 
                     return TileVisual.DeadWrongFlag;
 
-                if (_boardState.CellIsDiscovered(cl)) 
+                if (boardState.CellIsDiscovered(p)) 
                     return TileVisual.DeadDiscovered;
 
                 return TileVisual.DeadUndiscovered;
             }
         }
         
-        if (_boardState.CellIsDiscovered(cl) && _boardState.CellIsMine(cl)) 
+        if (boardState.CellIsDiscovered(p) && boardState.CellIsMine(p)) 
             return TileVisual.DiscoveredMine;
 
-        if (_boardState.CellIsDiscovered(cl)) 
+        if (boardState.CellIsDiscovered(p)) 
             return TileVisual.Discovered;
 
-        if (_boardState.CellIsFlagged(cl)) 
+        if (boardState.CellIsFlagged(p)) 
             return TileVisual.Flagged;
 
-        if (_boardState.CellIsQuestionMarked(cl)) 
+        if (boardState.CellIsQuestionMarked(p)) 
             return TileVisual.QuestionMarked;
         
-        if (cl.X % _gridSize == 0 || cl.Y % _gridSize == 0) 
+        if (p.X % _gridSize == 0 || p.Y % _gridSize == 0) 
             return TileVisual.UndiscoveredGrid;
 
         return TileVisual.Undiscovered;
     }
 
-    public StyledText CellVisual(Point cl)
+    public StyledText CellVisual(Point p, BoardState boardState, Difficulty difficulty, bool dead)
     {
-        TileVisual tileVisual = GetTileStyle(cl);
+        TileVisual tileVisual = GetTileStyle(p, boardState, dead);
 
         ConsoleColor fg = GetTileForeground(tileVisual);
         ConsoleColor bg = GetTileBackground(tileVisual);
-        string text = GetTileText(cl, tileVisual, ref fg);
+
+        string text = GetTileText(p, boardState, difficulty, tileVisual, ref fg);
 
         // Cursor
-        if (!_dead && IsCursor(cl))
+        if (!dead && IsCursor(p, boardState))
         {
-            if (!_difficulty.OnlyShowAtCursor || tileVisual != TileVisual.Discovered || _boardState.CellMineNumber(cl) <= 0)
+            if (!difficulty.OnlyShowAtCursor || tileVisual != TileVisual.Discovered || boardState.CellMineNumber(p) <= 0)
                 fg = _settings.Colors["cell-selected"];
 
             if (text == _settings.Texts["cell-undiscovered"] || text == _settings.Texts["cell-empty"])
@@ -124,27 +124,26 @@ class TileVisualizer : ITypeVisualizer<Point>
         return new(text, data);
     }
 
-    public StyledText BorderVisual(Point p)
+    public StyledText BorderVisual(Point p, BoardState boardState)
     {
-
         // Corners
         if (p.Equals(new Point(-1, -1)))
             return new(_settings.Texts["border-corner-tl"], _borderStyle);
 
-        if (p.Equals(new Point(_boardState.BoardWidth, -1)))
+        if (p.Equals(new Point(boardState.BoardWidth, -1)))
             return new(_settings.Texts["border-corner-tr"], _borderStyle);
 
-        if (p.Equals(new Point(-1, _boardState.BoardHeight)))
+        if (p.Equals(new Point(-1, boardState.BoardHeight)))
             return new(_settings.Texts["border-corner-bl"], _borderStyle);
 
-        if (p.Equals(new Point(_boardState.BoardWidth, _boardState.BoardHeight)))
+        if (p.Equals(new Point(boardState.BoardWidth, boardState.BoardHeight)))
             return new(_settings.Texts["border-corner-br"], _borderStyle);
 
         // Edges
-        if (p.Y == -1 || p.Y == _boardState.BoardHeight)
+        if (p.Y == -1 || p.Y == boardState.BoardHeight)
             return new(_settings.Texts["border-horizontal"], _borderStyle);
 
-        if (p.X == -1 || p.X == _boardState.BoardWidth)
+        if (p.X == -1 || p.X == boardState.BoardWidth)
             return new(_settings.Texts["border-vertical"], _borderStyle);
 
         throw new ArgumentOutOfRangeException(nameof(p), $"The point {p} is not part of the board");
@@ -166,7 +165,7 @@ class TileVisualizer : ITypeVisualizer<Point>
         };
     }
 
-    private string GetTileText(Point cl, TileVisual tileVisual, ref ConsoleColor fg)
+    private string GetTileText(Point cl, BoardState boardState, Difficulty difficulty, TileVisual tileVisual, ref ConsoleColor fg)
     {
         string text = _settings.Texts["cell-empty"];
 
@@ -196,22 +195,22 @@ class TileVisualizer : ITypeVisualizer<Point>
 
             case TileVisual.DeadDiscovered:
             case TileVisual.Discovered:
-                text = DiscoveredTileText(cl, ref fg);
+                text = DiscoveredTileText(cl, boardState, difficulty, ref fg);
                 break;
         }
 
         return text;
     }
 
-    private string DiscoveredTileText(Point cl, ref ConsoleColor fg)
+    private string DiscoveredTileText(Point p, BoardState boardState, Difficulty difficulty, ref ConsoleColor fg)
     {
         string text;
-        int num = _boardState.CellMineNumber(cl);
+        int num = boardState.CellMineNumber(p);
 
-        if (_difficulty.SubtractFlags) 
-            num = _boardState.CellSubtractedMineNumber(cl);
+        if (difficulty.SubtractFlags) 
+            num = boardState.CellSubtractedMineNumber(p);
 
-        if (num > 0 && (IsCursor(cl) || !_difficulty.OnlyShowAtCursor))
+        if (num > 0 && (IsCursor(p, boardState) || !difficulty.OnlyShowAtCursor))
         {
             text = num.ToString();
             fg = _settings.Colors[string.Format("cell-{0}-discovered", num % 10)];
@@ -221,7 +220,7 @@ class TileVisualizer : ITypeVisualizer<Point>
         return _settings.Texts["cell-empty"];
     }
 
-    private bool IsCursor(Point cl) => _boardState.Cursor == cl;
+    private bool IsCursor(Point cl, BoardState boardState) => boardState.Cursor == cl;
 
     private ConsoleColor GetTileForeground(TileVisual tileVisual)
     {

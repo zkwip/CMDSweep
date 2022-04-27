@@ -18,7 +18,7 @@ class HighscoreController : IViewController
         SelectedDifficulty = app.SaveData.CurrentDifficulty;
     }
 
-    public bool Step()
+    public void Step()
     {
         InputAction ia = App.ReadAction();
         switch (ia)
@@ -30,7 +30,6 @@ class HighscoreController : IViewController
                 App.GameController.NewGame();
                 break;
         }
-        return true;
     }
 
     public void ShowHighscores() => App.AppState = ApplicationState.Highscore;

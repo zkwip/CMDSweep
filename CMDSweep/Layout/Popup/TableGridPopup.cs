@@ -17,6 +17,8 @@ internal class TableGridPopup : IPopup
         TextStyle = textStyle;
     }
 
+    public int Id => 0;
+
     public Dimensions ContentDimensions => _tableGrid.Bounds.Dimensions;
 
     public void RenderContent(Rectangle bounds, IRenderer renderer)
