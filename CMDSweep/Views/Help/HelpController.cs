@@ -1,15 +1,15 @@
 ﻿using CMDSweep.Geometry;
 using CMDSweep.Layout;
 using CMDSweep.IO;
-using CMDSweep.Data;
 using CMDSweep.Rendering;
+using CMDSweep.Layout.Text;
 
 namespace CMDSweep.Views.Help;
 
 class HelpController : IViewController
 { 
     private TextRenderBox _helpTextBox;
-    private readonly HelpVisualizer _visualizer;
+    private readonly IChangeableTypeVisualizer<TextRenderBox,Rectangle> _visualizer;
     private readonly IRenderer _renderer;
 
     public MineApp App { get; }
@@ -18,11 +18,10 @@ class HelpController : IViewController
     {
         App = app;
         _renderer = App.Renderer;
-        _visualizer = new HelpVisualizer(_renderer, App.Settings);
-
         StyleData styleData = App.Settings.GetStyle("menu");
 
-        _helpTextBox = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero, styleData)
+        _visualizer = new TextRenderBoxVisualizer(_renderer, App.Settings, styleData);
+        _helpTextBox = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero)
         {
             Wrap = true,
             VerticalOverflow = false,
@@ -78,6 +77,6 @@ class HelpController : IViewController
 
     public void Refresh(RefreshMode mode)
     {
-        _visualizer.Visualize(_helpTextBox);
+        _visualizer.Visualize(_helpTextBox, _renderer.Bounds.Shrink(4, 2, 4, 2));
     }
 }

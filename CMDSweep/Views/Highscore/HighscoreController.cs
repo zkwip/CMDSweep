@@ -1,11 +1,13 @@
 ﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
 using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Highscore;
 
 class HighscoreController : IViewController
 {
-    private HighscoreVisualizer _visualizer;
+    private ITypeVisualizer<HighscoreTable, Rectangle> _visualizer;
+    private GameSettings _settings;
     internal Difficulty SelectedDifficulty;
 
     public MineApp App { get; }
@@ -13,8 +15,10 @@ class HighscoreController : IViewController
     public HighscoreController(MineApp app)
     {
         App = app;
+        _settings = App.Settings;
 
-        _visualizer = new HighscoreVisualizer(app.Renderer, app.Settings);
+        StyleData normalStyle = App.Settings.GetStyle("menu");
+        _visualizer = new HighscoreTableVisualizer(app.Renderer, normalStyle, normalStyle);
         SelectedDifficulty = app.SaveData.CurrentDifficulty;
     }
 
@@ -34,7 +38,13 @@ class HighscoreController : IViewController
 
     public void ShowHighscores() => App.AppState = ApplicationState.Highscore;
 
-    public void Refresh(RefreshMode _) => _visualizer.Visualize(SelectedDifficulty);
+    public void Refresh(RefreshMode _)
+    {
+        HighscoreTable table = new HighscoreTable(SelectedDifficulty, _settings);
+        Rectangle bounds = Rectangle.Centered(App.Renderer.Bounds.Center, table.ContentDimensions);
 
-    public void ResizeView() => _visualizer.Resize(); 
+        _visualizer.Visualize(table, bounds);
+    }
+
+    public void ResizeView() { }
 }

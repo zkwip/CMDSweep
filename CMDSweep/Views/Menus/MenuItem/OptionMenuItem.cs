@@ -4,7 +4,7 @@ using CMDSweep.Rendering;
 using System;
 using System.Collections.Generic;
 
-namespace CMDSweep.Views.Menus;
+namespace CMDSweep.Views.Menus.MenuItems;
 
 class OptionMenuItem<TOption> : MenuItem
 {
@@ -34,10 +34,10 @@ class OptionMenuItem<TOption> : MenuItem
 
     internal void SelectValue(TOption value)
     {
-        if (value == null) 
+        if (value == null)
             throw new NullReferenceException("Item is null");
 
-        if (!Select(value, true)) 
+        if (!Select(value, true))
             throw new Exception("The selected item not in the list");
     }
 

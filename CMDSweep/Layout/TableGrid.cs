@@ -1,5 +1,4 @@
 ﻿using CMDSweep.Geometry;
-using System;
 
 namespace CMDSweep.Layout;
 class TableGrid : IBounded
@@ -68,12 +67,11 @@ class TableGrid : IBounded
     
     public void Shift(Offset o) => Bounds = Bounds.Shift(o);
 
-    public Rectangle FitAround(int scale = 0)
+    public Dimensions ContentFitDimensions(int variableScale = 0)
     {
-        int width = colPart.ConstantSum + colPart.VariableSum * scale;
-        int height = rowPart.ConstantSum + rowPart.VariableSum * scale;
+        int width = colPart.ConstantSum + colPart.VariableSum * variableScale;
+        int height = rowPart.ConstantSum + rowPart.VariableSum * variableScale;
 
-        Bounds = new(Bounds.Left, Bounds.Top, width, height);
-        return Bounds;
+        return new(width, height);
     }
 }

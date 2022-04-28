@@ -4,30 +4,52 @@ using CMDSweep.Geometry;
 
 namespace CMDSweep.Layout.Popup;
 
-internal class PopupVisualizer : IChangeableTypeVisualizer<IPopup>
+internal class PopupVisualizer<TPlaceable> : IChangeableTypeVisualizer<TPlaceable> where TPlaceable : IPlaceable
 {
     private GameSettings _settings;
     private IRenderer _renderer;
     private StyleData _styleData;
+    private ITypeVisualizer<TPlaceable, Rectangle> _contentVisualizer;
+    private Rectangle? _lastShape;
 
-    public PopupVisualizer(IRenderer renderer, GameSettings settings)
+    public PopupVisualizer(IRenderer renderer, GameSettings settings, ITypeVisualizer<TPlaceable, Rectangle> contentVisualizer)
     {
         _settings = settings;
         _renderer = renderer;
+        _contentVisualizer = contentVisualizer;
         _styleData = settings.GetStyle("popup");
     }
 
-    public void Visualize(IPopup item)
+    public void Visualize(TPlaceable item)
     {
         Rectangle shape = Rectangle.Centered(_renderer.Bounds.Center, item.ContentDimensions);
         RenderPopupAroundShape(shape);
-        item.RenderContent(shape, _renderer);
+        _contentVisualizer.Visualize(item, shape);
+        _lastShape = shape;
+
     }
 
-    public void VisualizeChanges(IPopup item, IPopup oldItem)
+    public void VisualizeChanges(TPlaceable item, TPlaceable oldItem)
     {
         Rectangle shape = Rectangle.Centered(_renderer.Bounds.Center, item.ContentDimensions);
-        item.RenderContent(shape, _renderer);
+
+        if (shape != _lastShape)
+        {
+            Visualize(item);
+            _lastShape = shape;
+            return;
+        }
+
+        if (_contentVisualizer is IChangeableTypeVisualizer<TPlaceable, Rectangle> changeable)
+        {
+            if (shape == _lastShape)
+            {
+                changeable.VisualizeChanges(item, shape, oldItem, shape);
+                return;
+            }
+        }
+
+        _contentVisualizer.Visualize(item, shape);
     }
 
     private void RenderPopupAroundShape(Rectangle rect)

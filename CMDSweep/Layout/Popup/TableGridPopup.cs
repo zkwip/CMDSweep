@@ -4,7 +4,7 @@ using System;
 
 namespace CMDSweep.Layout.Popup;
 
-internal class TableGridPopup : IPopup
+internal class TableGridPopup : IPlaceable
 {
     private TableGrid _tableGrid;
     private Action<TableGrid, IRenderer> _renderTableContents;

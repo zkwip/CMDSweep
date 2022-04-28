@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace CMDSweep.Views.Menus;
+namespace CMDSweep.Views.Menus.MenuItems;
 
 class NumberRangeMenuItem : OptionMenuItem<int>
 {

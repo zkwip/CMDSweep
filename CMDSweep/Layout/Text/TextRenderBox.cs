@@ -3,9 +3,9 @@ using CMDSweep.Rendering;
 using System;
 using System.Collections.Generic;
 
-namespace CMDSweep.Layout;
+namespace CMDSweep.Layout.Text;
 
-class TextRenderBox : IBounded, IRenderState
+class TextRenderBox : IBounded, IRenderState, IPlaceable
 {
     internal string Text;
     private int _id;
@@ -24,29 +24,25 @@ class TextRenderBox : IBounded, IRenderState
 
     public HorzontalAlignment HorizontalAlign = HorzontalAlignment.Left;
 
-    public StyleData StyleData { get; set; }
-
     public Rectangle Used => new(Bounds.Left, Bounds.Top, LongestLineWidth, RenderLineCount);
 
-    public TextRenderBox(StyleData styleData, int id=0)
+    public TextRenderBox(int id=0)
     {
         Text = "";
         Bounds = Rectangle.Zero;
-        StyleData = styleData;
         _id = id; 
     }
 
-    public TextRenderBox(string text, Rectangle bounds, StyleData styleData, int id=0)
+    public TextRenderBox(string text, Rectangle bounds, int id=0)
     {
         Text = text;
         Bounds = bounds;
-        StyleData = styleData;
         _id = id;
     }
 
     public int Id => _id;
 
-    public TextRenderBox Clone() => new(Text, Bounds, StyleData, _id + 1)
+    public TextRenderBox Clone() => new(Text, Bounds, _id + 1)
     {
         LineSpacing = LineSpacing,
         VerticalScroll = VerticalScroll,
@@ -110,6 +106,8 @@ class TextRenderBox : IBounded, IRenderState
     
     public int RightmostScroll => Math.Max(0, LongestLineWidth - Bounds.Width);
 
+    public Dimensions ContentDimensions => Bounds.Dimensions;
+
     internal List<string> GetLines()
     {
         List<string> lines = new(Text.Split('\n'));
@@ -147,108 +145,6 @@ class TextRenderBox : IBounded, IRenderState
         }
 
         return res;
-    }
-
-    internal void Render(IRenderer renderer, bool clear) => RenderLines(renderer, 0, MaxLineCount, clear);
-
-    private void RenderLines(IRenderer renderer, int start, int end, bool clear)
-    {
-        if (clear)
-            renderer.ClearScreen(StyleData, LineBounds(start, end));
-
-        List<string> lines = GetLines();
-        int inner_width = Math.Max(Bounds.Width, LongestLineWidth);
-
-        for (int i = start; i < end; i++)
-        {
-            // vertical alignment
-            SingleLine(renderer, lines, inner_width, i);
-        }
-    }
-
-    internal void RenderScroll(IRenderer renderer, int distance)
-    {
-        if (distance == 0)
-            return;
-
-        if (0 < distance && distance < MaxLineCount)
-        {
-            RenderBufferCopyTask task = new(LineBounds(distance, MaxLineCount), LineBounds(0, MaxLineCount - distance));
-            renderer.CopyArea(task);
-
-            RenderLines(renderer, MaxLineCount - distance, MaxLineCount, true);
-            return;
-        }
-
-        distance = -distance;
-
-        if (0 < distance && distance < MaxLineCount)
-        {
-            RenderBufferCopyTask task = new(LineBounds(0, MaxLineCount - distance), LineBounds(distance, MaxLineCount));
-            renderer.CopyArea(task);
-
-            RenderLines(renderer, 0, distance, true);
-            return;
-        }
-
-        Render(renderer, true);
-
-    }
-
-    private Rectangle LineBounds(int start, int end)
-    {
-        int start_y = Bounds.Top + start * LineSpacing;
-        int end_y = Bounds.Top + end * LineSpacing;
-
-        return new Rectangle(Bounds.HorizontalRange, new LinearRange(start_y, end_y - start_y));
-    }
-
-    private bool SingleLine(IRenderer renderer, List<string> lines, int inner_width, int index)
-    {
-        int line = index + VerticalScroll;
-        
-        if (line >= lines.Count) 
-            return false;
-
-        string text = lines[line];
-
-        // horizontal alignment of the first char of the string to relative to the other text
-        int indent = (inner_width - text.Length) * (int)HorizontalAlign / 2;
-
-        int render_x = Bounds.Left - HorizontalScroll + indent;
-        int render_y = Bounds.Top + index * LineSpacing;
-
-        int clipping_x = 0;
-        if (!HorizontalOverflow) 
-            clipping_x = Math.Max(0, Bounds.Left);
-
-        int cut = clipping_x - render_x;
-
-        // trim the start if it the line extends back before the start of the box, if needed
-        if (cut > 0)
-        {
-            if (text.Length <= cut) 
-                return true;
-
-            text = text[cut..];
-            render_x += cut;
-        }
-
-        // trim the end if needed
-        if (!HorizontalOverflow)
-        {
-            int end = Bounds.Right - render_x;
-            if (end < 0)
-                return true;
-
-            if (text.Length > end) 
-                text = text[..end];
-        }
-
-        if (text.Length > 0)
-            renderer.PrintAtTile(new(render_x, render_y), StyleData, text);
-
-        return true;
     }
 
     private int FindLineBreakingPoint(string line)

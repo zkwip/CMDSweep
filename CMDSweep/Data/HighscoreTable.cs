@@ -1,69 +1,80 @@
-﻿using CMDSweep.Layout;
-using CMDSweep.Rendering;
+﻿using CMDSweep.Geometry;
+using CMDSweep.Layout;
 using System;
 using System.Collections.Generic;
 
 namespace CMDSweep.Data;
 
-static class HighscoreTable
+class HighscoreTable : IPlaceable
 {
     internal const int highscoreEntries = 5;
-    internal static TableGrid GetHSTableGrid(GameSettings settings)
+
+    private GameSettings _settings;
+    private string _name;
+    private List<HighscoreRecord> _highscores;
+    private TableGrid _tableGrid;
+
+    private Dimensions _dimensions;
+
+    public HighscoreTable(Difficulty difficulty, GameSettings settings)
+    {
+        _name = difficulty.Name;
+        _settings = settings;
+        _highscores = difficulty.Highscores;
+
+        BuildTableGrid(settings);
+    }
+
+    private void BuildTableGrid(GameSettings settings)
     {
         var dims = settings.Dimensions;
-        TableGrid tg = new();
-        tg.AddColumn(dims["popup-padding-x"], 0, "");
-        tg.AddColumn(dims["highscore-num-width"], 0, "num");
-        tg.AddColumn(dims["highscore-name-width"], 0, "name");
-        tg.AddColumn(dims["highscore-time-width"], 0, "time");
-        tg.AddColumn(dims["highscore-date-width"], 0, "date");
-        tg.AddColumn(dims["popup-padding-x"], 0, "");
+        _tableGrid = new();
 
-        tg.AddRow(dims["highscore-header-height"], 0, "title");
-        tg.AddRow(dims["popup-padding-y"], 0, "");
-        tg.AddRow(dims["highscore-header-height"], 0, "head");
-        tg.AddRow(dims["highscore-row-height"], 0, "row", highscoreEntries);
-        tg.FitAround(0);
+        _tableGrid.AddColumn(dims["popup-padding-x"], 0, "");
+        _tableGrid.AddColumn(dims["highscore-num-width"], 0, "num");
+        _tableGrid.AddColumn(dims["highscore-name-width"], 0, "name");
+        _tableGrid.AddColumn(dims["highscore-time-width"], 0, "time");
+        _tableGrid.AddColumn(dims["highscore-date-width"], 0, "date");
+        _tableGrid.AddColumn(dims["popup-padding-x"], 0, "");
 
-        return tg;
+        _tableGrid.AddRow(dims["highscore-header-height"], 0, "title");
+        _tableGrid.AddRow(dims["popup-padding-y"], 0, "");
+        _tableGrid.AddRow(dims["highscore-header-height"], 0, "head");
+        _tableGrid.AddRow(dims["highscore-row-height"], 0, "row", highscoreEntries);
+
+        _dimensions = _tableGrid.ContentFitDimensions(0);
     }
 
-    internal static void RenderHSTable(IRenderer renderer, GameSettings settings, TableGrid tg, Difficulty dif, StyleData style)
+    public string Name => _name;
+
+    public Dimensions ContentDimensions => _dimensions;
+
+    public TableGrid Grid => _tableGrid;
+
+    public string Time(int i)
     {
-        List<HighscoreRecord> highscores = dif.Highscores;
-
-        renderer.PrintAtTile(tg.GetPoint("num", "title"), style, "Highscores for " + dif.Name);
-        renderer.PrintAtTile(tg.GetPoint("num", "head"), style, "#");
-        renderer.PrintAtTile(tg.GetPoint("name", "head"), style, "Name");
-        renderer.PrintAtTile(tg.GetPoint("time", "head"), style, "Time");
-        renderer.PrintAtTile(tg.GetPoint("date", "head"), style, "When");
-
-        for (int i = 0; i < highscores.Count; i++)
-        {
-            string time = string.Format(
+        return string.Format(
                 "{0:D3}:{1:D2}.{2:D3}",
-                (int)highscores[i].Time.TotalMinutes,
-                highscores[i].Time.Seconds,
-                highscores[i].Time.Milliseconds
+                (int)_highscores[i].Time.TotalMinutes,
+                _highscores[i].Time.Seconds,
+                _highscores[i].Time.Milliseconds
             );
-
-            StyleData rowstyle = style;
-
-            string date = highscores[i].Date.ToString("g");
-            if (DateTime.Now - highscores[i].Date < TimeSpan.FromSeconds(5))
-            {
-                date = "Now";
-                rowstyle = new StyleData(settings.Colors["popup-fg-highlight"], style.Background);
-            }
-            else if (highscores[i].Date.Date == DateTime.Today)
-            {
-                date = "today " + highscores[i].Date.ToString("t");
-            }
-
-            renderer.PrintAtTile(tg.GetPoint("num", 0, "row", i), rowstyle, (i + 1).ToString());
-            renderer.PrintAtTile(tg.GetPoint("name", 0, "row", i), rowstyle, highscores[i].Name);
-            renderer.PrintAtTile(tg.GetPoint("time", 0, "row", i), rowstyle, time);
-            renderer.PrintAtTile(tg.GetPoint("date", 0, "row", i), rowstyle, date);
-        }
     }
+
+    public string Date(int i)
+    {
+        if (IsNow(i))
+            return "Now";
+
+        if (IsToday(i))
+            return "today " + _highscores[i].Date.ToString("t");
+
+        return _highscores[i].Date.ToString("g");
+    }
+
+    internal bool IsNow(int i) => DateTime.Now - _highscores[i].Date < TimeSpan.FromSeconds(5);
+
+    private bool IsToday(int i) => _highscores[i].Date.Date == DateTime.Today;
+
+    internal string PlayerName(int i) => _highscores[i].Name;
 }

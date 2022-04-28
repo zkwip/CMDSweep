@@ -2,7 +2,7 @@
 using CMDSweep.Layout;
 using CMDSweep.Rendering;
 
-namespace CMDSweep.Views.Menus;
+namespace CMDSweep.Views.Menus.MenuItems;
 
 class TextMenuItem : MenuItem
 {

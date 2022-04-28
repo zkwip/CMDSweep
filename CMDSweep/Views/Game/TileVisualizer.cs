@@ -4,6 +4,7 @@ using CMDSweep.Layout;
 using CMDSweep.Rendering;
 using System;
 using CMDSweep.Views.Game.State;
+using CMDSweep.Layout.Text;
 
 namespace CMDSweep.Views.Game;
 
@@ -119,7 +120,7 @@ class TileVisualizer : ITypeVisualizer<Point, GameState>
         }
 
         StyleData data = new(fg, bg, false);
-        text = Text.PadText(text, _tileWidth, HorzontalAlignment.Left);
+        text = Padding.PadText(text, _tileWidth, HorzontalAlignment.Left);
 
         return new(text, data);
     }

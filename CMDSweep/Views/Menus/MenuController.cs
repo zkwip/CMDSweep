@@ -2,6 +2,7 @@
 using CMDSweep.Rendering;
 using CMDSweep.Views;
 using CMDSweep.Views.Menus;
+using CMDSweep.Views.Menus.MenuItems;
 using System;
 
 namespace CMDSweep;

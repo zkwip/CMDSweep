@@ -1,16 +1,16 @@
 ﻿namespace CMDSweep.Rendering;
 
-interface IChangeableTypeVisualizer<T> : ITypeVisualizer<T> where T : IRenderState
+interface IChangeableTypeVisualizer<TState> : ITypeVisualizer<TState>
 {
-    public void VisualizeChanges(T newItem, T oldItem);
+    public void VisualizeChanges(TState newItem, TState oldItem);
 }
 
-interface IChangeableTypeVisualizer<T1, T2> : ITypeVisualizer<T1, T2> where T1 : IRenderState where T2 : IRenderState
+interface IChangeableTypeVisualizer<TState, TContext> : ITypeVisualizer<TState, TContext>
 {
-    public void VisualizeChanges(T1 newItem1, T2 newItem2, T1 oldItem1, T2 oldItem2);
+    public void VisualizeChanges(TState state, TContext context, TState oldState, TContext oldContext);
 }
 
-interface IChangeableTypeVisualizer<T1, T2, T3> : ITypeVisualizer<T1, T2, T3> where T1 : IRenderState where T2 : IRenderState where T3 : IRenderState
+interface IChangeableTypeVisualizer<TState, TContext1, TContext2> : ITypeVisualizer<TState, TContext1, TContext2>
 {
-    public void VisualizeChanges(T1 newItem1, T2 newItem2, T3 newItem3, T1 oldItem1, T2 oldItem2, T3 oldItem3);
+    public void VisualizeChanges(TState state, TContext1 context1, TContext2 context2, TState oldState, TContext1 oldContext1, TContext2 oldContext2);
 }

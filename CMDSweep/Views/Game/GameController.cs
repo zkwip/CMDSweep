@@ -1,7 +1,6 @@
 ﻿using CMDSweep.Data;
 using CMDSweep.Geometry;
 using CMDSweep.IO;
-using CMDSweep.Layout;
 using CMDSweep.Rendering;
 using CMDSweep.Views.Game.State;
 using System;
@@ -16,7 +15,7 @@ class GameController : IViewController
     private readonly IRenderer _renderer;
     private readonly GameVisualizer _visualizer;
     private readonly RenderSheduler<GameState> _renderSheduler;
-    private TextEnterField _highscoreTextField;
+    private string _enteredName;
 
     public GameState CurrentState { get; private set; }
 
@@ -38,7 +37,7 @@ class GameController : IViewController
 
         _visualizer = new GameVisualizer(_renderer, Settings);
         _renderSheduler = new RenderSheduler<GameState>(_visualizer, _renderer);
-        _highscoreTextField = new TextEnterField(Rectangle.Zero, Settings.GetStyle("popup"));
+        _enteredName = SaveData.PlayerName;
     }
 
     public GameSettings Settings => App.Settings;
@@ -48,6 +47,64 @@ class GameController : IViewController
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
     
     public void Step()
+    {
+        switch (CurrentState.ProgressState.PlayerState)
+        {
+            case PlayerState.Playing:
+            case PlayerState.NewGame:
+                PlayStep();
+                break;
+
+            case PlayerState.EnteringHighscore:
+                EnterHighscoreStep();
+                break;
+
+            case PlayerState.ShowingHighscores:
+            case PlayerState.Dead:
+            case PlayerState.Win:
+                GameEndStep();
+                break;
+        }
+    }
+
+    private void EnterHighscoreStep() 
+    {
+        (string name, bool done) = ConsoleTextInputReader.HandleTypingKeyPress(false, SaveData.PlayerName);
+
+        SaveData.PlayerName = name;
+
+        if (done)
+        {
+            AddHighscore(CurrentState.Timing.Time);
+            CurrentState.SetPlayerState(PlayerState.ShowingHighscores);
+        }
+    }
+
+    private void GameEndStep() 
+    {
+        InputAction ia = App.ReadAction();
+
+        switch (ia)
+        {
+            case InputAction.Help:
+                App.ShowHelp();
+                return;
+
+            case InputAction.Quit:
+                refreshTimer.Stop();
+                App.ShowMainMenu();
+                return;
+
+            case InputAction.Dig:
+                NewGame();
+                return;
+
+            default:
+                return;
+        }
+    }
+
+    private void PlayStep()
     {
         InputAction ia = App.ReadAction();
 
@@ -86,65 +143,19 @@ class GameController : IViewController
             _ => CurrentState
         };
 
-        AfterStepStateChanges();
+        if (CurrentState.ProgressState.PlayerState == PlayerState.Playing) 
+        { 
+            if (!refreshTimer.Enabled)
+                refreshTimer.Start();
+        }
+
+        refreshTimer.Stop();
         return true;
-    }
-
-    private void AfterStepStateChanges()
-    {
-        switch (CurrentState.ProgressState.PlayerState)
-        {
-            case PlayerState.Playing:
-                if (!refreshTimer.Enabled)
-                    refreshTimer.Start();
-                break;
-
-            case PlayerState.Dead:
-            case PlayerState.Win:
-                refreshTimer.Stop();
-                if (CurrentState.ProgressState.PlayerState == PlayerState.Win)
-                    CheckHighscoreFlow(CurrentState);
-
-                App.ChangeMode(ApplicationState.Done);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    private GameState CheckHighscoreFlow(GameState currentState)
-    {
-        TimeSpan time = currentState.Timing.Time;
-        if (currentState.TimeMakesHighscore())
-        {
-            currentState = currentState.SetPlayerState(PlayerState.EnteringHighscore);
-
-            bool textActive = true;
-            while (textActive)
-            {
-                InputAction ia = App.ParseAction(_highscoreTextField.HandleInput());
-                switch (ia)
-                {
-                    case InputAction.Dig:
-                    case InputAction.Quit:
-                        textActive = false;
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-
-            currentState = currentState.SetPlayerState(PlayerState.ShowingHighscores);
-            AddHighscore(time);
-        }
-        return currentState;
     }
 
     private void AddHighscore(TimeSpan time)
     {
-        SaveData.PlayerName = _highscoreTextField.Text;
+        SaveData.PlayerName = _enteredName;
         List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
         while (scores.Count >= HighscoreTable.highscoreEntries)
@@ -153,7 +164,7 @@ class GameController : IViewController
         scores.Add(new()
         {
             Time = time,
-            Name = _highscoreTextField.Text,
+            Name = _enteredName,
             Date = DateTime.Now
         });
 
@@ -167,16 +178,9 @@ class GameController : IViewController
         App.ChangeMode(ApplicationState.Playing);
     }
 
-    private GameState PrepareNewGameState()
-    {
-        return GameState.NewGame(SaveData.CurrentDifficulty, Settings, RenderMaskFromConsoleDimension());
-    }
+    private GameState PrepareNewGameState() => GameState.NewGame(SaveData.CurrentDifficulty, Settings, RenderMaskFromConsoleDimension());
 
-    public void ResizeView()
-    {
-        Rectangle newRenderMask = RenderMaskFromConsoleDimension();
-        CurrentState = CurrentState.ChangeRenderMask(newRenderMask);
-    }
+    public void ResizeView() => CurrentState = CurrentState.ChangeRenderMask(RenderMaskFromConsoleDimension());
 
     private Rectangle RenderMaskFromConsoleDimension()
     {

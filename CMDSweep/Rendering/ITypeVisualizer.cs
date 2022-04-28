@@ -1,16 +1,16 @@
 ﻿namespace CMDSweep.Rendering;
 
-interface ITypeVisualizer<T>
+interface ITypeVisualizer<TState>
 {
-    public void Visualize(T item);
+    public void Visualize(TState state);
 }
 
-interface ITypeVisualizer<T1,T2>
+interface ITypeVisualizer<TState,TContext>
 {
-    public void Visualize(T1 item1, T2 item2);
+    public void Visualize(TState state, TContext context);
 }
 
-interface ITypeVisualizer<T1, T2, T3>
+interface ITypeVisualizer<TState, TContext1, TContext2>
 {
-    public void Visualize(T1 item1, T2 item2, T3 item3);
+    public void Visualize(TState state, TContext1 context1, TContext2 context2);
 }

@@ -2,7 +2,7 @@
 using CMDSweep.Geometry;
 using CMDSweep.Layout;
 using CMDSweep.Rendering;
-using System;
+using CMDSweep.Views.Menus.MenuItems;
 using System.Collections.Generic;
 
 namespace CMDSweep.Views.Menus;
@@ -53,9 +53,8 @@ class MenuVisualizer : ITypeVisualizer<MenuList>
         tg.AddRow(dims["menu-title-space"], 0, "title");
         tg.AddRow(dims["menu-row-scale"], 0, "items", maxRows);
 
-        tg.FitAround();
-        tg.CenterOn(_renderer.Bounds.Center);
-
+        Dimensions dimensions = tg.ContentFitDimensions();
+        tg.Bounds = Rectangle.Centered(_renderer.Bounds.Center, dimensions);
         _tableGrid = tg;
     }
 

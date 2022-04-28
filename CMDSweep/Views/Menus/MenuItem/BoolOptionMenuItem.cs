@@ -1,7 +1,7 @@
 ﻿using CMDSweep.Data;
 using System.Collections.Generic;
 
-namespace CMDSweep.Views.Menus;
+namespace CMDSweep.Views.Menus.MenuItems;
 
 class BoolOptionMenuItem : OptionMenuItem<bool>
 {

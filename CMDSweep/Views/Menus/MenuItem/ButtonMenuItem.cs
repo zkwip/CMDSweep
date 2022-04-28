@@ -1,7 +1,7 @@
 ﻿using CMDSweep.Layout;
 using CMDSweep.Rendering;
 
-namespace CMDSweep.Views.Menus;
+namespace CMDSweep.Views.Menus.MenuItems;
 
 class ButtonMenuItem : MenuItem
 {
@@ -13,7 +13,7 @@ class ButtonMenuItem : MenuItem
 
     internal override bool HandleItemActions(InputAction ia)
     {
-        if (ia == InputAction.Dig) 
+        if (ia == InputAction.Dig)
             OnValueChanged();
         return ia == InputAction.Dig;
     }
