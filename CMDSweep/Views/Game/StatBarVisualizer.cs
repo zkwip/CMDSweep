@@ -71,7 +71,7 @@ internal class StatBarVisualizer : ITypeVisualizer<GameState>
     private void RenderFace(GameState state)
     {
         Point facePosition = _tableGrid.GetPoint("face", "bar");
-        string face = state.ProgressState.Face switch
+        string face = state.Face switch
         {
             Face.Surprise => _settings.Texts["face-surprise"],
             Face.Win => _settings.Texts["face-win"],
@@ -99,11 +99,11 @@ internal class StatBarVisualizer : ITypeVisualizer<GameState>
         StyleData livesGoneStyle = _settings.GetStyle("stat-lives-lost", "stat-mines-bg");
 
         string atext = " ";
-        for (int i = 0; i < state.Difficulty.Lives - state.ProgressState.LivesLost; i++) 
+        for (int i = 0; i < state.Difficulty.Lives - state.LivesLost; i++) 
             atext += life + " ";
 
         string btext = "";
-        for (int i = 0; i < state.ProgressState.LivesLost; i++) 
+        for (int i = 0; i < state.LivesLost; i++) 
             btext += life + " ";
 
         _renderer.PrintAtTile(minePosition, livesLeftStyle, atext);

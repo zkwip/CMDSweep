@@ -9,51 +9,59 @@ namespace CMDSweep.Views.Game.State;
 internal record class GameState : IRenderState
 {
     // Properties
-    public readonly BoardState BoardState;
-    public readonly GameProgressState ProgressState;
-    public readonly TimingState Timing;
     private readonly int _id;
+    public readonly BoardState BoardState;
+    public readonly TimingState Timing;
+    public readonly Difficulty Difficulty;
+    public readonly PlayerState PlayerState;
+    public readonly int Lives;
+    public Face Face;
 
-    public GameState(BoardState boardData, GameProgressState roundStats, TimingState timing, int id)
+    public GameState(BoardState boardData, TimingState timing, Difficulty difficulty, PlayerState playerState, int lives, Face face, int id)
     {
         BoardState = boardData;
-        ProgressState = roundStats;
         Timing = timing;
+        Difficulty = difficulty;
+        PlayerState = playerState;
+        Lives = lives;
+        Face = face;
         _id = id;
     }
 
     public static GameState NewGame(Difficulty diff, GameSettings settings, Rectangle boardRenderMask)
     {
         BoardState boardState = BoardState.NewGame(diff, settings, boardRenderMask);
-        GameProgressState progressState = GameProgressState.NewGame(diff);
         TimingState timing = TimingState.NewGame();
 
-        return new GameState(boardState, progressState, timing, 0);
+        return new GameState(
+            boardState, 
+            timing,
+            diff,
+            PlayerState.NewGame,
+            diff.Lives,
+            Face.Normal,
+            0);
     }
 
     public int Id => _id;
 
-    public Difficulty Difficulty => ProgressState.Difficulty;
+    public int MinesLeft => Mines - BoardState.Flags - LivesLost;
 
-    public int MinesLeft => ProgressState.Mines - BoardState.Flags - ProgressState.LivesLost;
+    public double MineProgressRatio => (double)(LivesLost + BoardState.Flags) / Mines;
 
-    public double MineProgressRatio => (double)(ProgressState.LivesLost + BoardState.Flags) / ProgressState.Mines;
 
-    public GameState Win() => new(BoardState, ProgressState.Win(), Timing.Pause(), _id+1);
-
-    public GameState LoseLife()
+    public GameState TryLoseLife()
     {
         NotifyFailedAction();
 
-        if (ProgressState.CanLoseLife)
-            return new GameState(BoardState, ProgressState.LoseLife(), Timing, _id + 1);
-
-        return new GameState(BoardState, ProgressState.Die(), Timing.Pause(), _id + 1);
+        if (CanLoseLife)
+            return LoseLife();
+        return Die();
     }
 
-    public GameState ResumeGame() => new(BoardState, ProgressState, Timing.Resume(), _id + 1);
+    public GameState ResumeGame() => new(BoardState, Timing.Resume(), Difficulty, PlayerState, Lives, Face, _id + 1);
 
-    public GameState FreezeGame() => new(BoardState, ProgressState, Timing.Pause(), _id + 1);
+    public GameState FreezeGame() => new(BoardState, Timing.Pause(), Difficulty, PlayerState, Lives, Face, _id + 1);
 
     public GameState NotifyFailedAction()
     {
@@ -72,7 +80,7 @@ internal record class GameState : IRenderState
 
         GameState res = this; 
 
-        if (ProgressState.PlayerState == PlayerState.NewGame)
+        if (PlayerState == PlayerState.NewGame)
             res = PlaceMines();
 
         res = res.Discover(BoardState.Cursor);
@@ -84,7 +92,7 @@ internal record class GameState : IRenderState
 
     private GameState CheckForWin()
     {
-        if (BoardState.Discovered + ProgressState.Mines - ProgressState.LivesLost == BoardState.Tiles) 
+        if (BoardState.Discovered + Mines - LivesLost == BoardState.Tiles) 
             return Win();
         return this;
     }
@@ -131,7 +139,7 @@ internal record class GameState : IRenderState
         if (mineHit) 
             return LoseLife();
 
-        return new GameState(BoardState.Discover(discoveredCells), ProgressState, Timing, _id + 1);
+        return new GameState(BoardState.Discover(discoveredCells), Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
     }
 
     public GameState ToggleFlag()
@@ -139,28 +147,28 @@ internal record class GameState : IRenderState
         if (!Difficulty.FlagsAllowed) return NotifyFailedAction();
         if (BoardState.CellIsDiscovered(BoardState.Cursor)) return NotifyFailedAction();
 
-        return new(BoardState.ToggleFlag(),ProgressState, Timing, _id + 1);
+        return new(BoardState.ToggleFlag(), Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
     }
 
-    public GameState MoveCursor(Direction d) => new(BoardState.MoveCursor(d), ProgressState, Timing, _id + 1);
+    public GameState MoveCursor(Direction d) => new(BoardState.MoveCursor(d), Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
 
-    private GameState PlaceMines() => new(BoardState.PlaceMines(), ProgressState.SetState(PlayerState.Playing), Timing.Resume(), _id + 1);
+    private GameState PlaceMines() => new(BoardState.PlaceMines(), Timing.Resume(), Difficulty, PlayerState.Playing, Lives, Face, _id + 1);
 
-    public GameState SetPlayerState(PlayerState state) => new(BoardState, ProgressState.SetState(state), Timing, _id + 1);
+    public GameState ChangeRenderMask(Rectangle newRenderMask) => new(BoardState.ChangeRenderMask(newRenderMask), Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
 
-    public bool TimeMakesHighscore()
-    {
-        TimeSpan time = Timing.Time;
-        List<HighscoreRecord> scores = Difficulty.Highscores;
+    public int Mines => Difficulty.Mines;
 
-        if (scores.Count >= HighscoreTable.highscoreEntries)
-        {
-            if (time < scores[HighscoreTable.highscoreEntries - 1].Time)
-                return true;
-            return false;
-        }
-        return true;
-    }
+    public int LivesLost => Difficulty.Lives - Lives;
 
-    public GameState ChangeRenderMask(Rectangle newRenderMask) => new(BoardState.ChangeRenderMask(newRenderMask), ProgressState, Timing, _id + 1);
+    public bool CanLoseLife => Lives > 1;
+
+    public bool Dead => PlayerState == PlayerState.Dead;
+
+    public GameState Win() => new(BoardState, Timing, Difficulty, PlayerState.Win, Lives, Face.Win, _id + 1);
+
+    public GameState LoseLife() => new(BoardState, Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
+
+    public GameState Die() => new(BoardState, Timing, Difficulty, PlayerState.Dead, 0, Face.Dead, _id + 1);
+
+    public GameState SetPlayerState(PlayerState state) => new(BoardState, Timing, Difficulty, state, Lives, Face, _id + 1);
 }

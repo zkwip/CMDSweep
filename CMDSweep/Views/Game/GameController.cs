@@ -48,7 +48,7 @@ class GameController : IViewController
     
     public void Step()
     {
-        switch (CurrentState.ProgressState.PlayerState)
+        switch (CurrentState.PlayerState)
         {
             case PlayerState.Playing:
             case PlayerState.NewGame:
@@ -131,7 +131,7 @@ class GameController : IViewController
         }
     }
 
-    private bool HandleBoardTransitionInput(InputAction ia)
+    private void HandleBoardTransitionInput(InputAction ia)
     {
         CurrentState = ia switch
         {
@@ -144,14 +144,30 @@ class GameController : IViewController
             _ => CurrentState
         };
 
-        if (CurrentState.ProgressState.PlayerState == PlayerState.Playing) 
+        if (CurrentState.PlayerState == PlayerState.Playing) 
         { 
             if (!refreshTimer.Enabled)
                 refreshTimer.Start();
+            return ;
+        }
+
+        if(CurrentState.PlayerState == PlayerState.Win)
+        {
+            if (CheckForHighscore(CurrentState.Timing.Time)) 
+                CurrentState = CurrentState.SetPlayerState(PlayerState.EnteringHighscore);
         }
 
         refreshTimer.Stop();
-        return true;
+    }
+
+    private bool CheckForHighscore(TimeSpan time)
+    {
+        List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
+        
+        if (scores.Count < HighscoreTable.highscoreEntries)
+            return true;
+
+        return (time < scores[HighscoreTable.highscoreEntries - 1].Time);
     }
 
     private void AddHighscore(TimeSpan time)

@@ -28,7 +28,7 @@ internal class BoardVisualizer : IChangeableTypeVisualizer<GameState>
 
     public void VisualizeChanges(GameState gameState, GameState previousGameState)
     {
-        if ((gameState.ProgressState.Dead) != (previousGameState.ProgressState.Dead))
+        if ((gameState.Dead) != (previousGameState.Dead))
         {
             Visualize(gameState);
             return;

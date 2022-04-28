@@ -32,7 +32,7 @@ class TileVisualizer : ITypeVisualizer<Point, GameState>
 
     public void Visualize(Point p, GameState gameState)
     {
-        bool dead = gameState.ProgressState.PlayerState == PlayerState.Dead;
+        bool dead = gameState.PlayerState == PlayerState.Dead;
         BoardState boardState = gameState.BoardState;
         Difficulty difficulty = boardState.Difficulty;
 

@@ -75,7 +75,7 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
 
     private void VisualizePopups(GameState state)
     {
-        switch (state.ProgressState.PlayerState)
+        switch (state.PlayerState)
         {
             case PlayerState.Win:
                 _textPopupVisualizer.Visualize(_winPopupTextBox);
@@ -101,15 +101,17 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
         _statBarVisualizer.Visualize(state);
         _statBarVisualizer.Visualize(state);
 
-        if (state.ProgressState.PlayerState != previousState.ProgressState.PlayerState)
+        if (state.PlayerState != previousState.PlayerState)
             VisualizePopups(state);
         else
             VisualizePopupChanges(state, previousState);
+
+        Console.Title = $"PlayerState: {state.PlayerState}";
     }
 
     private void VisualizePopupChanges(GameState state, GameState previousState)
     {
-        switch (state.ProgressState.PlayerState)
+        switch (state.PlayerState)
         {
             case PlayerState.Win:
                 _textPopupVisualizer.Visualize(_winPopupTextBox);
