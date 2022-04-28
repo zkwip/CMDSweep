@@ -26,6 +26,8 @@ class TextRenderBox : IBounded, IRenderState, IPlaceable
 
     public Rectangle Used => new(Bounds.Left, Bounds.Top, LongestLineWidth, RenderLineCount);
 
+    public Dimensions Dimensions { get => Bounds.Dimensions; set => Bounds = new Rectangle(Bounds.TopLeft, value); }
+
     public TextRenderBox(int id=0)
     {
         Text = "";

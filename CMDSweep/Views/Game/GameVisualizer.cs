@@ -3,6 +3,8 @@ using CMDSweep.Layout.Text;
 using CMDSweep.Layout.Popup;
 using CMDSweep.Rendering;
 using CMDSweep.Views.Game.State;
+using System;
+using CMDSweep.Geometry;
 
 namespace CMDSweep.Views.Game;
 
@@ -41,10 +43,22 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
     private void PreparePopups(StyleData popupStyle, GameSettings settings)
     {
         _textPopupVisualizer = new PopupVisualizer<TextRenderBox>(_renderer, settings, new TextRenderBoxVisualizer(_renderer, settings, popupStyle));
-        _winPopupTextBox = new TextRenderBox();
-        _winPopupTextBox.Text = "Congratulations, You won!\n\nYou can play again by pressing any key.";
-        _losePopupTextBox = new TextRenderBox();
-        _losePopupTextBox.Text = "You died!\n\nYou can play again by pressing any key.";
+
+        _winPopupTextBox = new TextRenderBox
+        {
+            Text = settings.Texts["popup-win-message"],
+            Dimensions = new Dimensions(settings.Dimensions["popup-message-width"], settings.Dimensions["popup-message-height"]),
+            HorizontalAlign = Layout.HorzontalAlignment.Center,
+            VerticalAlign = Layout.VerticalAlignment.Middle
+        };
+
+        _losePopupTextBox = new TextRenderBox
+        {
+            Text = settings.Texts["popup-lose-message"],
+            Dimensions = new Dimensions(settings.Dimensions["popup-message-width"], settings.Dimensions["popup-message-height"]),
+            HorizontalAlign = Layout.HorzontalAlignment.Center,
+            VerticalAlign = Layout.VerticalAlignment.Middle
+        };
 
         _showHighscorePopupVisualizer = new PopupVisualizer<HighscoreTable>(_renderer, settings, new HighscoreTableVisualizer(_renderer, popupStyle, settings.GetStyle("popup-fg-highlight", "popup-bg")));
     }
@@ -56,10 +70,10 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
         _statBarVisualizer.Visualize(state);
         _renderer.HideCursor(_hideStyle);
 
-        RenderPopups(state);
+        VisualizePopups(state);
     }
 
-    private void RenderPopups(GameState state)
+    private void VisualizePopups(GameState state)
     {
         switch (state.ProgressState.PlayerState)
         {
@@ -86,5 +100,32 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
         _boardVisualizer.VisualizeChanges(state, previousState);
         _statBarVisualizer.Visualize(state);
         _statBarVisualizer.Visualize(state);
+
+        if (state.ProgressState.PlayerState != previousState.ProgressState.PlayerState)
+            VisualizePopups(state);
+        else
+            VisualizePopupChanges(state, previousState);
+    }
+
+    private void VisualizePopupChanges(GameState state, GameState previousState)
+    {
+        switch (state.ProgressState.PlayerState)
+        {
+            case PlayerState.Win:
+                _textPopupVisualizer.Visualize(_winPopupTextBox);
+                break;
+
+            case PlayerState.Dead:
+                _textPopupVisualizer.Visualize(_losePopupTextBox);
+                break;
+
+            case PlayerState.ShowingHighscores:
+                _showHighscorePopupVisualizer.Visualize(new HighscoreTable(state.Difficulty, _settings));
+                break;
+
+            case PlayerState.EnteringHighscore:
+                //_enterHighscorePopupVisualizer.VisualizeChanges(state.PlayerName,whatevcr);
+                break;
+        }
     }
 }

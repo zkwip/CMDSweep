@@ -96,6 +96,7 @@ class GameController : IViewController
                 return;
 
             case InputAction.Dig:
+            case InputAction.NewGame:
                 NewGame();
                 return;
 

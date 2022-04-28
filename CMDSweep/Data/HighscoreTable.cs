@@ -8,8 +8,6 @@ namespace CMDSweep.Data;
 class HighscoreTable : IPlaceable
 {
     internal const int highscoreEntries = 5;
-
-    private GameSettings _settings;
     private string _name;
     private List<HighscoreRecord> _highscores;
     private TableGrid _tableGrid;
@@ -19,7 +17,6 @@ class HighscoreTable : IPlaceable
     public HighscoreTable(Difficulty difficulty, GameSettings settings)
     {
         _name = difficulty.Name;
-        _settings = settings;
         _highscores = difficulty.Highscores;
 
         BuildTableGrid(settings);
@@ -72,9 +69,11 @@ class HighscoreTable : IPlaceable
         return _highscores[i].Date.ToString("g");
     }
 
-    internal bool IsNow(int i) => DateTime.Now - _highscores[i].Date < TimeSpan.FromSeconds(5);
+    public bool IsNow(int i) => DateTime.Now - _highscores[i].Date < TimeSpan.FromSeconds(5);
 
     private bool IsToday(int i) => _highscores[i].Date.Date == DateTime.Today;
 
-    internal string PlayerName(int i) => _highscores[i].Name;
+    public string PlayerName(int i) => _highscores[i].Name;
+
+    public int Count => _highscores.Count;
 }

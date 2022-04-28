@@ -27,7 +27,7 @@ class HighscoreTableVisualizer : ITypeVisualizer<HighscoreTable, Rectangle>
         _renderer.PrintAtTile(table.Grid.GetPoint("time", "head"), _normalStyle, "Time");
         _renderer.PrintAtTile(table.Grid.GetPoint("date", "head"), _normalStyle, "When");
 
-        for (int i = 0; i < HighscoreTable.highscoreEntries; i++)
+        for (int i = 0; i < table.Count; i++)
         {
             StyleData rowstyle = table.IsNow(i) ? _normalStyle : _nowStyle;
             _renderer.PrintAtTile(table.Grid.GetPoint("num", 0, "row", i), rowstyle, (i + 1).ToString());
