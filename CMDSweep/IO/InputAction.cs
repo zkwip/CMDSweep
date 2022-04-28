@@ -1,4 +1,4 @@
-﻿namespace CMDSweep;
+﻿namespace CMDSweep.IO;
 
 enum InputAction
 {

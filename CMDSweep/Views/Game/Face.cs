@@ -1,4 +1,4 @@
-﻿namespace CMDSweep;
+﻿namespace CMDSweep.Views.Game;
 
 enum Face
 {
