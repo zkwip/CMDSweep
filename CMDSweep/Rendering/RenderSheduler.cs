@@ -30,12 +30,12 @@ internal class RenderSheduler<TState> where TState : IRenderState
 
     public bool Refresh(TState state, RefreshMode mode)
     {
-        if (mode > _modeWaiting) 
+        if (mode > _modeWaiting)
             _modeWaiting = mode;
 
         _nextState = state;
 
-        if (_isRendering) 
+        if (_isRendering)
             return false;
 
         _isRendering = true;

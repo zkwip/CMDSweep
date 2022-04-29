@@ -6,7 +6,6 @@ using CMDSweep.Views.Game;
 using CMDSweep.Views.Help;
 using CMDSweep.Views.Highscore;
 using System;
-using System.Collections.Generic;
 
 namespace CMDSweep;
 
@@ -39,7 +38,7 @@ class MineApp
     {
         IRenderer cmdr = new WinCMDRenderer();
         MineApp app = new(cmdr);
-        while (app.Step());
+        while (app.Step()) ;
     }
 
     public MineApp(IRenderer r)
@@ -69,10 +68,10 @@ class MineApp
 
     internal bool Refresh(RefreshMode mode)
     {
-        if (AppState == ApplicationState.Quit) 
+        if (AppState == ApplicationState.Quit)
             return false;
 
-        if (CurrentController == null) 
+        if (CurrentController == null)
             return false;
 
         CurrentController.Refresh(mode);
@@ -80,11 +79,11 @@ class MineApp
     }
 
     internal void ShowMainMenu() => MenuController.OpenMain();
-    
+
     internal void ShowHelp() => ChangeMode(ApplicationState.Help);
-    
+
     internal void QuitGame() => ChangeMode(ApplicationState.Quit);
-    
+
     internal void ContinueGame() => ChangeMode(ApplicationState.Playing);
 
     internal void ChangeMode(ApplicationState state)

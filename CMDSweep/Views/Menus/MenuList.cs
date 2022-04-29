@@ -62,7 +62,7 @@ class MenuList
             else Controller.OpenMenu(ParentMenu);
         }
 
-        if (FocusedItem != null) 
+        if (FocusedItem != null)
             FocusedItem.HandleMenuAction(ia);
         return true;
     }

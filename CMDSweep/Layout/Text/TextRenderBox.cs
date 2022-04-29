@@ -28,14 +28,14 @@ class TextRenderBox : IBounded, IRenderState, IPlaceable
 
     public Dimensions Dimensions { get => Bounds.Dimensions; set => Bounds = new Rectangle(Bounds.TopLeft, value); }
 
-    public TextRenderBox(int id=0)
+    public TextRenderBox(int id = 0)
     {
         Text = "";
         Bounds = Rectangle.Zero;
-        _id = id; 
+        _id = id;
     }
 
-    public TextRenderBox(string text, Rectangle bounds, int id=0)
+    public TextRenderBox(string text, Rectangle bounds, int id = 0)
     {
         Text = text;
         Bounds = bounds;
@@ -58,9 +58,9 @@ class TextRenderBox : IBounded, IRenderState, IPlaceable
 
     public int ScrollUp()
     {
-        if (VerticalScroll == 0) 
+        if (VerticalScroll == 0)
             VerticalScroll = LowestScroll;
-        else 
+        else
             VerticalScroll--;
 
         return VerticalScroll;
@@ -68,9 +68,9 @@ class TextRenderBox : IBounded, IRenderState, IPlaceable
 
     public int ScrollDown()
     {
-        if (VerticalScroll >= LowestScroll) 
+        if (VerticalScroll >= LowestScroll)
             VerticalScroll = 0;
-        else 
+        else
             VerticalScroll++;
 
         return VerticalScroll;
@@ -78,9 +78,9 @@ class TextRenderBox : IBounded, IRenderState, IPlaceable
 
     public int ScrollLeft()
     {
-        if (HorizontalScroll == 0) 
+        if (HorizontalScroll == 0)
             HorizontalScroll = RightmostScroll;
-        else 
+        else
             HorizontalScroll--;
 
         return HorizontalScroll;
@@ -88,24 +88,24 @@ class TextRenderBox : IBounded, IRenderState, IPlaceable
 
     public int ScrollRight()
     {
-        if (HorizontalScroll >= RightmostScroll) 
+        if (HorizontalScroll >= RightmostScroll)
             HorizontalScroll = 0;
-        else 
+        else
             HorizontalScroll++;
 
         return HorizontalScroll;
     }
 
     public int Lines => GetLines().Count;
-    
+
     public int LongestLineWidth => GeometryFunctions.Apply(0, GetLines(), Math.Max, x => x.Length);
-    
+
     public int MaxLineCount => Bounds.Height / LineSpacing;
-    
+
     public int RenderLineCount => Math.Min(MaxLineCount, Lines);
-    
+
     public int LowestScroll => Math.Max(0, Lines - MaxLineCount);
-    
+
     public int RightmostScroll => Math.Max(0, LongestLineWidth - Bounds.Width);
 
     public Dimensions ContentDimensions => Bounds.Dimensions;
@@ -155,11 +155,11 @@ class TextRenderBox : IBounded, IRenderState, IPlaceable
 
         for (int i = 0; i < Bounds.Width; i++)
         {
-            if (line[i] == ' ') 
+            if (line[i] == ' ')
                 res = i;
         }
 
-        if (res == 0) 
+        if (res == 0)
             return Bounds.Width;
 
         return res;

@@ -1,6 +1,6 @@
-﻿using Xunit;
-using CMDSweep.Geometry;
+﻿using CMDSweep.Geometry;
 using CMDSweep.Views.Game.State;
+using Xunit;
 
 namespace CMDSweepTests.LayoutTests
 {

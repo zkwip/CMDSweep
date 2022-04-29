@@ -11,7 +11,7 @@ internal record struct RenderBufferCopyTask
     public RenderBufferCopyTask(Rectangle source, Rectangle dest)
     {
         Source = source;
-        if (source.Dimensions != dest.Dimensions) 
+        if (source.Dimensions != dest.Dimensions)
             throw new DimensionMismatchException();
 
         Offset = Offset.FromChange(source.TopLeft, dest.TopLeft);

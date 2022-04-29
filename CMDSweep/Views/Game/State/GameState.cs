@@ -1,9 +1,9 @@
-﻿using CMDSweep.Geometry;
-using CMDSweep.Data;
+﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
+using CMDSweep.Layout.Text;
 using CMDSweep.Rendering;
 using System;
 using System.Collections.Generic;
-using CMDSweep.Layout.Text;
 
 namespace CMDSweep.Views.Game.State;
 
@@ -38,7 +38,7 @@ internal record class GameState : IRenderState
         TextEnterDialog enterDialog = new TextEnterDialog(settings.Texts["popup-enter-hs-message"], save.PlayerName, settings.Dimensions["popup-enter-hs-width"], settings.Dimensions["popup-enter-hs-height"]);
 
         return new GameState(
-            boardState, 
+            boardState,
             timing,
             save.CurrentDifficulty,
             PlayerState.NewGame,
@@ -78,14 +78,14 @@ internal record class GameState : IRenderState
 
     public GameState Dig()
     {
-        if (BoardState.CellIsDiscovered(BoardState.Cursor)) 
+        if (BoardState.CellIsDiscovered(BoardState.Cursor))
             return this;
 
-        if (BoardState.CellIsFlagged(BoardState.Cursor)) 
+        if (BoardState.CellIsFlagged(BoardState.Cursor))
             return NotifyFailedAction();
 
 
-        GameState res = this; 
+        GameState res = this;
 
         if (PlayerState == PlayerState.NewGame)
             res = PlaceMines();
@@ -99,7 +99,7 @@ internal record class GameState : IRenderState
 
     private GameState CheckForWin()
     {
-        if (BoardState.Discovered + Mines - LivesLost == BoardState.Tiles) 
+        if (BoardState.Discovered + Mines - LivesLost == BoardState.Tiles)
             return Win();
         return this;
     }
@@ -143,7 +143,7 @@ internal record class GameState : IRenderState
             sum += 1;
         }
 
-        if (mineHit) 
+        if (mineHit)
             return TryLoseLife();
 
         return new GameState(BoardState.Discover(discoveredCells), Timing, Difficulty, PlayerState, Lives, Face, EnteredNameDialog, _id + 1);

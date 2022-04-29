@@ -1,7 +1,7 @@
-using Xunit;
-using CMDSweep.Layout;
 using CMDSweep.Geometry;
+using CMDSweep.Layout;
 using System;
+using Xunit;
 
 namespace CMDSweepTests.LayoutTests
 {
@@ -28,7 +28,8 @@ namespace CMDSweepTests.LayoutTests
         [Fact]
         public void EmptyGridShouldBeEmpty()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
                 _sut.GetCell(0, 0);
             });
 
@@ -71,7 +72,7 @@ namespace CMDSweepTests.LayoutTests
         public void GridWithMultipleColumns()
         {
             _sut.AddRow(10, 0, "r1");
-            _sut.AddColumn(15, 0, "c1"); 
+            _sut.AddColumn(15, 0, "c1");
             _sut.Bounds = _sut.Bounds.Shift(10, 5);
             _sut.AddColumn(25, 0, "c2", 4);
 
@@ -94,11 +95,13 @@ namespace CMDSweepTests.LayoutTests
             _sut.AddColumn(0, 1);
             _sut.AddRow(0, 1);
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
                 _sut.GetCell(1, 0);
             });
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
                 _sut.GetCell(0, 1);
             });
         }

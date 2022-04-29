@@ -55,7 +55,7 @@ record struct Rectangle : IEnumerable<Point>
 
     public int MidLine => Top + Height / 2;
 
-    public Rectangle ScaleBack(Scale scale) => new Rectangle(TopLeft.ScaleBack(scale),BottomRight.ScaleBack(scale));
+    public Rectangle ScaleBack(Scale scale) => new Rectangle(TopLeft.ScaleBack(scale), BottomRight.ScaleBack(scale));
 
     public Rectangle Scale(Scale scale) => new Rectangle(TopLeft.Scale(scale), BottomRight.Scale(scale));
 
@@ -84,15 +84,15 @@ record struct Rectangle : IEnumerable<Point>
     public Rectangle Grow(int size) => Grow(size, size, size, size);
 
     public Rectangle Shrink(int left, int top, int right, int bottom) => Grow(-left, -top, -right, -bottom);
-    
+
     public Rectangle Shrink(int size) => Grow(-size, -size, -size, -size);
-    
+
     public bool Contains(Point p) => Contains(p.X, p.Y);
-    
+
     public bool Contains(int x, int y) => x >= Left && y >= Top && x < Right && y < Bottom;
 
     public bool Contains(Rectangle r) => Contains(r.TopLeft) && Contains(r.BottomRight.Shift(-1, -1));
-    
+
     public Rectangle Intersect(Rectangle other)
     {
         int l = Left > other.Left ? Left : other.Left;
@@ -111,13 +111,13 @@ record struct Rectangle : IEnumerable<Point>
             callback(p);
         }
     }
-    
+
     public Rectangle CenterOn(Point p) => Shift(Offset.FromChange(Center, p));
-    
+
     public Rectangle ShiftTo(Point p) => Shift(Offset.FromChange(TopLeft, p));
 
     public Rectangle Shift(Offset o) => Shift(o.X, o.Y);
-    
+
     public Rectangle Shift(int x, int y)
     {
         return new Rectangle(HorizontalRange.Shift(x), VerticalRange.Shift(y));

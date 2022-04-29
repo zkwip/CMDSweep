@@ -1,6 +1,5 @@
-﻿using CMDSweep.Geometry;
-using CMDSweep.Data;
-using System;
+﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
 
 namespace CMDSweep.Views.Game.State;
 
@@ -23,7 +22,7 @@ internal class BoardViewState
         Scale scale = new(scaleX, scaleY);
 
         Offset offset = Offset.FromChange(board.Center, renderMask.Center.ScaleBack(scale));
-        
+
 
         return new BoardViewState(scale, offset, scrollSafezoneDistance, renderMask, board);
     }

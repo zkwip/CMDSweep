@@ -1,15 +1,15 @@
 ﻿using CMDSweep.Geometry;
-using CMDSweep.Layout;
 using CMDSweep.IO;
-using CMDSweep.Rendering;
+using CMDSweep.Layout;
 using CMDSweep.Layout.Text;
+using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Help;
 
 class HelpController : IViewController
-{ 
+{
     private TextRenderBox _helpTextBox;
-    private readonly IChangeableTypeVisualizer<TextRenderBox,Rectangle> _visualizer;
+    private readonly IChangeableTypeVisualizer<TextRenderBox, Rectangle> _visualizer;
     private readonly IRenderer _renderer;
 
     public MineApp App { get; }
@@ -38,20 +38,20 @@ class HelpController : IViewController
         InputAction ia = ConsoleInputReader.ReadAction();
         switch (ia)
         {
-            case InputAction.Quit: 
-                App.ShowMainMenu(); 
+            case InputAction.Quit:
+                App.ShowMainMenu();
                 break;
 
-            case InputAction.Up: 
-                TryScrollUp(); 
+            case InputAction.Up:
+                TryScrollUp();
                 break;
 
-            case InputAction.Down: 
-                TryScrollDown(); 
+            case InputAction.Down:
+                TryScrollDown();
                 break;
 
-            case InputAction.NewGame: 
-                App.GameController.NewGame(); 
+            case InputAction.NewGame:
+                App.GameController.NewGame();
                 break;
 
             default: break;

@@ -13,15 +13,15 @@ internal class ConsoleInputReader
         char c = info.KeyChar;
         InputAction action = ParseAction(info);
 
-        if (c == '\0') 
+        if (c == '\0')
             return (text, true, action);
 
         if (info.Key == ConsoleKey.Enter && !allowLineBreak)
             return (text, true, action);
 
-        if (info.Key == ConsoleKey.Enter) 
+        if (info.Key == ConsoleKey.Enter)
             return (text + '\n', false, action);
-            
+
         if (info.Key == ConsoleKey.Escape)
             return (text, true, action);
 
@@ -29,11 +29,11 @@ internal class ConsoleInputReader
         {
             if (text.Length > 0)
                 return (text[..(text.Length - 1)], false, action);
-            
+
             Console.Beep();
             return (text, false, action);
         }
-        
+
         return (text + c, false, action);
     }
     public static InputAction ReadAction() => ParseAction(Console.ReadKey(true));

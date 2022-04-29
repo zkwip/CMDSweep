@@ -22,12 +22,12 @@ class Partition
 
     public int Length => Range.Length;
 
-    public Partition(int c, int v, string n, LinearPartitioner a) 
-    { 
+    public Partition(int c, int v, string n, LinearPartitioner a)
+    {
         Constant = c;
         Variable = v;
-        Name = n; 
-        ap = a; 
+        Name = n;
+        ap = a;
     }
 
     public Partition Clone() => new(Constant, Variable, Name, ap);

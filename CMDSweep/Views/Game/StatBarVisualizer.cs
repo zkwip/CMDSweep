@@ -99,11 +99,11 @@ internal class StatBarVisualizer : ITypeVisualizer<GameState>
         StyleData livesGoneStyle = _settings.GetStyle("stat-lives-lost", "stat-mines-bg");
 
         string atext = " ";
-        for (int i = 0; i < state.Difficulty.Lives - state.LivesLost; i++) 
+        for (int i = 0; i < state.Difficulty.Lives - state.LivesLost; i++)
             atext += life + " ";
 
         string btext = "";
-        for (int i = 0; i < state.LivesLost; i++) 
+        for (int i = 0; i < state.LivesLost; i++)
             btext += life + " ";
 
         _renderer.PrintAtTile(minePosition, livesLeftStyle, atext);

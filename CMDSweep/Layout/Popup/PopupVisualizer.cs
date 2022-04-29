@@ -1,6 +1,6 @@
-﻿using CMDSweep.Rendering;
-using CMDSweep.Data;
+﻿using CMDSweep.Data;
 using CMDSweep.Geometry;
+using CMDSweep.Rendering;
 
 namespace CMDSweep.Layout.Popup;
 

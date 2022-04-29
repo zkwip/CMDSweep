@@ -16,9 +16,9 @@ class LinearPartitioner
     internal List<Partition> parts;
 
     public Partition this[int index] => parts[index];
-    
+
     public Partition this[string name] => FindFirst(name);
-    
+
     public Partition this[string name, int index] => FindFirst(name).Offset(index);
 
     public Partition FindFirst(string name)
@@ -33,7 +33,7 @@ class LinearPartitioner
     public Partition FindLast(string name)
     {
         Partition? res = parts.FindLast(x => x.Name == name);
-        if (res == null) 
+        if (res == null)
             throw new KeyNotFoundException($"Could not find a partition with the name \"{name}\".");
 
         return res;

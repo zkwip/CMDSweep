@@ -74,7 +74,7 @@ class MenuController : IViewController
         CreateSettingsItem(AdvancedSettingsMenu, new BoolOptionMenuItem("Flags Allowed", Settings), x => x.FlagsAllowed, (d, val) => d.FlagsAllowed = val);
         CreateSettingsItem(AdvancedSettingsMenu, new BoolOptionMenuItem("Question Marks Allowed", Settings), x => x.QuestionMarkAllowed, (d, val) => d.QuestionMarkAllowed = val);
         CreateSettingsItem(AdvancedSettingsMenu, new BoolOptionMenuItem("Automatic Discovery", Settings), x => x.AutomaticDiscovery, (d, val) => d.AutomaticDiscovery = val);
-        CreateSettingsItem(AdvancedSettingsMenu, new BoolOptionMenuItem("Subtract Flags From Count", Settings), x => x.SubtractFlags, (d, val) => d.SubtractFlags = val) ;
+        CreateSettingsItem(AdvancedSettingsMenu, new BoolOptionMenuItem("Subtract Flags From Count", Settings), x => x.SubtractFlags, (d, val) => d.SubtractFlags = val);
         CreateSettingsItem(AdvancedSettingsMenu, new BoolOptionMenuItem("Only Show Numbers At Cursor", Settings), x => x.OnlyShowAtCursor, (d, val) => d.OnlyShowAtCursor = val);
     }
 

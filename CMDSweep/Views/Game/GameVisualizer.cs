@@ -1,7 +1,7 @@
 ﻿using CMDSweep.Data;
 using CMDSweep.Geometry;
-using CMDSweep.Layout.Text;
 using CMDSweep.Layout.Popup;
+using CMDSweep.Layout.Text;
 using CMDSweep.Rendering;
 using CMDSweep.Views.Game.State;
 using System;

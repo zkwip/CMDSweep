@@ -10,19 +10,19 @@ namespace CMDSweep.Data;
 class GameSettings
 {
     public List<Difficulty> DefaultDifficulties;
-    
+
     public Dictionary<string, ConsoleColor> Colors;
-    
+
     public Dictionary<string, string> Texts;
-    
+
     public Dictionary<string, int> Dimensions;
-    
+
     public Dictionary<InputAction, List<ConsoleKey>> Controls;
-    
+
     public string PlayerName;
-    
+
     public StyleData GetStyle(string handle) => new(Colors[handle + "-fg"], Colors[handle + "-bg"]);
-    
+
     public StyleData GetStyle(string fg, string bg) => new(Colors[fg], Colors[bg]);
 }
 #pragma warning restore CS0649

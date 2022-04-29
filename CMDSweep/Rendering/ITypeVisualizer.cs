@@ -5,7 +5,7 @@ interface ITypeVisualizer<TState>
     public void Visualize(TState state);
 }
 
-interface ITypeVisualizer<TState,TContext>
+interface ITypeVisualizer<TState, TContext>
 {
     public void Visualize(TState state, TContext context);
 }

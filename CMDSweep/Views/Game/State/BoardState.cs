@@ -1,8 +1,8 @@
-﻿using CMDSweep.Geometry;
-using CMDSweep.Data;
+﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
+using CMDSweep.Rendering;
 using System;
 using System.Collections.Generic;
-using CMDSweep.Rendering;
 
 namespace CMDSweep.Views.Game.State;
 

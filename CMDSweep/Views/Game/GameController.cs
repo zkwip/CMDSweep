@@ -25,7 +25,7 @@ class GameController : IViewController
         App = app;
         _renderer = App.Renderer;
 
-        if (SaveData.PlayerName == null) 
+        if (SaveData.PlayerName == null)
             SaveData.PlayerName = "You";
 
         refreshTimer = new Timer(100);
@@ -43,7 +43,7 @@ class GameController : IViewController
     public SaveData SaveData => App.SaveData;
 
     private void RefreshTimerElapsed(object? sender, ElapsedEventArgs e) => App.Refresh(RefreshMode.ChangesOnly);
-    
+
     public void Step()
     {
         switch (CurrentState.PlayerState)
@@ -65,7 +65,7 @@ class GameController : IViewController
         }
     }
 
-    private void EnterHighscoreStep() 
+    private void EnterHighscoreStep()
     {
         (string name, _, InputAction action) = ConsoleInputReader.HandleTypingKeyPress(false, CurrentState.EnteredNameDialog.Value);
 
@@ -79,7 +79,7 @@ class GameController : IViewController
         }
     }
 
-    private void GameEndStep() 
+    private void GameEndStep()
     {
         InputAction ia = ConsoleInputReader.ReadAction();
 
@@ -143,16 +143,16 @@ class GameController : IViewController
             _ => CurrentState
         };
 
-        if (CurrentState.PlayerState == PlayerState.Playing) 
-        { 
+        if (CurrentState.PlayerState == PlayerState.Playing)
+        {
             if (!refreshTimer.Enabled)
                 refreshTimer.Start();
-            return ;
+            return;
         }
 
-        if(CurrentState.PlayerState == PlayerState.Win)
+        if (CurrentState.PlayerState == PlayerState.Win)
         {
-            if (CheckForHighscore(CurrentState.Timing.Time)) 
+            if (CheckForHighscore(CurrentState.Timing.Time))
                 CurrentState = CurrentState.SetPlayerState(PlayerState.EnteringHighscore);
         }
 
@@ -162,7 +162,7 @@ class GameController : IViewController
     private bool CheckForHighscore(TimeSpan time)
     {
         List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
-        
+
         if (scores.Count < HighscoreTable.highscoreEntries)
             return true;
 

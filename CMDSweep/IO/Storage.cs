@@ -17,7 +17,7 @@ static class Storage
 
         GameSettings? settings = JsonConvert.DeserializeObject<GameSettings>(settingsText);
 
-        if (settings == null) 
+        if (settings == null)
             throw new Exception("Failed to load settings");
 
         return settings;

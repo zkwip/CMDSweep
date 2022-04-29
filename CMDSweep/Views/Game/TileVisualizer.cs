@@ -1,10 +1,10 @@
-﻿using CMDSweep.Geometry;
-using CMDSweep.Data;
+﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
 using CMDSweep.Layout;
-using CMDSweep.Rendering;
-using System;
-using CMDSweep.Views.Game.State;
 using CMDSweep.Layout.Text;
+using CMDSweep.Rendering;
+using CMDSweep.Views.Game.State;
+using System;
 
 namespace CMDSweep.Views.Game;
 
@@ -27,7 +27,7 @@ class TileVisualizer : ITypeVisualizer<Point, GameState>
         _gridSize = settings.Dimensions["cell-grid-size"];
         _tileWidth = settings.Dimensions["cell-size-x"];
         _borderStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
-        _clearVisual = new ("  ", _borderStyle);
+        _clearVisual = new("  ", _borderStyle);
     }
 
     public void Visualize(Point p, GameState gameState)
@@ -62,39 +62,39 @@ class TileVisualizer : ITypeVisualizer<Point, GameState>
         {
             if (boardState.CellIsMine(p))
             {
-                if (boardState.CellIsFlagged(p)) 
+                if (boardState.CellIsFlagged(p))
                     return TileVisual.DeadMineFlagged;
 
-                if (boardState.CellIsDiscovered(p)) 
+                if (boardState.CellIsDiscovered(p))
                     return TileVisual.DeadMineExploded;
 
                 return TileVisual.DeadMine;
             }
             else
             {
-                if (boardState.CellIsFlagged(p)) 
+                if (boardState.CellIsFlagged(p))
                     return TileVisual.DeadWrongFlag;
 
-                if (boardState.CellIsDiscovered(p)) 
+                if (boardState.CellIsDiscovered(p))
                     return TileVisual.DeadDiscovered;
 
                 return TileVisual.DeadUndiscovered;
             }
         }
-        
-        if (boardState.CellIsDiscovered(p) && boardState.CellIsMine(p)) 
+
+        if (boardState.CellIsDiscovered(p) && boardState.CellIsMine(p))
             return TileVisual.DiscoveredMine;
 
-        if (boardState.CellIsDiscovered(p)) 
+        if (boardState.CellIsDiscovered(p))
             return TileVisual.Discovered;
 
-        if (boardState.CellIsFlagged(p)) 
+        if (boardState.CellIsFlagged(p))
             return TileVisual.Flagged;
 
-        if (boardState.CellIsQuestionMarked(p)) 
+        if (boardState.CellIsQuestionMarked(p))
             return TileVisual.QuestionMarked;
-        
-        if (p.X % _gridSize == 0 || p.Y % _gridSize == 0) 
+
+        if (p.X % _gridSize == 0 || p.Y % _gridSize == 0)
             return TileVisual.UndiscoveredGrid;
 
         return TileVisual.Undiscovered;
@@ -208,7 +208,7 @@ class TileVisualizer : ITypeVisualizer<Point, GameState>
         string text;
         int num = boardState.CellMineNumber(p);
 
-        if (difficulty.SubtractFlags) 
+        if (difficulty.SubtractFlags)
             num = boardState.CellSubtractedMineNumber(p);
 
         if (num > 0 && (IsCursor(p, boardState) || !difficulty.OnlyShowAtCursor))

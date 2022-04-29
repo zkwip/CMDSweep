@@ -19,7 +19,7 @@ internal class BoardVisualizer : IChangeableTypeVisualizer<GameState>
     {
         Rectangle viewport = gameState.BoardState.View.ViewPort;
 
-        if (viewport.Area == 0) 
+        if (viewport.Area == 0)
             throw new System.Exception("The visualized area is empty.");
 
         foreach (Point p in viewport)
@@ -33,7 +33,7 @@ internal class BoardVisualizer : IChangeableTypeVisualizer<GameState>
             Visualize(gameState);
             return;
         }
-        
+
         List<Point> changes;
         changes = gameState.BoardState.FindChangedTiles(previousGameState.BoardState);
 

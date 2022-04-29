@@ -1,18 +1,16 @@
-﻿using System;
-
-namespace CMDSweep.Geometry;
+﻿namespace CMDSweep.Geometry;
 
 record struct Offset
 {
     public int X;
     public int Y;
 
-    public static Offset Zero => new (0, 0);
+    public static Offset Zero => new(0, 0);
 
     public Offset(int x, int y)
     {
-        X = x; 
-        Y = y; 
+        X = x;
+        Y = y;
     }
 
     public static Offset ToPoint(Point newOrigin) => new(newOrigin.X, newOrigin.Y);
