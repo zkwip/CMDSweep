@@ -7,7 +7,7 @@ namespace CMDSweep.IO;
 
 static class Settings
 {
-    private static GameSettings _settings = Storage.LoadSettings();
+    private readonly static GameSettings _settings = Storage.LoadSettings();
 
     public static List<Difficulty> DefaultDifficulties => _settings.DefaultDifficulties;
 

@@ -30,6 +30,8 @@ class LinearPartitioner
         return res;
     }
 
+    public void Clear() => parts.Clear();
+
     public Partition FindLast(string name)
     {
         Partition? res = parts.FindLast(x => x.Name == name);

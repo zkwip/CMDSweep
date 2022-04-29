@@ -6,13 +6,13 @@ namespace CMDSweep.Layout.Text;
 
 internal class TextEnterDialogVisualizer : IChangeableTypeVisualizer<TextEnterDialog, Rectangle>
 {
-    private TextRenderBoxVisualizer _messageVisualizer;
-    private TextRenderBoxVisualizer _inputVisualizer;
+    private readonly TextRenderBoxVisualizer _messageVisualizer;
+    private readonly TextRenderBoxVisualizer _inputVisualizer;
 
-    public TextEnterDialogVisualizer(IRenderer renderer, GameSettings settings, StyleData popupStyle, StyleData textEnterStyle)
+    public TextEnterDialogVisualizer(IRenderer renderer, StyleData popupStyle, StyleData textEnterStyle)
     {
-        _messageVisualizer = new TextRenderBoxVisualizer(renderer, settings, popupStyle);
-        _inputVisualizer = new TextRenderBoxVisualizer(renderer, settings, textEnterStyle);
+        _messageVisualizer = new TextRenderBoxVisualizer(renderer, popupStyle);
+        _inputVisualizer = new TextRenderBoxVisualizer(renderer, textEnterStyle);
     }
 
     public void Visualize(TextEnterDialog state, Rectangle context)

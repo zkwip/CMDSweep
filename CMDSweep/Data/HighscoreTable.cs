@@ -8,9 +8,9 @@ namespace CMDSweep.Data;
 class HighscoreTable : IPlaceable
 {
     internal const int highscoreEntries = 5;
-    private string _name;
-    private List<HighscoreRecord> _highscores;
-    private TableGrid _tableGrid;
+    private readonly string _name;
+    private readonly List<HighscoreRecord> _highscores;
+    private readonly TableGrid _tableGrid;
 
     private Dimensions _dimensions;
 
@@ -19,13 +19,13 @@ class HighscoreTable : IPlaceable
         _name = difficulty.Name;
         _highscores = difficulty.Highscores;
 
+        _tableGrid = new();
         BuildTableGrid(settings);
     }
 
     private void BuildTableGrid(GameSettings settings)
     {
         var dims = settings.Dimensions;
-        _tableGrid = new();
 
         _tableGrid.AddColumn(dims["popup-padding-x"], 0, "");
         _tableGrid.AddColumn(dims["highscore-num-width"], 0, "num");

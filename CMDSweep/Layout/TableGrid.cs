@@ -14,14 +14,20 @@ class TableGrid : IBounded
         rowPart = new();
     }
 
-    private void setBounds(Rectangle b)
+    private void SetBounds(Rectangle b)
     {
         bounds = b;
         colPart.Range = b.HorizontalRange;
         rowPart.Range = b.VerticalRange;
     }
 
-    public Rectangle Bounds { get => bounds; set => setBounds(value); }
+    public void Clear()
+    {
+        colPart.Clear();
+        rowPart.Clear();
+    }
+
+    public Rectangle Bounds { get => bounds; set => SetBounds(value); }
 
     public int Columns => colPart.Count;
 

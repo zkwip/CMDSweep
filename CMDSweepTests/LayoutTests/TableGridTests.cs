@@ -7,7 +7,7 @@ namespace CMDSweepTests.LayoutTests
 {
     public class TableGridTests
     {
-        TableGrid _sut;
+        readonly TableGrid _sut;
 
         public TableGridTests()
         {
@@ -17,7 +17,7 @@ namespace CMDSweepTests.LayoutTests
         [Fact]
         public void SingleCellPartitionShouldMatchTheMainBounds()
         {
-            Rectangle rect = new Rectangle(0, 0, 10, 10);
+            Rectangle rect = new(0, 0, 10, 10);
             _sut.Bounds = rect;
             _sut.AddColumn(0, 1);
             _sut.AddRow(0, 1);
@@ -90,7 +90,7 @@ namespace CMDSweepTests.LayoutTests
         [Fact]
         public void PopulatedGridShouldNotAllowIndexingOutOfBounds()
         {
-            Rectangle rect = new Rectangle(0, 0, 10, 10);
+            Rectangle rect = new(0, 0, 10, 10);
             _sut.Bounds = rect;
             _sut.AddColumn(0, 1);
             _sut.AddRow(0, 1);

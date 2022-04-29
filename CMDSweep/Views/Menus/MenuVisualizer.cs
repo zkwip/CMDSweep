@@ -9,17 +9,16 @@ namespace CMDSweep.Views.Menus;
 
 class MenuVisualizer : ITypeVisualizer<MenuList>
 {
-    private TableGrid _tableGrid;
-    private IRenderer _renderer;
-    private GameSettings _settings;
+    private readonly TableGrid _tableGrid;
+    private readonly IRenderer _renderer;
+    private readonly GameSettings _settings;
 
     private int scrollDepth = 0;
     private int maxRows = 4;
 
-    private StyleData _menuTextStyle;
-    private StyleData _focusBoxStyle;
-    private StyleData _focusTitleStyle;
-    private StyleData _hideStyle;
+    private readonly StyleData _menuTextStyle;
+    private readonly StyleData _focusTitleStyle;
+    private readonly StyleData _hideStyle;
 
     public MenuVisualizer(GameSettings settings, IRenderer renderer)
     {
@@ -27,9 +26,9 @@ class MenuVisualizer : ITypeVisualizer<MenuList>
 
         _hideStyle = settings.GetStyle("menu");
         _menuTextStyle = settings.GetStyle("menu");
-        _focusBoxStyle = settings.GetStyle("menu-highlight-box");
         _focusTitleStyle = settings.GetStyle("menu-highlight-title");
         _renderer = renderer;
+        _tableGrid = new();
 
         Resize();
     }
@@ -37,25 +36,24 @@ class MenuVisualizer : ITypeVisualizer<MenuList>
     public void Resize()
     {
         Dictionary<string, int> dims = _settings.Dimensions;
-        TableGrid tg = new();
-
         maxRows = dims["menu-rows"];
 
+        _tableGrid.Clear();
+
         // Columns
-        tg.AddColumn(dims["menu-indent"], 0, "prefix");
-        tg.AddColumn(dims["menu-col1-width"], 0, "labels");
-        tg.AddColumn(dims["menu-box-padding"], 0);
-        tg.AddColumn(dims["menu-box-padding"], 0, "pre-options");
-        tg.AddColumn(dims["menu-col2-width"], 0, "options");
-        tg.AddColumn(dims["menu-box-padding"], 0, "post-options");
+        _tableGrid.AddColumn(dims["menu-indent"], 0, "prefix");
+        _tableGrid.AddColumn(dims["menu-col1-width"], 0, "labels");
+        _tableGrid.AddColumn(dims["menu-box-padding"], 0);
+        _tableGrid.AddColumn(dims["menu-box-padding"], 0, "pre-options");
+        _tableGrid.AddColumn(dims["menu-col2-width"], 0, "options");
+        _tableGrid.AddColumn(dims["menu-box-padding"], 0, "post-options");
 
         // Rows
-        tg.AddRow(dims["menu-title-space"], 0, "title");
-        tg.AddRow(dims["menu-row-scale"], 0, "items", maxRows);
+        _tableGrid.AddRow(dims["menu-title-space"], 0, "title");
+        _tableGrid.AddRow(dims["menu-row-scale"], 0, "items", maxRows);
 
-        Dimensions dimensions = tg.ContentFitDimensions();
-        tg.Bounds = Rectangle.Centered(_renderer.Bounds.Center, dimensions);
-        _tableGrid = tg;
+        Dimensions dimensions = _tableGrid.ContentFitDimensions();
+        _tableGrid.Bounds = Rectangle.Centered(_renderer.Bounds.Center, dimensions);
     }
 
     public void Visualize(MenuList state)

@@ -9,15 +9,15 @@ using System;
 namespace CMDSweep;
 class MenuController : IViewController
 {
-    private MenuList _currentMenuList;
-    private MenuVisualizer _visualizer;
-
-    public MineApp App { get; }
+    private readonly MenuVisualizer _visualizer;
 
     public readonly MenuList MainMenu;
     public readonly MenuList SettingsMenu;
     public readonly MenuList AdvancedSettingsMenu;
 
+    public MineApp App { get; }
+
+    private MenuList _currentMenuList;
 
     public MenuController(MineApp app)
     {
@@ -29,6 +29,7 @@ class MenuController : IViewController
         AdvancedSettingsMenu = new("Advanced", this);
 
         PopulateMenus();
+        _currentMenuList = MainMenu;
     }
 
     public GameSettings Settings => App.Settings;
@@ -78,7 +79,7 @@ class MenuController : IViewController
         CreateSettingsItem(AdvancedSettingsMenu, new BoolOptionMenuItem("Only Show Numbers At Cursor", Settings), x => x.OnlyShowAtCursor, (d, val) => d.OnlyShowAtCursor = val);
     }
 
-    private event EventHandler DifficultyChanged;
+    private event EventHandler? DifficultyChanged;
 
     private void CreateSettingsItem<TOption>(MenuList Parent, OptionMenuItem<TOption> Item, Func<Difficulty, TOption> ReadProperty, Action<Difficulty, TOption> WriteProperty)
     {

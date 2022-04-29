@@ -13,17 +13,17 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
     private readonly IRenderer _renderer;
     private readonly GameSettings _settings;
 
-    private StatBarVisualizer _statBarVisualizer;
-    private BoardVisualizer _boardVisualizer;
+    private readonly StatBarVisualizer _statBarVisualizer;
+    private readonly BoardVisualizer _boardVisualizer;
 
-    private IChangeableTypeVisualizer<TextRenderBox> _textPopupVisualizer;
-    private IChangeableTypeVisualizer<TextEnterDialog> _enterHighscorePopupVisualizer;
-    private IChangeableTypeVisualizer<HighscoreTable> _showHighscorePopupVisualizer;
+    private readonly IChangeableTypeVisualizer<TextRenderBox> _textPopupVisualizer;
+    private readonly IChangeableTypeVisualizer<TextEnterDialog> _enterHighscorePopupVisualizer;
+    private readonly IChangeableTypeVisualizer<HighscoreTable> _showHighscorePopupVisualizer;
 
-    private TextRenderBox _winPopupTextBox;
-    private TextRenderBox _losePopupTextBox;
+    private readonly TextRenderBox _winPopupTextBox;
+    private readonly TextRenderBox _losePopupTextBox;
 
-    private StyleData _hideStyle;
+    private readonly StyleData _hideStyle;
 
     public GameVisualizer(IRenderer renderer, GameSettings settings)
     {
@@ -32,19 +32,15 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
 
         _hideStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
+        StyleData popupStyle = settings.GetStyle("popup");
+        StyleData textEnterStyle = settings.GetStyle("popup-textbox");
+        StyleData nowStyle = settings.GetStyle("popup-fg-highlight", "popup-bg");
+
 
         _statBarVisualizer = new StatBarVisualizer(_renderer, settings);
         _boardVisualizer = new BoardVisualizer(_renderer, settings);
 
-        PreparePopups(settings);
-    }
-
-    private void PreparePopups(GameSettings settings)
-    {
-        StyleData popupStyle = settings.GetStyle("popup");
-        StyleData textEnterStyle = settings.GetStyle("popup-textbox");
-
-        _textPopupVisualizer = new PopupVisualizer<TextRenderBox>(_renderer, settings, new TextRenderBoxVisualizer(_renderer, settings, popupStyle));
+        _textPopupVisualizer = new PopupVisualizer<TextRenderBox>(_renderer, settings, new TextRenderBoxVisualizer(_renderer, popupStyle));
 
         _winPopupTextBox = new TextRenderBox
         {
@@ -63,8 +59,8 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
         };
 
 
-        _showHighscorePopupVisualizer = new PopupVisualizer<HighscoreTable>(_renderer, settings, new HighscoreTableVisualizer(_renderer, popupStyle, settings.GetStyle("popup-fg-highlight", "popup-bg")));
-        _enterHighscorePopupVisualizer = new PopupVisualizer<TextEnterDialog>(_renderer, settings, new TextEnterDialogVisualizer(_renderer, settings, popupStyle, textEnterStyle));
+        _showHighscorePopupVisualizer = new PopupVisualizer<HighscoreTable>(_renderer, settings, new HighscoreTableVisualizer(_renderer, popupStyle, nowStyle));
+        _enterHighscorePopupVisualizer = new PopupVisualizer<TextEnterDialog>(_renderer, settings, new TextEnterDialogVisualizer(_renderer, popupStyle, textEnterStyle));
     }
 
     public void Visualize(GameState state)

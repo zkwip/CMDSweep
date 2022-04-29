@@ -6,10 +6,11 @@ namespace CMDSweep.Layout.Popup;
 
 internal class PopupVisualizer<TPlaceable> : IChangeableTypeVisualizer<TPlaceable> where TPlaceable : IPlaceable
 {
-    private GameSettings _settings;
-    private IRenderer _renderer;
-    private StyleData _styleData;
-    private ITypeVisualizer<TPlaceable, Rectangle> _contentVisualizer;
+    private readonly GameSettings _settings;
+    private readonly IRenderer _renderer;
+    private readonly StyleData _styleData;
+    private readonly ITypeVisualizer<TPlaceable, Rectangle> _contentVisualizer;
+
     private Rectangle? _lastShape;
 
     public PopupVisualizer(IRenderer renderer, GameSettings settings, ITypeVisualizer<TPlaceable, Rectangle> contentVisualizer)

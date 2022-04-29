@@ -38,7 +38,7 @@ internal record class BoardState : IRenderState
         int height = diff.Height;
 
         CellData[,] cells = new CellData[width, height];
-        Rectangle board = new Rectangle(0, 0, width, height);
+        Rectangle board = new(0, 0, width, height);
         Point cursor = board.Center;
 
         BoardViewState view = BoardViewState.NewGame(settings, board, renderMask);
@@ -168,7 +168,7 @@ internal record class BoardState : IRenderState
         return li;
     }
 
-    public BoardState ChangeRenderMask(Rectangle newRenderMask) => new BoardState(Cells, Difficulty, Cursor, View.ChangeRenderMask(newRenderMask), _id + 1);
+    public BoardState ChangeRenderMask(Rectangle newRenderMask) => new(Cells, Difficulty, Cursor, View.ChangeRenderMask(newRenderMask), _id + 1);
 
     public int CellMineNumber(Point cl) => CountSurroundingCells(cl, c => c.Mine, Difficulty.WrapAround);
 

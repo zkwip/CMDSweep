@@ -8,10 +8,10 @@ namespace CMDSweep.Layout.Text;
 
 internal class TextRenderBoxVisualizer : IChangeableTypeVisualizer<TextRenderBox, Rectangle>
 {
-    private IRenderer _renderer;
-    private StyleData _textData;
+    private readonly IRenderer _renderer;
+    private readonly StyleData _textData;
 
-    public TextRenderBoxVisualizer(IRenderer renderer, GameSettings settings, StyleData textStyle)
+    public TextRenderBoxVisualizer(IRenderer renderer, StyleData textStyle)
     {
         _renderer = renderer;
         _textData = textStyle;
@@ -66,7 +66,7 @@ internal class TextRenderBoxVisualizer : IChangeableTypeVisualizer<TextRenderBox
 
     }
 
-    private Rectangle LineBounds(int start, int end, Rectangle bounds, TextRenderBox box)
+    private static Rectangle LineBounds(int start, int end, Rectangle bounds, TextRenderBox box)
     {
         int start_y = bounds.Top + start * box.LineSpacing;
         int end_y = bounds.Top + end * box.LineSpacing;

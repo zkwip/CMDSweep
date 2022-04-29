@@ -20,7 +20,7 @@ class HelpController : IViewController
         _renderer = App.Renderer;
         StyleData styleData = App.Settings.GetStyle("menu");
 
-        _visualizer = new TextRenderBoxVisualizer(_renderer, App.Settings, styleData);
+        _visualizer = new TextRenderBoxVisualizer(_renderer, styleData);
         _helpTextBox = new TextRenderBox(Storage.LoadHelpFile(), Rectangle.Zero)
         {
             Wrap = true,
