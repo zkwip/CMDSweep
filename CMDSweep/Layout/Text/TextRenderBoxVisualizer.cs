@@ -124,9 +124,6 @@ internal class TextRenderBoxVisualizer : IChangeableTypeVisualizer<TextRenderBox
 
     public void VisualizeChanges(TextRenderBox box, Rectangle bounds, TextRenderBox oldBox, Rectangle oldBounds)
     {
-        if (bounds != oldBounds)
-        {
-            Visualize(box, bounds);
-        }
+        Visualize(box, bounds); // Todo: make it actually changeable?
     }
 }

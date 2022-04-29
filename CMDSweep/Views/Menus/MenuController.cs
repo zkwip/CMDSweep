@@ -14,16 +14,21 @@ class MenuController : IViewController
 
     public MineApp App { get; }
 
-    public MenuList MainMenu;
-    public MenuList SettingsMenu;
-    public MenuList AdvancedSettingsMenu;
+    public readonly MenuList MainMenu;
+    public readonly MenuList SettingsMenu;
+    public readonly MenuList AdvancedSettingsMenu;
 
 
     public MenuController(MineApp app)
     {
         App = app;
         _visualizer = new MenuVisualizer(Settings, app.Renderer);
-        BuildMenus();
+
+        MainMenu = new("Main Menu", this);
+        SettingsMenu = new("Settings", this);
+        AdvancedSettingsMenu = new("Advanced", this);
+
+        PopulateMenus();
     }
 
     public GameSettings Settings => App.Settings;
@@ -31,7 +36,7 @@ class MenuController : IViewController
 
     public void Step()
     {
-        InputAction ia = App.ReadAction();
+        InputAction ia = ConsoleInputReader.ReadAction();
         if (ia == InputAction.NewGame)
         {
             App.GameController.NewGame();
@@ -40,14 +45,11 @@ class MenuController : IViewController
         _currentMenuList.HandleInput(ia);
     }
 
-    internal void BuildMenus()
+    internal void PopulateMenus()
     {
-        MainMenu = new("Main Menu", this);
 
-        SettingsMenu = new("Settings", this);
         SettingsMenu.ParentMenu = MainMenu;
 
-        AdvancedSettingsMenu = new("Advanced", this);
         AdvancedSettingsMenu.ParentMenu = SettingsMenu;
 
         MainMenu.AddButton("New Game", () => App.GameController.NewGame());

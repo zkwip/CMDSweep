@@ -9,7 +9,7 @@ class HighscoreTableVisualizer : ITypeVisualizer<HighscoreTable, Rectangle>
     private readonly StyleData _normalStyle;
     private readonly StyleData _nowStyle;
 
-    public HighscoreTableVisualizer(IRenderer renderer, StyleData nowStyle, StyleData normalStyle)
+    public HighscoreTableVisualizer(IRenderer renderer, StyleData normalStyle, StyleData nowStyle)
     {
         _renderer = renderer;
         _nowStyle = nowStyle;
@@ -29,7 +29,7 @@ class HighscoreTableVisualizer : ITypeVisualizer<HighscoreTable, Rectangle>
 
         for (int i = 0; i < table.Count; i++)
         {
-            StyleData rowstyle = table.IsNow(i) ? _normalStyle : _nowStyle;
+            StyleData rowstyle = table.IsNow(i) ? _nowStyle : _normalStyle;
             _renderer.PrintAtTile(table.Grid.GetPoint("num", 0, "row", i), rowstyle, (i + 1).ToString());
             _renderer.PrintAtTile(table.Grid.GetPoint("name", 0, "row", i), rowstyle, table.PlayerName(i));
             _renderer.PrintAtTile(table.Grid.GetPoint("time", 0, "row", i), rowstyle, table.Time(i));

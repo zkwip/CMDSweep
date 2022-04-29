@@ -3,6 +3,7 @@ using CMDSweep.Data;
 using CMDSweep.Rendering;
 using System;
 using System.Collections.Generic;
+using CMDSweep.Layout.Text;
 
 namespace CMDSweep.Views.Game.State;
 
@@ -15,9 +16,10 @@ internal record class GameState : IRenderState
     public readonly Difficulty Difficulty;
     public readonly PlayerState PlayerState;
     public readonly int Lives;
-    public Face Face;
+    public readonly Face Face;
+    public readonly TextEnterDialog EnteredNameDialog;
 
-    public GameState(BoardState boardData, TimingState timing, Difficulty difficulty, PlayerState playerState, int lives, Face face, int id)
+    public GameState(BoardState boardData, TimingState timing, Difficulty difficulty, PlayerState playerState, int lives, Face face, TextEnterDialog dialog, int id)
     {
         BoardState = boardData;
         Timing = timing;
@@ -26,20 +28,23 @@ internal record class GameState : IRenderState
         Lives = lives;
         Face = face;
         _id = id;
+        EnteredNameDialog = dialog;
     }
 
-    public static GameState NewGame(Difficulty diff, GameSettings settings, Rectangle boardRenderMask)
+    public static GameState NewGame(SaveData save, GameSettings settings, Rectangle boardRenderMask)
     {
-        BoardState boardState = BoardState.NewGame(diff, settings, boardRenderMask);
+        BoardState boardState = BoardState.NewGame(save.CurrentDifficulty, settings, boardRenderMask);
         TimingState timing = TimingState.NewGame();
+        TextEnterDialog enterDialog = new TextEnterDialog(settings.Texts["popup-enter-hs-message"], save.PlayerName, settings.Dimensions["popup-enter-hs-width"], settings.Dimensions["popup-enter-hs-height"]);
 
         return new GameState(
             boardState, 
             timing,
-            diff,
+            save.CurrentDifficulty,
             PlayerState.NewGame,
-            diff.Lives,
+            save.CurrentDifficulty.Lives,
             Face.Normal,
+            enterDialog,
             0);
     }
 
@@ -59,9 +64,11 @@ internal record class GameState : IRenderState
         return Die();
     }
 
-    public GameState ResumeGame() => new(BoardState, Timing.Resume(), Difficulty, PlayerState, Lives, Face, _id + 1);
+    public GameState ResumeGame() => new(BoardState, Timing.Resume(), Difficulty, PlayerState, Lives, Face, EnteredNameDialog, _id + 1);
 
-    public GameState FreezeGame() => new(BoardState, Timing.Pause(), Difficulty, PlayerState, Lives, Face, _id + 1);
+    internal GameState SetEnteredName(string name) => new(BoardState, Timing, Difficulty, PlayerState, Lives, Face, EnteredNameDialog.UpdateValue(name), _id + 1);
+
+    public GameState FreezeGame() => new(BoardState, Timing.Pause(), Difficulty, PlayerState, Lives, Face, EnteredNameDialog, _id + 1);
 
     public GameState NotifyFailedAction()
     {
@@ -72,7 +79,7 @@ internal record class GameState : IRenderState
     public GameState Dig()
     {
         if (BoardState.CellIsDiscovered(BoardState.Cursor)) 
-            return NotifyFailedAction();
+            return this;
 
         if (BoardState.CellIsFlagged(BoardState.Cursor)) 
             return NotifyFailedAction();
@@ -137,9 +144,9 @@ internal record class GameState : IRenderState
         }
 
         if (mineHit) 
-            return LoseLife();
+            return TryLoseLife();
 
-        return new GameState(BoardState.Discover(discoveredCells), Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
+        return new GameState(BoardState.Discover(discoveredCells), Timing, Difficulty, PlayerState, Lives, Face, EnteredNameDialog, _id + 1);
     }
 
     public GameState ToggleFlag()
@@ -147,14 +154,14 @@ internal record class GameState : IRenderState
         if (!Difficulty.FlagsAllowed) return NotifyFailedAction();
         if (BoardState.CellIsDiscovered(BoardState.Cursor)) return NotifyFailedAction();
 
-        return new(BoardState.ToggleFlag(), Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
+        return new(BoardState.ToggleFlag(), Timing, Difficulty, PlayerState, Lives, Face, EnteredNameDialog, _id + 1);
     }
 
-    public GameState MoveCursor(Direction d) => new(BoardState.MoveCursor(d), Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
+    public GameState MoveCursor(Direction d) => new(BoardState.MoveCursor(d), Timing, Difficulty, PlayerState, Lives, Face, EnteredNameDialog, _id + 1);
 
-    private GameState PlaceMines() => new(BoardState.PlaceMines(), Timing.Resume(), Difficulty, PlayerState.Playing, Lives, Face, _id + 1);
+    private GameState PlaceMines() => new(BoardState.PlaceMines(), Timing.Resume(), Difficulty, PlayerState.Playing, Lives, Face, EnteredNameDialog, _id + 1);
 
-    public GameState ChangeRenderMask(Rectangle newRenderMask) => new(BoardState.ChangeRenderMask(newRenderMask), Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
+    public GameState ChangeRenderMask(Rectangle newRenderMask) => new(BoardState.ChangeRenderMask(newRenderMask), Timing, Difficulty, PlayerState, Lives, Face, EnteredNameDialog, _id + 1);
 
     public int Mines => Difficulty.Mines;
 
@@ -164,11 +171,11 @@ internal record class GameState : IRenderState
 
     public bool Dead => PlayerState == PlayerState.Dead;
 
-    public GameState Win() => new(BoardState, Timing, Difficulty, PlayerState.Win, Lives, Face.Win, _id + 1);
+    public GameState Win() => new(BoardState, Timing.Pause(), Difficulty, PlayerState.Win, Lives, Face.Win, EnteredNameDialog, _id + 1);
 
-    public GameState LoseLife() => new(BoardState, Timing, Difficulty, PlayerState, Lives, Face, _id + 1);
+    public GameState LoseLife() => new(BoardState, Timing, Difficulty, PlayerState, Lives - 1, Face, EnteredNameDialog, _id + 1);
 
-    public GameState Die() => new(BoardState, Timing, Difficulty, PlayerState.Dead, 0, Face.Dead, _id + 1);
+    public GameState Die() => new(BoardState, Timing.Pause(), Difficulty, PlayerState.Dead, 0, Face.Dead, EnteredNameDialog, _id + 1);
 
-    public GameState SetPlayerState(PlayerState state) => new(BoardState, Timing, Difficulty, state, Lives, Face, _id + 1);
+    public GameState SetPlayerState(PlayerState state) => new(BoardState, Timing, Difficulty, state, Lives, Face, EnteredNameDialog, _id + 1);
 }

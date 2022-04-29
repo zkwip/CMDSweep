@@ -79,19 +79,6 @@ class MineApp
         return true;
     }
 
-    internal InputAction ReadAction() => ParseAction(Console.ReadKey(true));
-
-    internal InputAction ParseAction(ConsoleKeyInfo info)
-    {
-
-        ConsoleKey key = info.Key;
-        foreach (KeyValuePair<InputAction, List<ConsoleKey>> ctrl in Settings.Controls)
-            if (ctrl.Value.Contains(key))
-                return ctrl.Key;
-
-        return InputAction.Unknown;
-    }
-
     internal void ShowMainMenu() => MenuController.OpenMain();
     
     internal void ShowHelp() => ChangeMode(ApplicationState.Help);

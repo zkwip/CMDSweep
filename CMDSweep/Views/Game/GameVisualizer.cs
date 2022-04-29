@@ -1,10 +1,10 @@
 ﻿using CMDSweep.Data;
+using CMDSweep.Geometry;
 using CMDSweep.Layout.Text;
 using CMDSweep.Layout.Popup;
 using CMDSweep.Rendering;
 using CMDSweep.Views.Game.State;
 using System;
-using CMDSweep.Geometry;
 
 namespace CMDSweep.Views.Game;
 
@@ -17,7 +17,7 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
     private BoardVisualizer _boardVisualizer;
 
     private IChangeableTypeVisualizer<TextRenderBox> _textPopupVisualizer;
-    private IChangeableTypeVisualizer<string> _enterHighscorePopupVisualizer;
+    private IChangeableTypeVisualizer<TextEnterDialog> _enterHighscorePopupVisualizer;
     private IChangeableTypeVisualizer<HighscoreTable> _showHighscorePopupVisualizer;
 
     private TextRenderBox _winPopupTextBox;
@@ -32,16 +32,18 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
 
         _hideStyle = settings.GetStyle("border-fg", "cell-bg-out-of-bounds");
 
-        StyleData popupStyle = settings.GetStyle("popup");
 
         _statBarVisualizer = new StatBarVisualizer(_renderer, settings);
         _boardVisualizer = new BoardVisualizer(_renderer, settings);
 
-        PreparePopups(popupStyle, settings);
+        PreparePopups(settings);
     }
 
-    private void PreparePopups(StyleData popupStyle, GameSettings settings)
+    private void PreparePopups(GameSettings settings)
     {
+        StyleData popupStyle = settings.GetStyle("popup");
+        StyleData textEnterStyle = settings.GetStyle("popup-textbox");
+
         _textPopupVisualizer = new PopupVisualizer<TextRenderBox>(_renderer, settings, new TextRenderBoxVisualizer(_renderer, settings, popupStyle));
 
         _winPopupTextBox = new TextRenderBox
@@ -60,7 +62,9 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
             VerticalAlign = Layout.VerticalAlignment.Middle
         };
 
+
         _showHighscorePopupVisualizer = new PopupVisualizer<HighscoreTable>(_renderer, settings, new HighscoreTableVisualizer(_renderer, popupStyle, settings.GetStyle("popup-fg-highlight", "popup-bg")));
+        _enterHighscorePopupVisualizer = new PopupVisualizer<TextEnterDialog>(_renderer, settings, new TextEnterDialogVisualizer(_renderer, settings, popupStyle, textEnterStyle));
     }
 
     public void Visualize(GameState state)
@@ -90,7 +94,7 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
                 break;
 
             case PlayerState.EnteringHighscore:
-                //_enterHighscorePopupVisualizer.Visualize(state.PlayerName);
+                _enterHighscorePopupVisualizer.Visualize(state.EnteredNameDialog);
                 break;
         }
     }
@@ -126,7 +130,7 @@ partial class GameVisualizer : IChangeableTypeVisualizer<GameState>
                 break;
 
             case PlayerState.EnteringHighscore:
-                //_enterHighscorePopupVisualizer.VisualizeChanges(state.PlayerName,whatevcr);
+                _enterHighscorePopupVisualizer.VisualizeChanges(state.EnteredNameDialog, previousState.EnteredNameDialog);
                 break;
         }
     }

@@ -35,7 +35,7 @@ class HelpController : IViewController
 
     public void Step()
     {
-        InputAction ia = App.ReadAction();
+        InputAction ia = ConsoleInputReader.ReadAction();
         switch (ia)
         {
             case InputAction.Quit: 

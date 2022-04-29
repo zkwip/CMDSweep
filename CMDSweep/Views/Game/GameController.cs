@@ -15,7 +15,6 @@ class GameController : IViewController
     private readonly IRenderer _renderer;
     private readonly GameVisualizer _visualizer;
     private readonly RenderSheduler<GameState> _renderSheduler;
-    private string _enteredName;
 
     public GameState CurrentState { get; private set; }
 
@@ -37,7 +36,6 @@ class GameController : IViewController
 
         _visualizer = new GameVisualizer(_renderer, Settings);
         _renderSheduler = new RenderSheduler<GameState>(_visualizer, _renderer);
-        _enteredName = SaveData.PlayerName;
     }
 
     public GameSettings Settings => App.Settings;
@@ -69,20 +67,21 @@ class GameController : IViewController
 
     private void EnterHighscoreStep() 
     {
-        (string name, bool done) = ConsoleTextInputReader.HandleTypingKeyPress(false, SaveData.PlayerName);
+        (string name, _, InputAction action) = ConsoleInputReader.HandleTypingKeyPress(false, CurrentState.EnteredNameDialog.Value);
 
-        SaveData.PlayerName = name;
+        CurrentState = CurrentState.SetEnteredName(name);
 
-        if (done)
+        if (action == InputAction.Dig)
         {
-            AddHighscore(CurrentState.Timing.Time);
-            CurrentState.SetPlayerState(PlayerState.ShowingHighscores);
+            SaveData.PlayerName = name;
+            AddHighscore(CurrentState.Timing.Time, name);
+            CurrentState = CurrentState.SetPlayerState(PlayerState.ShowingHighscores);
         }
     }
 
     private void GameEndStep() 
     {
-        InputAction ia = App.ReadAction();
+        InputAction ia = ConsoleInputReader.ReadAction();
 
         switch (ia)
         {
@@ -107,7 +106,7 @@ class GameController : IViewController
 
     private void PlayStep()
     {
-        InputAction ia = App.ReadAction();
+        InputAction ia = ConsoleInputReader.ReadAction();
 
         switch (ia)
         {
@@ -170,9 +169,8 @@ class GameController : IViewController
         return (time < scores[HighscoreTable.highscoreEntries - 1].Time);
     }
 
-    private void AddHighscore(TimeSpan time)
+    private void AddHighscore(TimeSpan time, string name)
     {
-        SaveData.PlayerName = _enteredName;
         List<HighscoreRecord> scores = SaveData.CurrentDifficulty.Highscores;
 
         while (scores.Count >= HighscoreTable.highscoreEntries)
@@ -181,11 +179,11 @@ class GameController : IViewController
         scores.Add(new()
         {
             Time = time,
-            Name = _enteredName,
+            Name = name,
             Date = DateTime.Now
         });
 
-        scores.Sort((x, y) => (x.Time - y.Time).Milliseconds);
+        scores.Sort((x, y) => (x.Time.CompareTo(y.Time)));
         Storage.WriteSave(SaveData);
     }
 
@@ -195,7 +193,7 @@ class GameController : IViewController
         App.ChangeMode(ApplicationState.Playing);
     }
 
-    private GameState PrepareNewGameState() => GameState.NewGame(SaveData.CurrentDifficulty, Settings, RenderMaskFromConsoleDimension());
+    private GameState PrepareNewGameState() => GameState.NewGame(SaveData, Settings, RenderMaskFromConsoleDimension());
 
     public void ResizeView() => CurrentState = CurrentState.ChangeRenderMask(RenderMaskFromConsoleDimension());
 

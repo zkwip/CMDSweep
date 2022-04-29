@@ -29,4 +29,3 @@ enum InputAction
     Zero,
     Clear,
 }
-
