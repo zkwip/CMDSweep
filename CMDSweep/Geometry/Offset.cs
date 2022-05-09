@@ -26,4 +26,6 @@ record struct Offset
     public Offset Scale(Scale dimensions) => new(X * dimensions.Width, Y * dimensions.Height);
 
     public Offset ScaleBack(Scale dimensions) => new(X / dimensions.Width, Y / dimensions.Height);
+
+    public override string ToString() => $"({X}, {Y})";
 }

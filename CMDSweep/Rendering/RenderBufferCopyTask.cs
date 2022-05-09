@@ -8,6 +8,8 @@ internal record struct RenderBufferCopyTask
     public readonly Offset Offset;
     public readonly bool Empty;
 
+    public override string ToString() => $"RenderBuffer Copy from {Source} with offset {Offset}";
+
     public RenderBufferCopyTask(Rectangle source, Rectangle dest)
     {
         Source = source;
@@ -34,5 +36,5 @@ internal record struct RenderBufferCopyTask
 
     public Rectangle Destination => Source.Shift(Offset);
 
-    public static RenderBufferCopyTask None => new RenderBufferCopyTask(Rectangle.Zero, Rectangle.Zero);
+    public static RenderBufferCopyTask None => new(Rectangle.Zero, Rectangle.Zero);
 }

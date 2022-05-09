@@ -55,9 +55,9 @@ record struct Rectangle : IEnumerable<Point>
 
     public int MidLine => Top + Height / 2;
 
-    public Rectangle ScaleBack(Scale scale) => new Rectangle(TopLeft.ScaleBack(scale), BottomRight.ScaleBack(scale));
+    public Rectangle ScaleBack(Scale scale) => new(TopLeft.ScaleBack(scale), BottomRight.ScaleBack(scale));
 
-    public Rectangle Scale(Scale scale) => new Rectangle(TopLeft.Scale(scale), BottomRight.Scale(scale));
+    public Rectangle Scale(Scale scale) => new(TopLeft.Scale(scale), BottomRight.Scale(scale));
 
     public Point TopLeft => new(Left, Top);
 

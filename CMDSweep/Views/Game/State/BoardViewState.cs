@@ -44,12 +44,16 @@ internal class BoardViewState
 
     public Point MapToRender(Point p) => p.Shift(_offset).Scale(_scale);
 
+    public Rectangle MapToRender(Rectangle r) => r.Shift(_offset).Scale(_scale);
+
     public BoardViewState ScrollTo(Point cursor)
     {
-        Offset offset = _offset.Shift(ScrollSafezone.OffsetOutOfBounds(cursor));
+        Offset offset = _offset.Shift(ScrollSafezone.OffsetOutOfBounds(cursor).Reverse);
         BoardViewState newView = new(_scale, offset, _scrollSafezoneDistance, _renderMask, _board);
         return newView;
     }
+
+    public Rectangle RenderMask => _renderMask;
 
     public BoardViewState ChangeRenderMask(Rectangle newMask)
     {

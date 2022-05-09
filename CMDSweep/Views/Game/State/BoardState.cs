@@ -27,6 +27,9 @@ internal record class BoardState : IRenderState
     {
         BoardViewState newView = View.ScrollTo(Cursor);
 
+        if (newView.ViewPort == View.ViewPort) 
+            return this;
+
         return new(Cells, Difficulty, Cursor, newView, _id + 1);
     }
 
@@ -204,7 +207,7 @@ internal record class BoardState : IRenderState
             _ => Cursor,
         };
 
-        return SetCursor(Wrap(p));
+        return SetCursor(Wrap(p)).Scroll();
 
     }
 
@@ -256,7 +259,7 @@ internal record class BoardState : IRenderState
             hits.Add(other.Cursor);
         }
 
-        return hits;
+        return hits.FindAll(x=>area.Contains(x));
     }
 
     public BoardState PlaceMines()
