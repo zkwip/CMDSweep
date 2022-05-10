@@ -110,8 +110,6 @@ internal record class GameState : IRenderState
         List<Point> discoveredCells = new();
 
         frontierQueue.Add(cl);
-
-        int sum = 0;
         bool mineHit = false;
 
         while (frontierQueue.Count > 0)
@@ -121,10 +119,18 @@ internal record class GameState : IRenderState
             frontierQueue.RemoveAt(0);
 
             // Check discoverable
-            if (BoardState.CellOutsideBounds(cl)) continue;
-            if (BoardState.CellIsDiscovered(cl)) continue;
-            if (BoardState.CellIsFlagged(cl)) continue;
-            if (discoveredCells.Contains(cl)) continue;
+            if (discoveredCells.Contains(cl)) 
+                continue;
+
+            if (BoardState.CellOutsideBounds(cl)) 
+                continue;
+
+            if (BoardState.CellIsDiscovered(cl)) 
+                continue;
+
+            if (BoardState.CellIsFlagged(cl)) 
+                continue;
+
 
             discoveredCells.Add(cl);
 
@@ -140,7 +146,6 @@ internal record class GameState : IRenderState
             {
                 BoardState.ForAllSurroundingCells(cl, (p) => frontierQueue.Add(p), Difficulty.WrapAround);
             }
-            sum += 1;
         }
 
         if (mineHit)

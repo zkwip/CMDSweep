@@ -27,7 +27,7 @@ internal record class BoardState : IRenderState
     {
         BoardViewState newView = View.ScrollTo(Cursor);
 
-        if (newView.ViewPort == View.ViewPort) 
+        if (newView.ViewPort == View.ViewPort)
             return this;
 
         return new(Cells, Difficulty, Cursor, newView, _id + 1);
@@ -49,30 +49,40 @@ internal record class BoardState : IRenderState
         return new BoardState(cells, diff, cursor, view, 0);
     }
 
-    private int CountCells(Predicate<CellData> p)
+    private int CountCells(Predicate<CellData> pred)
     {
         int sum = 0;
-        foreach (CellData cell in Cells) if (p(cell)) sum++;
+
+        foreach (CellData cell in Cells)
+            if (pred(cell)) sum++;
+
         return sum;
     }
 
-    internal TOut ApplySurroundingCells<TOut>(Point p, TOut zero, Func<Point, TOut, TOut> fold, bool wrap)
+    internal IEnumerable<Point> SurroundingCells(Point p, bool wrap)
     {
-        TOut res = zero;
-        ForAllSurroundingCells(p, (p2) => { res = fold(p2, res); }, wrap);
-        return res;
+        Rectangle area = new Rectangle(p.X, p.Y, 1, 1);
+        area = area.Grow(Difficulty.DetectionRadius);
+
+        return FilterBoard(area, wrap);
+    }
+
+    internal IEnumerable<Point> FilterBoard(IEnumerable<Point> source, bool wrap)
+    {
+        foreach (Point res in source)
+        {
+            if (wrap)
+                yield return Wrap(res);
+
+            else if (!CellOutsideBounds(res))
+                yield return res;
+        }
     }
 
     internal void ForAllSurroundingCells(Point p, Action<Point> act, bool wrap)
     {
-        for (int ax = p.X - Difficulty.DetectionRadius; ax <= p.X + Difficulty.DetectionRadius; ax++)
-        {
-            for (int ay = p.Y - Difficulty.DetectionRadius; ay <= p.Y + Difficulty.DetectionRadius; ay++)
-            {
-                Point loc = new(ax, ay);
-                if (wrap || !CellOutsideBounds(loc)) act(Wrap(loc));
-            }
-        }
+        foreach (Point pos in SurroundingCells(p, wrap))
+            act(pos);
     }
 
     private T CheckCell<T>(Point cl, Func<CellData, T> check, T dflt)
@@ -87,7 +97,6 @@ internal record class BoardState : IRenderState
     }
 
     public CellData Cell(Point cl) => Cells[cl.X, cl.Y];
-
 
     public BoardState Flag(Point cl)
     {
@@ -138,11 +147,6 @@ internal record class BoardState : IRenderState
         return Math.Max(xdist, ydist);
     }
 
-
-    private int CountSurroundingCells(Point cl, Func<CellData, bool> callback, bool outsideAllowed) => CountSurroundingCells(cl, (cl2) => CheckCell(cl2, callback, false), outsideAllowed);
-
-    private int CountSurroundingCells(Point cl, Func<Point, bool> callback, bool outsideAllowed) => ApplySurroundingCells(cl, 0, (loc, sum) => sum + (callback(loc) ? 1 : 0), outsideAllowed);
-
     internal Rectangle Bounds => new(0, 0, BoardWidth, BoardHeight);
 
     public double DiscoveryRate => (double)Discovered / Tiles;
@@ -161,21 +165,25 @@ internal record class BoardState : IRenderState
 
     public bool CellIsQuestionMarked(Point cl) => CheckCell(cl, c => c.Flagged == FlagMarking.QuestionMarked, false);
 
-    internal List<Point> ExpandChangeHits(List<Point> hits, int detectionRadius, bool wrapAround)
+    internal IEnumerable<Point> ExpandChangeHits(IEnumerable<Point> hits, bool wrap)
     {
         List<Point> li = new();
         foreach (Point cl in hits)
         {
-            li = ApplySurroundingCells(cl, li, (loc, list) => { if (!list.Contains(loc)) list.Add(loc); return list; }, wrapAround);
+            foreach (Point p in SurroundingCells(cl, wrap))
+            {
+                if (!li.Contains(p))
+                    li.Add(p);
+            }
         }
         return li;
     }
 
     public BoardState ChangeRenderMask(Rectangle newRenderMask) => new(Cells, Difficulty, Cursor, View.ChangeRenderMask(newRenderMask), _id + 1);
 
-    public int CellMineNumber(Point cl) => CountSurroundingCells(cl, c => c.Mine, Difficulty.WrapAround);
+    public int CellMineNumber(Point cl) => CountPoints(c => c.Mine, SurroundingCells(cl, Difficulty.WrapAround));
 
-    public int CellSubtractedMineNumber(Point cl) => CellMineNumber(cl) - CountSurroundingCells(cl, c => c.Flagged == FlagMarking.Flagged, Difficulty.WrapAround);
+    public int CellSubtractedMineNumber(Point cl) => CellMineNumber(cl) - CountPoints(c => c.Flagged == FlagMarking.Flagged, SurroundingCells(cl, Difficulty.WrapAround));
 
     public int Flags => CountCells(x => x.Flagged == FlagMarking.Flagged);
 
@@ -231,27 +239,37 @@ internal record class BoardState : IRenderState
         }
     }
 
-    public List<Point> DiffersFrom(BoardState other, Rectangle area)
-    {
-        List<Point> hits = new();
-        area.ForAll((p) =>
-        {
-            if (Cell(p) != other.Cell(p)) hits.Add(p);
-        });
+    public IEnumerable<Point> DiffersFrom(BoardState other, Rectangle area) => FilterPoints((p) => Cell(p) != other.Cell(p), area);
 
-        return hits;
+    public IEnumerable<Point> FilterPoints(Predicate<Point> pred, IEnumerable<Point> area) 
+    {
+        foreach (Point p in area) 
+            if (pred(p)) yield return p;
+    }
+
+    public int CountPoints(Predicate<CellData> pred, IEnumerable<Point> area) => CountPoints(c => pred(Cell(c)), area);
+
+    public int CountPoints(Predicate<Point> pred, IEnumerable<Point> area)
+    {
+        int sum = 0;
+
+        foreach (Point p in area)
+            if (pred(p)) sum++;
+
+        return sum;
     }
 
     public List<Point> CompareForVisibleChanges(BoardState other, Rectangle area)
     {
         if (Difficulty.SubtractFlags)
-            area.Grow(Difficulty.DetectionRadius);
+            area = area.Grow(Difficulty.DetectionRadius);
 
         area = area.Intersect(Bounds);
 
-        List<Point> hits = DiffersFrom(other, area);
+        List<Point> hits = new(DiffersFrom(other, area));
 
-        if (Difficulty.SubtractFlags) hits = ExpandChangeHits(hits, Difficulty.DetectionRadius, Difficulty.WrapAround);
+        if (Difficulty.SubtractFlags) 
+            hits = new(ExpandChangeHits(hits, Difficulty.WrapAround));
 
         if (other.Cursor != Cursor)
         {
@@ -259,7 +277,7 @@ internal record class BoardState : IRenderState
             hits.Add(other.Cursor);
         }
 
-        return hits.FindAll(x=>area.Contains(x));
+        return hits.FindAll(x => area.Contains(x));
     }
 
     public BoardState PlaceMines()

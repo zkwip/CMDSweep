@@ -104,14 +104,6 @@ record struct Rectangle : IEnumerable<Point>
         return new Rectangle(l, t, r - l, b - t);
     }
 
-    public void ForAll(Action<Point> callback)
-    {
-        foreach (Point p in this)
-        {
-            callback(p);
-        }
-    }
-
     public Rectangle CenterOn(Point p) => Shift(Offset.FromChange(Center, p));
 
     public Rectangle ShiftTo(Point p) => Shift(Offset.FromChange(TopLeft, p));
@@ -127,9 +119,10 @@ record struct Rectangle : IEnumerable<Point>
 
     public IEnumerator<Point> GetEnumerator()
     {
-        for (int x = Left; x < Right; x++)
+        foreach(int x in HorizontalRange)
         {
-            for (int y = Top; y < Bottom; y++) yield return new Point(x, y);
+            foreach (int y in VerticalRange)
+                yield return new Point(x, y);
         }
     }
 

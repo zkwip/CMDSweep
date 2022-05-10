@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace CMDSweep.Geometry;
 
-record struct LinearRange
+record struct LinearRange : IEnumerable<int>
 {
     public readonly int Start;
     public readonly int Length;
@@ -44,4 +46,12 @@ record struct LinearRange
     internal LinearRange Shift(int offset) => new(Start + offset, Length);
 
     internal LinearRange Intersect(LinearRange range) => ToEnd(Math.Max(range.Start, this.Start), Math.Min(range.End, this.End));
+
+    public IEnumerator<int> GetEnumerator()
+    {
+        for (int i=Start; i < End; i++) 
+            yield return i;
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

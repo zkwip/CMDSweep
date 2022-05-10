@@ -34,12 +34,12 @@ internal class StatBarVisualizer : ITypeVisualizer<GameState>
 
     private void Resize()
     {
-        _tableGrid = new();
-        _tableGrid.Bounds = new(_renderer.Bounds.HorizontalRange, LinearRange.Zero);
-
         int horpad = _settings.Dimensions["stat-padding-x"];
         int verpad = _settings.Dimensions["stat-padding-y"];
         int vmidpad = _settings.Dimensions["stat-padding-x-in-between"];
+
+        _tableGrid = new();
+        _tableGrid.Bounds = new(_renderer.Bounds.HorizontalRange, new (0,2 * verpad + 1));
 
         // Rows
         _tableGrid.AddRow(verpad, 0);

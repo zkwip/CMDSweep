@@ -57,7 +57,7 @@ internal class BoardVisualizer : IChangeableTypeVisualizer<GameState>
         // TODO: Does not work, needs to be debugged and tested. It looks like the mapping function does not work as expected or it is used wrong
 
         Rectangle copyableArea = newView.ViewPort.Intersect(oldView.ViewPort);
-        RenderBufferCopyTask task = new RenderBufferCopyTask(oldView.MapToRender(copyableArea), newView.MapToRender(copyableArea));
+        RenderBufferCopyTask task = new(oldView.MapToRender(copyableArea), newView.MapToRender(copyableArea));
         _renderer.CopyArea(task);
 
         List<Point> newpoints = new(newView.ViewPort);
