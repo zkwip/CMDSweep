@@ -153,7 +153,7 @@
     "menu-choice-right": " >",
     "menu-item-prefix": "  ",
     "menu-item-prefix-selected": "> ",
-    "popup-enter-hs-message": "Congratulations, you got a new highscore! Please enter your name to be saved it.",
+    "popup-enter-hs-message": "Congratulations, you got a new highscore! Please enter your name to save it.",
     "popup-win-message": "Congratulations, you won! Press F2 to start a new game.",
     "popup-lose-message": "Oh no, you died. Press F2 to start a new game."
   },

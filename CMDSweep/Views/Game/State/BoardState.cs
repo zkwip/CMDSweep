@@ -61,7 +61,7 @@ internal record class BoardState : IRenderState
 
     internal IEnumerable<Point> SurroundingCells(Point p, bool wrap)
     {
-        Rectangle area = new Rectangle(p.X, p.Y, 1, 1);
+        Rectangle area = new(p.X, p.Y, 1, 1);
         area = area.Grow(Difficulty.DetectionRadius);
 
         return FilterBoard(area, wrap);
@@ -286,6 +286,7 @@ internal record class BoardState : IRenderState
         int detectZoneSize = (2 * Difficulty.DetectionRadius + 1) * (2 * Difficulty.DetectionRadius + 1);
         int placementFailures = 0;
         int maxMines = (int)Math.Floor(0.8 * detectZoneSize);
+
         Random rng = new();
 
         BoardState state = new(Cells, Difficulty, Cursor, View, _id + 1);

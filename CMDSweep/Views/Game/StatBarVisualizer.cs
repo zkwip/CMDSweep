@@ -11,12 +11,13 @@ internal class StatBarVisualizer : ITypeVisualizer<GameState>
     private readonly IRenderer _renderer;
     private readonly GameSettings _settings;
     private readonly StyleData _hideStyle;
-    private TableGrid _tableGrid;
+    private readonly TableGrid _tableGrid;
     public StatBarVisualizer(IRenderer renderer, GameSettings settings)
     {
         _renderer = renderer;
         _settings = settings;
         _hideStyle = settings.GetStyle("cell-bg-out-of-bounds", "cell-bg-out-of-bounds");
+        _tableGrid = new();
         Resize();
     }
 
@@ -38,7 +39,7 @@ internal class StatBarVisualizer : ITypeVisualizer<GameState>
         int verpad = _settings.Dimensions["stat-padding-y"];
         int vmidpad = _settings.Dimensions["stat-padding-x-in-between"];
 
-        _tableGrid = new();
+        _tableGrid.Clear();
         _tableGrid.Bounds = new(_renderer.Bounds.HorizontalRange, new (0,2 * verpad + 1));
 
         // Rows

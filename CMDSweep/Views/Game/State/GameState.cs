@@ -35,7 +35,7 @@ internal record class GameState : IRenderState
     {
         BoardState boardState = BoardState.NewGame(save.CurrentDifficulty, settings, boardRenderMask);
         TimingState timing = TimingState.NewGame();
-        TextEnterDialog enterDialog = new TextEnterDialog(settings.Texts["popup-enter-hs-message"], save.PlayerName, settings.Dimensions["popup-enter-hs-width"], settings.Dimensions["popup-enter-hs-height"]);
+        TextEnterDialog enterDialog = new(settings.Texts["popup-enter-hs-message"], save.PlayerName, settings.Dimensions["popup-enter-hs-width"], settings.Dimensions["popup-enter-hs-height"]);
 
         return new GameState(
             boardState,

@@ -1,5 +1,4 @@
-﻿using CMDSweep.Data;
-using CMDSweep.Geometry;
+﻿using CMDSweep.Geometry;
 using CMDSweep.Rendering;
 using System;
 using System.Collections.Generic;
